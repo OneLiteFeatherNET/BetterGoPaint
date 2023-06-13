@@ -12,14 +12,11 @@ import dev.themeinerlp.bettergopaint.fawe.util.BrushSettings;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
-import java.util.Random;
-
 public class AngleBrush implements BetterBrush {
 
     private final Player player;
     private final BrushSettings brushSettings;
     private final Plugin plugin;
-    private final Random random = new Random();
 
     public AngleBrush(Player player, BrushSettings brushSettings, Plugin plugin) {
         this.player = player;
