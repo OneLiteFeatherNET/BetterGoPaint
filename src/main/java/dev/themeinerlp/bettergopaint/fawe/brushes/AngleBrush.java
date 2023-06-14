@@ -35,7 +35,8 @@ public class AngleBrush implements BetterBrush {
     }
 
     @Override
-    public void build(EditSession editSession, BlockVector3 position, Pattern pattern, double size) throws MaxChangedBlocksException {
+    public void build(EditSession editSession, BlockVector3 position, Pattern pattern, double size) throws
+            MaxChangedBlocksException {
         BlockVector3 positionA = position.add((int) (-size / 2), (int) -size / 2, (int) -size / 2);
         BlockVector3 positionB = position.add((int) (size / 2), (int) size / 2, (int) size / 2);
         double distanceMath = size / 2;
@@ -45,22 +46,29 @@ public class AngleBrush implements BetterBrush {
                 for (double y = positionA.getY(); y <= positionB.getY(); y++) {
                     BlockVector3 blockInRadius = BlockVector3.at(x, y, z);
                     BaseBlock block = editSession.getFullBlock(blockInRadius);
-                    if (!(blockInRadius.distance(position) < distanceMath && !block.toBlockState().isAir())) {
-                        continue;
+                    if (blockInRadius.distance(position) < distanceMath && !block.toBlockState().isAir()) {
+                        if ((!settings().surfaceEnabled || isOnSurface(
+                                editSession,
+                                blockInRadius.toVector3(),
+                                playerPosAsVec3
+                        ))) {
+                            if (!settings().maskEnabled || (editSession.getMask() != null && editSession
+                                    .getMask()
+                                    .test(blockInRadius))) {
+
+                                if (!(getAverageHeightDiffAngle(editSession, blockInRadius.toVector3(), 1) >= 0.1)) {
+                                    if (!(getAverageHeightDiffAngle(
+                                            editSession,
+                                            blockInRadius.toVector3(),
+                                            settings().angleDistance
+                                    ) >= Math.tan(Math.toRadians(settings().angleHeightDifference)))) {
+                                        editSession.setBlock(blockInRadius, pattern);
+                                    }
+                                }
+                            }
+                        }
                     }
-                    if (!(!settings().surfaceEnabled || isOnSurface(editSession, blockInRadius.toVector3(), playerPosAsVec3))) {
-                        continue;
-                    }
-                    if (!(!settings().maskEnabled && editSession.getMask().test(blockInRadius))) {
-                        continue;
-                    }
-                    if (getAverageHeightDiffAngle(editSession, blockInRadius.toVector3(), 1) >= 0.1) {
-                        continue;
-                    }
-                    if (getAverageHeightDiffAngle(editSession, blockInRadius.toVector3(), settings().angleDistance) >= Math.tan(Math.toRadians(settings().angleHeightDifference))) {
-                        continue;
-                    }
-                    editSession.setBlock(blockInRadius, pattern);
+
                 }
             }
         }
@@ -70,4 +78,5 @@ public class AngleBrush implements BetterBrush {
     public BrushSettings settings() {
         return this.brushSettings;
     }
+
 }
