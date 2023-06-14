@@ -15,4 +15,16 @@ public class BrushSettings {
 
     public double angleHeightDifference;
 
+    public BrushSettings(boolean surfaceEnabled, boolean maskEnabled, int chance, int thickness, int fractureDistance, int angleDistance, int falloffStrength, int mixingStrength, Axis axis, double angleHeightDifference) {
+        this.surfaceEnabled = surfaceEnabled;
+        this.maskEnabled = maskEnabled;
+        this.chance = chance;
+        this.thickness = thickness;
+        this.fractureDistance = fractureDistance;
+        this.angleDistance = angleDistance;
+        this.falloffStrength = falloffStrength;
+        this.mixingStrength = mixingStrength;
+        this.axis = axis;
+        this.angleHeightDifference = angleHeightDifference;
+    }
 }
