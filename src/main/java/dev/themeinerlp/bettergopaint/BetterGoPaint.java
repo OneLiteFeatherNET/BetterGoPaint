@@ -26,6 +26,7 @@ import cloud.commandframework.execution.CommandExecutionCoordinator;
 import cloud.commandframework.meta.CommandMeta;
 import cloud.commandframework.paper.PaperCommandManager;
 import com.fastasyncworldedit.core.Fawe;
+import dev.themeinerlp.bettergopaint.command.BrushCommand;
 import dev.themeinerlp.bettergopaint.command.Handler;
 import dev.themeinerlp.bettergopaint.command.ReloadCommand;
 import dev.themeinerlp.bettergopaint.listeners.ConnectListener;
@@ -90,6 +91,7 @@ public class BetterGoPaint extends JavaPlugin implements Listener {
         enableCommandSystem();
         if (this.annotationParser != null) {
             annotationParser.parse(new ReloadCommand(this));
+            annotationParser.parse(new BrushCommand(this));
         }
 
 
@@ -122,7 +124,7 @@ public class BetterGoPaint extends JavaPlugin implements Listener {
             }
             if (commandManager.hasCapability(CloudBukkitCapabilities.ASYNCHRONOUS_COMPLETION)) {
                 commandManager.registerAsynchronousCompletions();
-                getLogger().info("Brigadier support enabled");
+                getLogger().info("Async completion support enabled");
             }
             Function<ParserParameters, CommandMeta> commandMetaFunction = parserParameters ->
                     CommandMeta
