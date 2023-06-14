@@ -45,17 +45,16 @@ public interface BetterBrush extends Brush {
             blockPos = blockPos.add(0, 0, 0.5);
         }
         double distance = blockPos.distance(playerPos);
-        boolean notAir = false;
-        for (int i = 1; i < distance && notAir; i++) {
+        for (int i = 1; i < distance; i++) {
             double moveX = distanceX * (i / distance);
             double moveY = distanceY * (i / distance);
             double moveZ = distanceZ * (i / distance);
             Vector3 checkLocation = blockPos.add(moveX, moveY, moveZ);
             if (!editSession.getBlock(checkLocation.toBlockPoint()).isAir()) {
-                notAir = true;
+                return false;
             }
         }
-        return notAir;
+        return true;
     }
 
     default double getAverageHeightDiffAngle(EditSession editSession, Vector3 vector3, int distance) {
