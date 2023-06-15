@@ -1,5 +1,6 @@
 package dev.themeinerlp.bettergopaint.fawe.brushes;
 
+import com.destroystokyo.paper.profile.ProfileProperty;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.MaxChangedBlocksException;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
@@ -9,19 +10,35 @@ import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.math.Vector3;
 import com.sk89q.worldedit.world.block.BaseBlock;
 import dev.themeinerlp.bettergopaint.fawe.util.BrushSettings;
+import dev.themeinerlp.bettergopaint.utils.Constants;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.Plugin;
+
+import java.util.UUID;
 
 public class AngleBrush implements BetterBrush {
 
     private final Player player;
     private final BrushSettings brushSettings;
     private final Plugin plugin;
+    private final ItemStack itemStack;
 
     public AngleBrush(Player player, BrushSettings brushSettings, Plugin plugin) {
         this.player = player;
         this.brushSettings = brushSettings;
         this.plugin = plugin;
+
+        itemStack = new ItemStack(Material.PLAYER_HEAD);
+        if (itemStack.getItemMeta() instanceof SkullMeta skullMeta) {
+            var profile = Bukkit.createProfile(UUID.randomUUID());
+            profile.setProperty(new ProfileProperty("textures", Constants.HEAD_ANGLE));
+            skullMeta.setPlayerProfile(profile);
+            itemStack.setItemMeta(skullMeta);
+        }
     }
 
     @Override
@@ -33,6 +50,8 @@ public class AngleBrush implements BetterBrush {
     public BukkitPlayer actor() {
         return BukkitAdapter.adapt(this.player);
     }
+
+
 
     @Override
     public void build(EditSession editSession, BlockVector3 position, Pattern pattern, double size) throws
@@ -77,6 +96,16 @@ public class AngleBrush implements BetterBrush {
     @Override
     public BrushSettings settings() {
         return this.brushSettings;
+    }
+
+    @Override
+    public String getName() {
+        return "Angle Brush";
+    }
+
+    @Override
+    public ItemStack getDisplayItem() {
+        return itemStack;
     }
 
 }
