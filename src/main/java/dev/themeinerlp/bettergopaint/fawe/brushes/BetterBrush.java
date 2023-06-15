@@ -10,6 +10,7 @@ import com.sk89q.worldedit.math.Vector3;
 import com.sk89q.worldedit.world.block.BlockState;
 import dev.themeinerlp.bettergopaint.fawe.util.BrushSettings;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 public interface BetterBrush extends Brush {
 
@@ -21,6 +22,10 @@ public interface BetterBrush extends Brush {
     void build(EditSession editSession, BlockVector3 position, Pattern pattern, double size) throws MaxChangedBlocksException;
 
     BrushSettings settings();
+
+    String getName();
+
+    ItemStack getDisplayItem();
 
     default boolean isOnSurface(EditSession editSession, Vector3 blockPos, Vector3 playerPos) {
         Vector3 finalPlayerPos = playerPos.add(0, 1.5, 0);
