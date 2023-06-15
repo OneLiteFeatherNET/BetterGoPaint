@@ -20,7 +20,7 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.UUID;
 
-public class AngleBrush implements BetterBrush {
+public final class AngleBrush implements BetterBrush {
 
     private final Player player;
     private final BrushSettings brushSettings;
