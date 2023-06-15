@@ -108,6 +108,11 @@ public interface BetterBrush extends Brush {
         return height / (double) (distance * 2);
     }
 
+    default boolean isOnTop(EditSession session, Vector3 vector3, int thickness) {
+        int height = getHeight(session, vector3);
+        return height - vector3.getBlockY() <= thickness;
+    }
+
     default int getHeight(EditSession editSession, Vector3 vector3) {
         if (editSession.getBlock(vector3.toBlockPoint()).isAir()) {
             for (int i = vector3.getBlockX(); i <= editSession.getWorld().getMaxY() && i >= editSession.getWorld().getMinY(); i--) {
