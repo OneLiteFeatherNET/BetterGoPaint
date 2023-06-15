@@ -21,7 +21,7 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.UUID;
 
-public class DiscBrush implements BetterBrush {
+public final class DiscBrush implements BetterBrush {
 
     private final Player player;
     private final BrushSettings brushSettings;
