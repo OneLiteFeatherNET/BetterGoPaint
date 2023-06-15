@@ -25,13 +25,11 @@ import com.sk89q.worldedit.LocalSession;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.bukkit.BukkitPlayer;
 import com.sk89q.worldedit.command.tool.BrushTool;
-import com.sk89q.worldedit.world.block.BlockType;
 import com.sk89q.worldedit.world.block.BlockTypes;
 import com.sk89q.worldedit.world.item.ItemTypes;
 import dev.themeinerlp.bettergopaint.BetterGoPaint;
-import dev.themeinerlp.bettergopaint.fawe.brushes.FractureBrush;
-import dev.themeinerlp.bettergopaint.fawe.brushes.GradientBrush;
-import dev.themeinerlp.bettergopaint.fawe.pattern.BetteGoPaintGradientPattern;
+import dev.themeinerlp.bettergopaint.fawe.brushes.BetterBrush;
+import dev.themeinerlp.bettergopaint.fawe.brushes.OverlayBrush;
 import dev.themeinerlp.bettergopaint.fawe.pattern.BetteGoPaintRandomPattern;
 import dev.themeinerlp.bettergopaint.fawe.util.BrushSettings;
 import dev.themeinerlp.bettergopaint.objects.other.Settings;
@@ -58,7 +56,7 @@ public final class BrushCommand {
                 false,
                 false,
                 0,
-                0,
+                Settings.settings().THICKNESS.DEFAULT_THICKNESS,
                 Settings.settings().FRACTURE.DEFAULT_FRACTURE_DISTANCE,
                 2,
                 50,
@@ -66,10 +64,10 @@ public final class BrushCommand {
                 Axis.X,
                 40.0
         );
-        GradientBrush angleBrush = new GradientBrush(player, brushSettings, betterGoPaint);
+        BetterBrush angleBrush = new OverlayBrush(player, brushSettings, betterGoPaint);
         brushTool.setSize(20);
         brushTool.setBrush(angleBrush, "");
-        brushTool.setFill(new BetteGoPaintGradientPattern(List.of(BlockTypes.STONE, BlockTypes.CAKE, BlockTypes.CAMPFIRE)));
+        brushTool.setFill(new BetteGoPaintRandomPattern(List.of(BlockTypes.STONE, BlockTypes.CAKE, BlockTypes.CAMPFIRE)));
     }
 
 }
