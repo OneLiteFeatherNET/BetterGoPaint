@@ -108,7 +108,7 @@ public final class BucketBrush implements BetterBrush {
 
     @Override
     public String getName() {
-        return "BucketBrush";
+        return "Bucket Brush";
     }
 
     @Override
