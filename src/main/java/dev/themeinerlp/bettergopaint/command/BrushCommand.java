@@ -29,8 +29,7 @@ import com.sk89q.worldedit.world.block.BlockTypes;
 import com.sk89q.worldedit.world.item.ItemTypes;
 import dev.themeinerlp.bettergopaint.BetterGoPaint;
 import dev.themeinerlp.bettergopaint.fawe.brushes.BetterBrush;
-import dev.themeinerlp.bettergopaint.fawe.brushes.OverlayBrush;
-import dev.themeinerlp.bettergopaint.fawe.brushes.SplatterBrush;
+import dev.themeinerlp.bettergopaint.fawe.brushes.SprayBrush;
 import dev.themeinerlp.bettergopaint.fawe.pattern.BetteGoPaintRandomPattern;
 import dev.themeinerlp.bettergopaint.fawe.util.BrushSettings;
 import dev.themeinerlp.bettergopaint.objects.other.Settings;
@@ -56,7 +55,7 @@ public final class BrushCommand {
         BrushSettings brushSettings = new BrushSettings(
                 false,
                 false,
-                0,
+                Settings.settings().GENERIC.DEFAULT_CHANCE,
                 Settings.settings().THICKNESS.DEFAULT_THICKNESS,
                 Settings.settings().FRACTURE.DEFAULT_FRACTURE_DISTANCE,
                 2,
@@ -65,7 +64,7 @@ public final class BrushCommand {
                 Axis.X,
                 40.0
         );
-        BetterBrush angleBrush = new SplatterBrush(player, brushSettings, betterGoPaint);
+        BetterBrush angleBrush = new SprayBrush(player, brushSettings, betterGoPaint);
         brushTool.setSize(20);
         brushTool.setBrush(angleBrush, "");
         brushTool.setFill(new BetteGoPaintRandomPattern(List.of(BlockTypes.STONE, BlockTypes.CAKE, BlockTypes.CAMPFIRE)));
