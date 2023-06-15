@@ -91,21 +91,36 @@ public interface BetterBrush extends Brush {
 
     default int getHeight(EditSession editSession, Vector3 vector3) {
         if (editSession.getBlock(vector3.toBlockPoint()).isAir()) {
-            for (int i = 0; i < editSession.getWorld().getMaxY() && i >= editSession.getWorld().getMinY(); i--) {
-                BlockState blockState = editSession.getBlock(vector3.toBlockPoint().add(0, i, 0));
+            for (int i = vector3.getBlockX(); i <= editSession.getWorld().getMaxY() && i >= editSession.getWorld().getMinY(); i--) {
+                var vec = vector3.toBlockPoint().add(0, i, 0);
+                BlockState blockState = editSession.getBlock(vec);
                 if (!blockState.isAir()) {
-                    return i + 1;
+                    return vec.getY() + 1;
                 }
             }
             return 1;
         } else {
-            for (int i = 0; i < editSession.getWorld().getMaxY() && i >= editSession.getWorld().getMinY(); i++) {
-                BlockState blockState = editSession.getBlock(vector3.toBlockPoint().add(0, i, 0));
+            for (int i = vector3.getBlockX(); i <= editSession.getWorld().getMaxY() && i >= editSession.getWorld().getMinY(); i++) {
+                var vec = vector3.toBlockPoint().add(0, i, 0);
+                BlockState blockState = editSession.getBlock(vec);
                 if (blockState.isAir()) {
-                    return i;
+                    return vec.getY();
                 }
             }
             return editSession.getWorld().getMaxY();
         }
+    }
+
+    default double getAverageHeightDiffFracture(EditSession editSession, Vector3 vector3, int height, int distance) {
+        double totalHeight = 0;
+        totalHeight += Math.abs(getHeight(editSession, vector3.add(distance, 0, -distance))) - height;
+        totalHeight += Math.abs(getHeight(editSession, vector3.add(distance, 0, distance))) - height;
+        totalHeight += Math.abs(getHeight(editSession, vector3.add(-distance, 0, distance))) - height;
+        totalHeight += Math.abs(getHeight(editSession, vector3.add(-distance, 0, -distance))) - height;
+        totalHeight += Math.abs(getHeight(editSession, vector3.add(0, 0, -distance))) - height;
+        totalHeight += Math.abs(getHeight(editSession, vector3.add(0, 0, distance))) - height;
+        totalHeight += Math.abs(getHeight(editSession, vector3.add(-distance, 0, 0))) - height;
+        totalHeight += Math.abs(getHeight(editSession, vector3.add(distance, 0, 0))) - height;
+        return (totalHeight / (double) 8) / (double) distance;
     }
 }
