@@ -46,15 +46,19 @@ public class BucketBrush implements BetterBrush {
                 for (double y = positionA.getY(); y <= positionB.getY(); y++) {
                     BlockVector3 blockInRadius = BlockVector3.at(x, y, z);
                     BaseBlock block = editSession.getFullBlock(blockInRadius);
-                    if (blockInRadius.distance(position) < distanceMath && !block.toBlockState().isAir()) {
-                        if ((!settings().surfaceEnabled || isOnSurface(editSession, blockInRadius.toVector3(), playerPosAsVec3))) {
-                            if (!settings().maskEnabled || (editSession.getMask() != null && editSession
-                                    .getMask()
-                                    .test(blockInRadius))) {
-                                editSession.setBlock(blockInRadius, pattern);
-                            }
-                        }
+                    if (blockInRadius.distance(position) >= distanceMath || block.toBlockState().isAir()) {
+                        continue;
                     }
+
+                    if (settings().surfaceEnabled && !isOnSurface(editSession, blockInRadius.toVector3(), playerPosAsVec3)) {
+                        continue;
+                    }
+
+                    if (settings().maskEnabled && (editSession.getMask() != null || !editSession.getMask().test(blockInRadius))) {
+                        continue;
+                    }
+
+                    editSession.setBlock(blockInRadius, pattern);
                 }
             }
         }

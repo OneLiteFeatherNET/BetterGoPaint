@@ -46,28 +46,28 @@ public class AngleBrush implements BetterBrush {
                 for (double y = positionA.getY(); y <= positionB.getY(); y++) {
                     BlockVector3 blockInRadius = BlockVector3.at(x, y, z);
                     BaseBlock block = editSession.getFullBlock(blockInRadius);
-                    if (blockInRadius.distance(position) < distanceMath && !block.toBlockState().isAir()) {
-                        if ((!settings().surfaceEnabled || isOnSurface(
-                                editSession,
-                                blockInRadius.toVector3(),
-                                playerPosAsVec3
-                        ))) {
-                            if (!settings().maskEnabled || (editSession.getMask() != null && editSession
-                                    .getMask()
-                                    .test(blockInRadius))) {
 
-                                if (!(getAverageHeightDiffAngle(editSession, blockInRadius.toVector3(), 1) >= 0.1)) {
-                                    if (!(getAverageHeightDiffAngle(
-                                            editSession,
-                                            blockInRadius.toVector3(),
-                                            settings().angleDistance
-                                    ) >= Math.tan(Math.toRadians(settings().angleHeightDifference)))) {
-                                        editSession.setBlock(blockInRadius, pattern);
-                                    }
-                                }
-                            }
-                        }
+                    if (blockInRadius.distance(position) >= distanceMath || block.toBlockState().isAir()) {
+                        continue;
                     }
+
+                    if (settings().surfaceEnabled && !isOnSurface(editSession, blockInRadius.toVector3(), playerPosAsVec3)) {
+                        continue;
+                    }
+
+                    if (settings().maskEnabled && (editSession.getMask() != null || !editSession.getMask().test(blockInRadius))) {
+                        continue;
+                    }
+
+                    if (getAverageHeightDiffAngle(editSession, blockInRadius.toVector3(), 1) >= 0.1) {
+                        continue;
+                    }
+
+                    if (getAverageHeightDiffAngle(editSession, blockInRadius.toVector3(), settings().angleDistance) >= Math.tan(Math.toRadians(settings().angleHeightDifference))) {
+                        continue;
+                    }
+
+                    editSession.setBlock(blockInRadius, pattern);
 
                 }
             }
