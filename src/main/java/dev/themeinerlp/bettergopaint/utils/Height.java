@@ -1,7 +1,8 @@
 /*
- * goPaint is designed to simplify painting inside of Minecraft.
- * Copyright (C) Arcaniax-Development
- * Copyright (C) Arcaniax team and contributors
+ * BetterGoPaint is designed to simplify painting inside of Minecraft.
+ * Copyright (C) TheMeinerLP
+ * Copyright (C) OneLiteFeather
+ * Copyright (C) OneLiteFeather team and contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
