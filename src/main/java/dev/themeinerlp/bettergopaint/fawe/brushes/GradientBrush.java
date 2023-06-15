@@ -116,7 +116,7 @@ public final class GradientBrush implements BetterBrush {
 
     @Override
     public String getName() {
-        return "BucketBrush";
+        return "Gradient Brush";
     }
 
     @Override
