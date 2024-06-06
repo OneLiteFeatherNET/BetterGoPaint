@@ -8,12 +8,12 @@ plugins {
     `java-library`
     id("olf.build-logic")
     id("com.diffplug.spotless") version "6.18.0"
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("io.github.goooler.shadow") version "8.1.7"
     id("net.minecrell.plugin-yml.bukkit") version "0.5.3"
-    id("xyz.jpenilla.run-paper") version "2.1.0"
+    id("xyz.jpenilla.run-paper") version "2.3.0"
     idea
 
-    id("io.papermc.hangar-publish-plugin") version "0.0.5"
+    id("io.papermc.hangar-publish-plugin") version "0.1.2"
     id("com.modrinth.minotaur") version "2.+"
 }
 
@@ -33,7 +33,7 @@ allprojects {
 }
 group = "net.onelitefeather.bettergopaint"
 
-val minecraftVersion = "1.20.2"
+val minecraftVersion = "1.20.6"
 val supportedMinecraftVersions = listOf(
     "1.16.5",
     "1.17",
@@ -50,7 +50,9 @@ val supportedMinecraftVersions = listOf(
     "1.20.1",
     "1.20.2",
     "1.20.3",
-    "1.20.4"
+    "1.20.4",
+    "1.20.5",
+    "1.20.6"
 )
 
 repositories {
@@ -130,7 +132,7 @@ spotless {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 
@@ -139,7 +141,7 @@ tasks {
         archiveClassifier.set("unshaded")
     }
     compileJava {
-        options.release.set(17)
+        options.release.set(21)
         options.encoding = "UTF-8"
     }
     shadowJar {
@@ -185,8 +187,6 @@ if (!isRelease || isMainBranch) { // Only publish releases from the main branch
             channel.set(if (isRelease) "Release" else if (isMainBranch) "Snapshot" else "Alpha")
             changelog.set(changelogContent)
             apiKey.set(System.getenv("HANGAR_SECRET"))
-            owner.set("TheMeinerLP")
-            slug.set("BetterGoPaint")
             platforms {
                 register(Platforms.PAPER) {
                     jar.set(tasks.shadowJar.flatMap { it.archiveFile })
