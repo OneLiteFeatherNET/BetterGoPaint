@@ -42,6 +42,11 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
+/**
+ * A utility class to generate GUIs for the goPaint plugin.
+ * @version 1.0.0
+ * @since 1.0.0
+ */
 public final class GUI {
 
     private static final String INCREASE_DECREASE_LORE = "\n§7Left click to increase\n§7Right click to decrease";
@@ -57,12 +62,21 @@ public final class GUI {
         throw new UnsupportedOperationException("This class cannot be instantiated");
     }
 
-    public static @NotNull Inventory create(PlayerBrush pb) {
+    /**
+     * Creates a new {@link Inventory} with the current {@link PlayerBrush} settings.
+     * @param pb the player brush to get the settings from
+     * @return the generated inventory
+     */
+    public static @NotNull Inventory create(@NotNull PlayerBrush pb) {
         Inventory inv = Bukkit.createInventory(null, 54, Component.text("goPaint Menu", NamedTextColor.DARK_BLUE));
         update(inv, pb);
         return inv;
     }
 
+    /**
+     * Generates an {@link Inventory} with all the brushes represented by an {@link ItemStack}.
+     * @return the generated inventory
+     */
     public static @NotNull Inventory generateBrushes() {
         Inventory inv = Bukkit.createInventory(null, 27, Component.text("goPaint Brushes", NamedTextColor.DARK_BLUE));
         // FILLER
@@ -76,12 +90,21 @@ public final class GUI {
         return inv;
     }
 
+    /**
+     * Applies a default formating to the given {@link Inventory}.
+     * @param inventory the inventory to format
+     */
     private static void formatDefault(@NotNull Inventory inventory) {
         for (int slot = 0; slot < inventory.getSize(); slot++) {
             inventory.setItem(slot, LIME_DECORATION);
         }
     }
 
+    /**
+     * Updates the given {@link Inventory} with the current {@link PlayerBrush} settings.
+     * @param inventory the inventory to update
+     * @param playerBrush the player brush to get the settings from
+     */
     public static void update(@NotNull Inventory inventory, @NotNull PlayerBrush playerBrush) {
         Brush brush = playerBrush.brush();
 
@@ -155,6 +178,14 @@ public final class GUI {
             inventory.setItem(21, WHITE_DECORATION);
         }
 
+        if (brush instanceof SplatterBrush || brush instanceof PaintBrush || brush instanceof GradientBrush) {
+            inventory.setItem(3, WHITE_DECORATION);
+            inventory.setItem(12, Items.create(Material.BLAZE_POWDER, 1,
+                    "§6Falloff Strength: §e" + playerBrush.falloffStrength() + "%",
+                    INCREASE_DECREASE_LORE
+            ));
+            inventory.setItem(21, WHITE_DECORATION);
+        }
         // angle settings
         if (brush instanceof GradientBrush) {
             inventory.setItem(4, WHITE_DECORATION);
@@ -163,15 +194,6 @@ public final class GUI {
                     INCREASE_DECREASE_LORE
             ));
             inventory.setItem(22, WHITE_DECORATION);
-        }
-
-        if (brush instanceof SplatterBrush || brush instanceof PaintBrush || brush instanceof GradientBrush) {
-            inventory.setItem(3, WHITE_DECORATION);
-            inventory.setItem(12, Items.create(Material.BLAZE_POWDER, 1,
-                    "§6Falloff Strength: §e" + playerBrush.falloffStrength() + "%",
-                    INCREASE_DECREASE_LORE
-            ));
-            inventory.setItem(21, WHITE_DECORATION);
         }
 
 
@@ -289,5 +311,4 @@ public final class GUI {
         ));
         inv.setItem(25, pane);
     }
-
 }
