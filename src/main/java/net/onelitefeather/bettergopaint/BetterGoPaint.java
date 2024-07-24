@@ -19,7 +19,12 @@
 package net.onelitefeather.bettergopaint;
 
 import com.fastasyncworldedit.core.Fawe;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.translation.GlobalTranslator;
+import net.kyori.adventure.translation.TranslationRegistry;
+import net.kyori.adventure.util.UTF8ResourceBundleControl;
 import net.onelitefeather.bettergopaint.brush.PlayerBrushManager;
 import net.onelitefeather.bettergopaint.command.GoPaintCommand;
 import net.onelitefeather.bettergopaint.command.ReloadCommand;
@@ -27,6 +32,8 @@ import net.onelitefeather.bettergopaint.listeners.ConnectListener;
 import net.onelitefeather.bettergopaint.listeners.InteractListener;
 import net.onelitefeather.bettergopaint.listeners.InventoryListener;
 import net.onelitefeather.bettergopaint.objects.other.Settings;
+import net.onelitefeather.bettergopaint.service.UpdateService;
+import net.onelitefeather.bettergopaint.translations.PluginTranslationRegistry;
 import org.bstats.bukkit.Metrics;
 import org.bstats.charts.SimplePie;
 import org.bukkit.Bukkit;
@@ -45,21 +52,23 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Locale;
 import java.util.Objects;
+import java.util.ResourceBundle;
 import java.util.logging.Level;
 
 public class BetterGoPaint extends JavaPlugin implements Listener {
 
     public static final String PAPER_DOCS = "https://jd.papermc.io/paper/1.20.6/org/bukkit/Material.html#enum-constant-summary";
-    public static final String USE_PERMISSION = "bettergopaint.use";
-    public static final String ADMIN_PERMISSION = "bettergopaint.admin";
-    public static final String RELOAD_PERMISSION = "bettergopaint.command.admin.reload";
-    public static final String WORLD_BYPASS_PERMISSION = "bettergopaint.world.bypass";
 
     private final PlayerBrushManager brushManager = new PlayerBrushManager();
     private final Metrics metrics = new Metrics(this, 18734);
+    private UpdateService updateService;
 
     @Override
     public void onLoad() {
@@ -84,6 +93,30 @@ public class BetterGoPaint extends JavaPlugin implements Listener {
 
         reloadConfig();
 
+        final TranslationRegistry translationRegistry = new PluginTranslationRegistry(TranslationRegistry.create(Key.key("bettergopaint", "translations")));
+        translationRegistry.defaultLocale(Locale.US);
+        Path langFolder = getDataFolder().toPath().resolve("lang");
+        var languages = new HashSet<>(Settings.settings().generic.LANGUAGES);
+        languages.add("en-US");
+        if (Files.exists(langFolder)) {
+            try (var urlClassLoader = new URLClassLoader(new URL[]{langFolder.toUri().toURL()})) {
+                languages.stream().map(Locale::forLanguageTag).forEach(r -> {
+                    var bundle = ResourceBundle.getBundle("bettergopaint", r, urlClassLoader, UTF8ResourceBundleControl.get());
+                    translationRegistry.registerAll(r, bundle, false);
+                });
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            languages.stream().map(Locale::forLanguageTag).forEach(r -> {
+                var bundle = ResourceBundle.getBundle("bettergopaint", r, UTF8ResourceBundleControl.get());
+                translationRegistry.registerAll(r, bundle, false);
+            });
+        }
+        GlobalTranslator.translator().addSource(translationRegistry);
+        donationInformation();
+
+
         Material brush = Settings.settings().generic.DEFAULT_BRUSH;
         if (!brush.isItem()) {
             getComponentLogger().error("{} is not a valid default brush, it has to be an item", brush.name());
@@ -103,6 +136,7 @@ public class BetterGoPaint extends JavaPlugin implements Listener {
     @Override
     public void onDisable() {
         metrics.shutdown();
+        this.updateService.shutdown();
     }
 
     public void reloadConfig() {
@@ -116,6 +150,13 @@ public class BetterGoPaint extends JavaPlugin implements Listener {
         }
 
     }
+
+    private void updateService() {
+        this.updateService = new UpdateService(this);
+        this.updateService.run();
+        this.updateService.notifyConsole(getComponentLogger());
+    }
+
 
     @SuppressWarnings("UnstableApiUsage")
     private void registerCommands() {
@@ -132,11 +173,15 @@ public class BetterGoPaint extends JavaPlugin implements Listener {
         PluginManager pm = getServer().getPluginManager();
         pm.registerEvents(new InventoryListener(getBrushManager()), this);
         pm.registerEvents(new InteractListener(this), this);
-        pm.registerEvents(new ConnectListener(getBrushManager()), this);
+        pm.registerEvents(new ConnectListener(getBrushManager(), this), this);
     }
 
     private boolean hasOriginalGoPaint() {
         return getServer().getPluginManager().getPlugin("goPaint") != this;
+    }
+
+    private void donationInformation() {
+        getComponentLogger().info(Component.translatable("bettergopaint.notify.donation.console"));
     }
 
     private @Nullable AnnotationParser<CommandSender> enableCommandSystem() {
@@ -159,6 +204,10 @@ public class BetterGoPaint extends JavaPlugin implements Listener {
 
     public @NotNull PlayerBrushManager getBrushManager() {
         return brushManager;
+    }
+
+    public UpdateService getUpdateService() {
+        return updateService;
     }
 
 }

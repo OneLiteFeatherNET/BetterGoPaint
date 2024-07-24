@@ -46,6 +46,9 @@ public final class Settings extends Config {
     @Comment("This is related to generic settings")
     public static class Generic {
 
+        @Comment("Supported Languages")
+        public List<String> LANGUAGES = new ArrayList<>();
+
         @Comment({
                 "Default brush item",
                 "Possible values: " + BetterGoPaint.PAPER_DOCS,

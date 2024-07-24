@@ -19,6 +19,7 @@
 package net.onelitefeather.bettergopaint.command;
 
 import net.onelitefeather.bettergopaint.BetterGoPaint;
+import net.onelitefeather.bettergopaint.utils.Constants;
 import org.bukkit.entity.Player;
 import org.incendo.cloud.annotations.Command;
 import org.incendo.cloud.annotations.Permission;
@@ -32,7 +33,7 @@ public final class ReloadCommand {
     }
 
     @Command("bgp|gp reload")
-    @Permission(BetterGoPaint.RELOAD_PERMISSION)
+    @Permission(Constants.RELOAD_PERMISSION)
     public void onReload(Player player) {
         betterGoPaint.reloadConfig();
     }

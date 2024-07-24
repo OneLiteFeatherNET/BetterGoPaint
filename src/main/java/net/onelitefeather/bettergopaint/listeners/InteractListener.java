@@ -26,6 +26,7 @@ import net.onelitefeather.bettergopaint.brush.ExportedPlayerBrush;
 import net.onelitefeather.bettergopaint.brush.PlayerBrush;
 import net.onelitefeather.bettergopaint.objects.brush.Brush;
 import net.onelitefeather.bettergopaint.objects.other.Settings;
+import net.onelitefeather.bettergopaint.utils.Constants;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -52,7 +53,7 @@ public final class InteractListener implements Listener {
     public void onClick(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if (!player.hasPermission(BetterGoPaint.USE_PERMISSION)) {
+        if (!player.hasPermission(Constants.USE_PERMISSION)) {
             return;
         }
 
@@ -85,7 +86,7 @@ public final class InteractListener implements Listener {
             return;
         }
 
-        final boolean hasNotWorldByePassPermission = !player.hasPermission(BetterGoPaint.WORLD_BYPASS_PERMISSION);
+        final boolean hasNotWorldByePassPermission = !player.hasPermission(Constants.WORLD_BYPASS_PERMISSION);
 
         if (hasNotWorldByePassPermission && Settings.settings().generic.DISABLED_WORLDS
                 .contains(location.getWorld().getName())) {

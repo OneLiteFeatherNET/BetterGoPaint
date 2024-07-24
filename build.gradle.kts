@@ -53,6 +53,7 @@ dependencies {
     // Utils
     implementation(libs.serverlib)
     implementation(libs.paperlib)
+    implementation(libs.semver)
     // Stats
     implementation(libs.bstats)
     // Commands
