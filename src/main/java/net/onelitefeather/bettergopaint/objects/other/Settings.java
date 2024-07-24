@@ -23,8 +23,6 @@ import net.onelitefeather.bettergopaint.BetterGoPaint;
 import org.bukkit.Axis;
 import org.bukkit.Material;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 

@@ -49,7 +49,7 @@ dependencies {
     compileOnly(libs.paper)
     // Fawe / WorldEdit
     implementation(platform(libs.fawe.bom))
-    // compileOnlyApi(libs.fawe.bukkit)
+    compileOnly(libs.fawe.bukkit)
     // Utils
     implementation(libs.serverlib)
     implementation(libs.paperlib)
