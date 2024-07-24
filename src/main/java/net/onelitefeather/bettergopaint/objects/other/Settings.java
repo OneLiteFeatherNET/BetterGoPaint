@@ -33,19 +33,6 @@ public final class Settings extends Config {
     @Ignore
     private static final Settings settings = new Settings();
 
-    public void reload(BetterGoPaint plugin, File file) {
-        try {
-            if (file.isFile() || file.createNewFile()) {
-                load(file);
-                save(file);
-            } else {
-                plugin.getComponentLogger().error("Failed to create file {}", file.getName());
-            }
-        } catch (IOException e) {
-            plugin.getComponentLogger().error("Failed to create file {}", file.getName(), e);
-        }
-    }
-
     @Create
     public Generic generic;
 

@@ -44,6 +44,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Objects;
 import java.util.logging.Level;
 
@@ -103,7 +106,15 @@ public class BetterGoPaint extends JavaPlugin implements Listener {
     }
 
     public void reloadConfig() {
-        Settings.settings().reload(this, new File(getDataFolder(), "config.yml"));
+        try {
+            Files.createDirectories(getDataFolder().toPath());
+            final Path resolve = getDataFolder().toPath().resolve("config.yml");
+            Settings.settings().save(resolve.toFile());
+            Settings.settings().load(resolve.toFile());
+        } catch (IOException e) {
+            getLogger().log(Level.SEVERE, "Cannot init config", e);
+        }
+
     }
 
     @SuppressWarnings("UnstableApiUsage")

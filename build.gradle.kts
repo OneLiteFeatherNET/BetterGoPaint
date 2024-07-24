@@ -5,17 +5,16 @@ import xyz.jpenilla.runpaper.task.RunServer
 import kotlin.system.exitProcess
 
 plugins {
-    id("idea")
     id("java")
-    id("java-library")
-    id("olf.build-logic")
-
+    alias(libs.plugins.shadowJar)
+    alias(libs.plugins.publishdata)
+    alias(libs.plugins.paper.run)
+    alias(libs.plugins.paper.yml)
+    alias(libs.plugins.hangar)
+    alias(libs.plugins.modrinth)
     alias(libs.plugins.spotless)
-    alias(libs.plugins.minotaur)
-    alias(libs.plugins.shadow)
-    alias(libs.plugins.hangar.publish.plugin)
-    alias(libs.plugins.plugin.yml.paper)
-    alias(libs.plugins.run.paper)
+    id("olf.build-logic")
+    `maven-publish`
 }
 
 if (!File("$rootDir/.git").exists()) {
@@ -35,13 +34,9 @@ allprojects {
 group = "net.onelitefeather.bettergopaint"
 
 val supportedMinecraftVersions = listOf(
-        "1.20",
-        "1.20.1",
-        "1.20.2",
-        "1.20.3",
-        "1.20.4",
-        "1.20.5",
-        "1.20.6"
+        "1.19.4",
+        "1.20.6",
+        "1.21"
 )
 
 repositories {
@@ -54,18 +49,24 @@ dependencies {
     compileOnly(libs.paper)
     // Fawe / WorldEdit
     implementation(platform(libs.fawe.bom))
-    compileOnlyApi(libs.fawe.bukkit)
+    // compileOnlyApi(libs.fawe.bukkit)
     // Utils
     implementation(libs.serverlib)
     implementation(libs.paperlib)
     // Stats
     implementation(libs.bstats)
     // Commands
-    implementation(libs.cloud.annotations)
-    implementation(libs.cloud.minecraft.extras)
-    implementation(libs.cloud.paper)
-    annotationProcessor(libs.cloud.annotations)
+    implementation(libs.cloud.command.annotations)
+    implementation(libs.cloud.command.extras)
+    implementation(libs.cloud.command.paper)
+    annotationProcessor(libs.cloud.command.annotations)
 }
+
+publishData {
+    useEldoNexusRepos(false)
+    publishTask("shadowJar")
+}
+
 
 paper {
     name = "BetterGoPaint"
@@ -145,7 +146,7 @@ tasks {
 }
 
 val branch = rootProject.branchName()
-val baseVersion = project.version as String
+val baseVersion = publishData.getVersion(false)
 val isRelease = !baseVersion.contains('-')
 val isMainBranch = branch == "master"
 if (!isRelease || isMainBranch) { // Only publish releases from the main branch

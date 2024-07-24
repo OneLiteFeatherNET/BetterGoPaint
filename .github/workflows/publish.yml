@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - master
-      - dev
+      - develop
 jobs:
   build:
     # Run on all label events (won't be duplicated) or all push events or on PR syncs not from the same repo
