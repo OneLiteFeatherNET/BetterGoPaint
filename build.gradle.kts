@@ -162,7 +162,7 @@ if (!isRelease || isMainBranch) { // Only publish releases from the main branch
     hangarPublish {
         publications.register("BetterGoPaint") {
             version.set(suffixedVersion)
-            channel.set(if (isRelease) "Release" else if (isMainBranch) "Snapshot" else "Alpha")
+            channel.set(if (isRelease) "Release" else "Snapshot")
             changelog.set(changelogContent)
             apiKey.set(System.getenv("HANGAR_SECRET"))
             id.set("BetterGoPaint")
@@ -178,7 +178,7 @@ if (!isRelease || isMainBranch) { // Only publish releases from the main branch
     modrinth {
         token.set(System.getenv("MODRINTH_TOKEN"))
         projectId.set("qf7sNg9A")
-        versionType.set(if (isRelease) "release" else if (isMainBranch) "beta" else "alpha")
+        versionType.set(if (isRelease) "release" else "beta")
         versionNumber.set(suffixedVersion)
         versionName.set(suffixedVersion)
         changelog.set(changelogContent)
@@ -187,5 +187,28 @@ if (!isRelease || isMainBranch) { // Only publish releases from the main branch
         loaders.add("paper")
         loaders.add("bukkit")
         loaders.add("folia")
+    }
+}
+
+publishing {
+    publications.create<MavenPublication>("maven") {
+        // Configure our maven publication
+        publishData.configurePublication(this)
+    }
+
+    repositories {
+        // We add EldoNexus as our repository. The used url is defined by the publish data.
+        maven {
+            authentication {
+                credentials(PasswordCredentials::class) {
+                    // Those credentials need to be set under "Settings -> Secrets -> Actions" in your repository
+                    username = System.getenv("ELDO_USERNAME")
+                    password = System.getenv("ELDO_PASSWORD")
+                }
+            }
+
+            name = "EldoNexus"
+            setUrl(publishData.getRepository())
+        }
     }
 }
