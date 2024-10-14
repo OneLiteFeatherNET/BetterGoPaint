@@ -131,6 +131,7 @@ public class BetterGoPaint extends JavaPlugin implements Listener {
 
         registerListeners();
         registerCommands();
+        updateService();
     }
 
     @Override

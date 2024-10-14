@@ -90,6 +90,12 @@ paper {
         register("bettergopaint.command.admin.reload") {
             default = BukkitPluginDescription.Permission.Default.OP
         }
+        register("bettergopaint.notify.admin.update") {
+            default = BukkitPluginDescription.Permission.Default.OP
+        }
+        register("bettergopaint.notify.disable.donation") {
+            default = BukkitPluginDescription.Permission.Default.FALSE
+        }
         register("bettergopaint.use") {
             default = BukkitPluginDescription.Permission.Default.OP
         }
