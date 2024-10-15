@@ -25,7 +25,7 @@ public final class Constants {
 
     public static final String USE_PERMISSION = "bettergopaint.use";
     public static final String ADMIN_PERMISSION = "bettergopaint.admin";
-    public static final String PERMISSION_NOTIFY_UPDATE = "antiredstoneclockremastered.notify.admin.update";
+    public static final String PERMISSION_NOTIFY_UPDATE = "bettergopaint.notify.admin.update";
     public static final String DISABLE_DONATION_NOTIFY = "bettergopaint.notify.disable.donation";
     public static final String RELOAD_PERMISSION = "bettergopaint.command.admin.reload";
     public static final String WORLD_BYPASS_PERMISSION = "bettergopaint.world.bypass";
