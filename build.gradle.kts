@@ -29,7 +29,7 @@ if (!File("$rootDir/.git").exists()) {
 
 allprojects {
     group = "net.onelitefeather.bettergopaint"
-    version = "1.2.0"
+    version = "1.1.0"
 }
 group = "net.onelitefeather.bettergopaint"
 
