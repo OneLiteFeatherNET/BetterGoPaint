@@ -1,8 +1,8 @@
 import io.papermc.hangarpublishplugin.model.Platforms
+import kotlin.system.exitProcess
 import net.minecrell.pluginyml.bukkit.BukkitPluginDescription
 import net.minecrell.pluginyml.paper.PaperPluginDescription
 import xyz.jpenilla.runpaper.task.RunServer
-import kotlin.system.exitProcess
 
 plugins {
     id("java")
@@ -29,13 +29,11 @@ if (!File("$rootDir/.git").exists()) {
 
 allprojects {
     group = "net.onelitefeather.bettergopaint"
-    version = "1.1.0"
+    version = "1.2.0"
 }
 group = "net.onelitefeather.bettergopaint"
 
 val supportedMinecraftVersions = listOf(
-        "1.19.4",
-        "1.20.6",
         "1.21"
 )
 

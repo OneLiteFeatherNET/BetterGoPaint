@@ -17,9 +17,9 @@ dependencyResolutionManagement {
             version("paper.yml", "0.6.0")
             version("paper.run", "2.3.0")
             version("shadowJar", "8.1.1")
-            version("intellectualsites", "1.47")
+            version("intellectualsites", "1.51")
 
-            version("paper", "1.20.6-R0.1-SNAPSHOT")
+            version("paper", "1.21.3-R0.1-SNAPSHOT")
             version("bstats", "3.0.2")
 
             version("cloudcommand", "2.0.0-SNAPSHOT")
