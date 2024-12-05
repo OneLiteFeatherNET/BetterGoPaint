@@ -21,6 +21,7 @@ package net.onelitefeather.bettergopaint.command;
 import net.onelitefeather.bettergopaint.BetterGoPaint;
 import net.onelitefeather.bettergopaint.objects.other.Settings;
 import net.onelitefeather.bettergopaint.brush.PlayerBrush;
+import net.onelitefeather.bettergopaint.utils.Constants;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginIdentifiableCommand;
@@ -50,12 +51,12 @@ public class GoPaintCommand extends Command implements PluginIdentifiableCommand
         }
         PlayerBrush pb = plugin.getBrushManager().getBrush(p);
         String prefix = Settings.settings().generic.PREFIX;
-        if (!p.hasPermission(BetterGoPaint.USE_PERMISSION)) {
+        if (!p.hasPermission(Constants.USE_PERMISSION)) {
             p.sendRichMessage(prefix + "<red>You are lacking the permission bettergopaint.use");
             return true;
         }
         if (args.length == 0) {
-            if (p.hasPermission(BetterGoPaint.ADMIN_PERMISSION)) {
+            if (p.hasPermission(Constants.ADMIN_PERMISSION)) {
                 p.sendRichMessage(prefix + "<red>/gp size<gray>|<red>toggle<gray>|<red>info<gray>|<red>reload");
                 return true;
             }
@@ -75,7 +76,7 @@ public class GoPaintCommand extends Command implements PluginIdentifiableCommand
                 }
                 return true;
             } else if ((args[0].equalsIgnoreCase("reload") || args[0].equalsIgnoreCase("r")) && p.hasPermission(
-                    BetterGoPaint.ADMIN_PERMISSION)) {
+                    Constants.ADMIN_PERMISSION)) {
                 plugin.reloadConfig();
                 p.sendRichMessage(prefix + "<green>Reloaded");
                 return true;
@@ -84,7 +85,7 @@ public class GoPaintCommand extends Command implements PluginIdentifiableCommand
                 p.sendRichMessage(prefix + "<aqua>Links: <gold><click:open_url:https://twitter.com/themeinerlp'><u>Twitter</u></click>");
                 return true;
             }
-            if (p.hasPermission(BetterGoPaint.ADMIN_PERMISSION)) {
+            if (p.hasPermission(Constants.ADMIN_PERMISSION)) {
                 p.sendRichMessage(prefix + "<red>/gp size<gray>|<red>toggle<gray>|<red>info<gray>|<red>reload");
                 return true;
             }
@@ -102,7 +103,7 @@ public class GoPaintCommand extends Command implements PluginIdentifiableCommand
                     return true;
                 }
             }
-            if (p.hasPermission(BetterGoPaint.ADMIN_PERMISSION)) {
+            if (p.hasPermission(Constants.ADMIN_PERMISSION)) {
                 p.sendRichMessage(prefix + "<red>/gp size<gray>|<red>toggle<gray>|<red>info<gray>|<red>reload");
                 return true;
             }

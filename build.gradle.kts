@@ -1,21 +1,20 @@
 import io.papermc.hangarpublishplugin.model.Platforms
+import kotlin.system.exitProcess
 import net.minecrell.pluginyml.bukkit.BukkitPluginDescription
 import net.minecrell.pluginyml.paper.PaperPluginDescription
 import xyz.jpenilla.runpaper.task.RunServer
-import kotlin.system.exitProcess
 
 plugins {
-    id("idea")
     id("java")
-    id("java-library")
-    id("olf.build-logic")
-
+    alias(libs.plugins.shadowJar)
+    alias(libs.plugins.publishdata)
+    alias(libs.plugins.paper.run)
+    alias(libs.plugins.paper.yml)
+    alias(libs.plugins.hangar)
+    alias(libs.plugins.modrinth)
     alias(libs.plugins.spotless)
-    alias(libs.plugins.minotaur)
-    alias(libs.plugins.shadow)
-    alias(libs.plugins.hangar.publish.plugin)
-    alias(libs.plugins.plugin.yml.paper)
-    alias(libs.plugins.run.paper)
+    id("olf.build-logic")
+    `maven-publish`
 }
 
 if (!File("$rootDir/.git").exists()) {
@@ -30,23 +29,18 @@ if (!File("$rootDir/.git").exists()) {
 
 allprojects {
     group = "net.onelitefeather.bettergopaint"
-    version = property("projectVersion") as String // from gradle.properties
+    version = "1.1.0"
 }
 group = "net.onelitefeather.bettergopaint"
 
 val supportedMinecraftVersions = listOf(
-        "1.20",
-        "1.20.1",
-        "1.20.2",
-        "1.20.3",
-        "1.20.4",
-        "1.20.5",
-        "1.20.6"
+        "1.21"
 )
 
 repositories {
     mavenCentral()
     maven("https://papermc.io/repo/repository/maven-public/")
+    maven("https://maven.enginehub.org/repo/")
 }
 
 dependencies {
@@ -54,18 +48,25 @@ dependencies {
     compileOnly(libs.paper)
     // Fawe / WorldEdit
     implementation(platform(libs.fawe.bom))
-    compileOnlyApi(libs.fawe.bukkit)
+    compileOnly(libs.fawe.bukkit)
     // Utils
     implementation(libs.serverlib)
     implementation(libs.paperlib)
+    implementation(libs.semver)
     // Stats
     implementation(libs.bstats)
     // Commands
-    implementation(libs.cloud.annotations)
-    implementation(libs.cloud.minecraft.extras)
-    implementation(libs.cloud.paper)
-    annotationProcessor(libs.cloud.annotations)
+    implementation(libs.cloud.command.annotations)
+    implementation(libs.cloud.command.extras)
+    implementation(libs.cloud.command.paper)
+    annotationProcessor(libs.cloud.command.annotations)
 }
+
+publishData {
+    useEldoNexusRepos(false)
+    publishTask("shadowJar")
+}
+
 
 paper {
     name = "BetterGoPaint"
@@ -86,6 +87,12 @@ paper {
     permissions {
         register("bettergopaint.command.admin.reload") {
             default = BukkitPluginDescription.Permission.Default.OP
+        }
+        register("bettergopaint.notify.admin.update") {
+            default = BukkitPluginDescription.Permission.Default.OP
+        }
+        register("bettergopaint.notify.disable.donation") {
+            default = BukkitPluginDescription.Permission.Default.FALSE
         }
         register("bettergopaint.use") {
             default = BukkitPluginDescription.Permission.Default.OP
@@ -145,7 +152,7 @@ tasks {
 }
 
 val branch = rootProject.branchName()
-val baseVersion = project.version as String
+val baseVersion = publishData.getVersion(false)
 val isRelease = !baseVersion.contains('-')
 val isMainBranch = branch == "master"
 if (!isRelease || isMainBranch) { // Only publish releases from the main branch
@@ -159,7 +166,7 @@ if (!isRelease || isMainBranch) { // Only publish releases from the main branch
     hangarPublish {
         publications.register("BetterGoPaint") {
             version.set(suffixedVersion)
-            channel.set(if (isRelease) "Release" else if (isMainBranch) "Snapshot" else "Alpha")
+            channel.set(if (isRelease) "Release" else "Snapshot")
             changelog.set(changelogContent)
             apiKey.set(System.getenv("HANGAR_SECRET"))
             id.set("BetterGoPaint")
@@ -175,7 +182,7 @@ if (!isRelease || isMainBranch) { // Only publish releases from the main branch
     modrinth {
         token.set(System.getenv("MODRINTH_TOKEN"))
         projectId.set("qf7sNg9A")
-        versionType.set(if (isRelease) "release" else if (isMainBranch) "beta" else "alpha")
+        versionType.set(if (isRelease) "release" else "beta")
         versionNumber.set(suffixedVersion)
         versionName.set(suffixedVersion)
         changelog.set(changelogContent)
@@ -184,5 +191,28 @@ if (!isRelease || isMainBranch) { // Only publish releases from the main branch
         loaders.add("paper")
         loaders.add("bukkit")
         loaders.add("folia")
+    }
+}
+
+publishing {
+    publications.create<MavenPublication>("maven") {
+        // Configure our maven publication
+        publishData.configurePublication(this)
+    }
+
+    repositories {
+        // We add EldoNexus as our repository. The used url is defined by the publish data.
+        maven {
+            authentication {
+                credentials(PasswordCredentials::class) {
+                    // Those credentials need to be set under "Settings -> Secrets -> Actions" in your repository
+                    username = System.getenv("ELDO_USERNAME")
+                    password = System.getenv("ELDO_PASSWORD")
+                }
+            }
+
+            name = "EldoNexus"
+            setUrl(publishData.getRepository())
+        }
     }
 }

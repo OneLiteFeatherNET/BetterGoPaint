@@ -23,8 +23,6 @@ import net.onelitefeather.bettergopaint.BetterGoPaint;
 import org.bukkit.Axis;
 import org.bukkit.Material;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,19 +30,6 @@ public final class Settings extends Config {
 
     @Ignore
     private static final Settings settings = new Settings();
-
-    public void reload(BetterGoPaint plugin, File file) {
-        try {
-            if (file.isFile() || file.createNewFile()) {
-                load(file);
-                save(file);
-            } else {
-                plugin.getComponentLogger().error("Failed to create file {}", file.getName());
-            }
-        } catch (IOException e) {
-            plugin.getComponentLogger().error("Failed to create file {}", file.getName(), e);
-        }
-    }
 
     @Create
     public Generic generic;
@@ -60,6 +45,9 @@ public final class Settings extends Config {
 
     @Comment("This is related to generic settings")
     public static class Generic {
+
+        @Comment("Supported Languages")
+        public List<String> LANGUAGES = new ArrayList<>();
 
         @Comment({
                 "Default brush item",

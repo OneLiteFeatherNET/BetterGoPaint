@@ -1,0 +1,3 @@
+files:
+  - source: src/main/resources/bettergopaint.properties
+    translation: /src/main/resources/bettergopaint_%locale_with_underscore%.properties
