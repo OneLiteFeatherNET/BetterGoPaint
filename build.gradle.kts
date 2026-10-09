@@ -51,6 +51,12 @@ dependencies {
 
     implementation(libs.bstats)
     implementation(libs.semver)
+    // Guava comes with Paper; only Guice itself and its small dependencies are shaded.
+    implementation(libs.guice) {
+        exclude(group = "com.google.guava")
+        exclude(group = "com.google.errorprone")
+    }
+    implementation(libs.jakarta.inject)
     implementation(libs.cloud.command.annotations)
     implementation(libs.cloud.command.extras)
     implementation(libs.cloud.command.paper)
@@ -149,6 +155,9 @@ tasks {
         archiveClassifier.set("")
         relocate("org.bstats", "${project.group}.metrics")
         relocate("com.github.zafarkhaja.semver", "${project.group}.semver")
+        relocate("com.google.inject", "${project.group}.libs.guice")
+        relocate("jakarta.inject", "${project.group}.libs.jakarta.inject")
+        relocate("org.aopalliance", "${project.group}.libs.aopalliance")
     }
     build {
         dependsOn(shadowJar)

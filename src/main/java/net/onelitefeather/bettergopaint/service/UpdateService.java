@@ -19,10 +19,12 @@
 package net.onelitefeather.bettergopaint.service;
 
 import com.github.zafarkhaja.semver.Version;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.onelitefeather.bettergopaint.objects.other.Settings;
+import net.onelitefeather.bettergopaint.settings.SettingsHolder;
+import net.onelitefeather.bettergopaint.utils.Messages;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -38,6 +40,7 @@ import java.util.function.Supplier;
 /**
  * Checks Hangar for a newer release off the main thread and tells the console and joining admins about it.
  */
+@Singleton
 public final class UpdateService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UpdateService.class);
@@ -45,6 +48,7 @@ public final class UpdateService {
     private static final String DOWNLOAD_URL = "https://hangar.papermc.io/OneLiteFeather/BetterGoPaint/versions/%s";
 
     private final Plugin plugin;
+    private final SettingsHolder settings;
     private final ComponentLogger console;
     private final Version localVersion;
     private final Supplier<Optional<String>> latestReleaseSource;
@@ -52,18 +56,21 @@ public final class UpdateService {
     private volatile @Nullable Version remoteVersion;
     private @Nullable BukkitTask task;
 
-    public UpdateService(@NotNull Plugin plugin, @NotNull ComponentLogger console) {
-        this(plugin, console, Version.parse(plugin.getPluginMeta().getVersion()), new HangarReleaseSource());
+    @Inject
+    public UpdateService(@NotNull Plugin plugin, @NotNull ComponentLogger console, @NotNull SettingsHolder settings) {
+        this(plugin, console, settings, Version.parse(plugin.getPluginMeta().getVersion()), new HangarReleaseSource());
     }
 
     UpdateService(
             @NotNull Plugin plugin,
             @NotNull ComponentLogger console,
+            @NotNull SettingsHolder settings,
             @NotNull Version localVersion,
             @NotNull Supplier<Optional<String>> latestReleaseSource
     ) {
         this.plugin = plugin;
         this.console = console;
+        this.settings = settings;
         this.localVersion = localVersion;
         this.latestReleaseSource = latestReleaseSource;
     }
@@ -73,7 +80,7 @@ public final class UpdateService {
      * {@code generic.check-for-updates} is disabled.
      */
     public void start() {
-        if (!Settings.settings().generic.CHECK_FOR_UPDATES) {
+        if (!settings.get().generic().checkForUpdates()) {
             return;
         }
         this.task = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::check, 0, CHECK_INTERVAL_TICKS);
@@ -119,7 +126,7 @@ public final class UpdateService {
             return;
         }
         player.sendMessage(Component.translatable("bettergopaint.notify.update.player").arguments(
-                MiniMessage.miniMessage().deserialize(Settings.settings().generic.PREFIX),
+                Messages.prefix(settings.get()),
                 Component.text(localVersion.toString()),
                 Component.text(version.toString())
         ));

@@ -18,6 +18,9 @@
  */
 package net.onelitefeather.bettergopaint.brush;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import net.onelitefeather.bettergopaint.settings.SettingsHolder;
 import net.onelitefeather.bettergopaint.objects.brush.AngleBrush;
 import net.onelitefeather.bettergopaint.objects.brush.Brush;
 import net.onelitefeather.bettergopaint.objects.brush.BucketBrush;
@@ -42,12 +45,17 @@ import java.util.UUID;
 /**
  * The PlayerBrushManager class manages the brush selection for each player.
  */
+@Singleton
 public class PlayerBrushManager {
 
     private final HashMap<UUID, PlayerBrush> playerBrushes;
     private final List<Brush> brushes;
 
-    public PlayerBrushManager() {
+    private final SettingsHolder settings;
+
+    @Inject
+    public PlayerBrushManager(@NotNull SettingsHolder settings) {
+        this.settings = settings;
         this.playerBrushes = new HashMap<>();
         this.brushes = List.of(
                 new SphereBrush(),
@@ -60,7 +68,7 @@ public class PlayerBrushManager {
                 new UnderlayBrush(),
                 new FractureBrush(),
                 new GradientBrush(),
-                new PaintBrush()
+                new PaintBrush(settings)
         );
     }
 
@@ -71,7 +79,7 @@ public class PlayerBrushManager {
      * @return The brush for the specified player.
      */
     public @NotNull PlayerBrush getBrush(@NotNull Player player) {
-        return playerBrushes.computeIfAbsent(player.getUniqueId(), ignored -> new PlayerBrush(this, player.locale()));
+        return playerBrushes.computeIfAbsent(player.getUniqueId(), ignored -> new PlayerBrush(this, settings, player.locale()));
     }
 
     /**

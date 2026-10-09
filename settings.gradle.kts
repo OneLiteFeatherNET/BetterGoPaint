@@ -26,6 +26,8 @@ dependencyResolutionManagement {
             version("cloudcommandExtras", "2.0.1")
 
             version("semver", "0.10.2")
+            version("guice", "7.0.0")
+            version("jakarta-inject", "2.0.1")
 
             // Testing dependencies
             version("junit", "6.1.3")
@@ -42,6 +44,8 @@ dependencyResolutionManagement {
             library("cloud.command.extras", "org.incendo", "cloud-minecraft-extras").versionRef("cloudcommandExtras")
 
             library("semver", "com.github.zafarkhaja", "java-semver").versionRef("semver")
+            library("guice", "com.google.inject", "guice").versionRef("guice")
+            library("jakarta-inject", "jakarta.inject", "jakarta.inject-api").versionRef("jakarta-inject")
 
             // Testing libraries
             library("junit-jupiter", "org.junit.jupiter", "junit-jupiter").versionRef("junit")

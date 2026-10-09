@@ -19,7 +19,7 @@
 package net.onelitefeather.bettergopaint.brush;
 
 import net.onelitefeather.bettergopaint.objects.brush.Brush;
-import net.onelitefeather.bettergopaint.objects.other.Settings;
+import net.onelitefeather.bettergopaint.settings.Settings;
 import net.onelitefeather.bettergopaint.objects.other.SurfaceMode;
 import org.bukkit.Axis;
 import org.bukkit.Material;
@@ -87,8 +87,8 @@ public record ExportedPlayerBrush(
         return RANDOM;
     }
 
-    public static Builder builder(@NotNull Brush brush) {
-        return new Builder(brush);
+    public static Builder builder(@NotNull Brush brush, @NotNull Settings settings) {
+        return new Builder(brush, settings);
     }
 
     public static final class Builder {
@@ -96,22 +96,31 @@ public record ExportedPlayerBrush(
         private final Brush brush;
 
         private List<Material> blocks = Collections.emptyList();
-        private Axis axis = Settings.settings().generic.DEFAULT_AXIS;
+        private Axis axis;
         private SurfaceMode surfaceMode = SurfaceMode.DISABLED;
 
         private Material mask;
 
-        private int size = Settings.settings().generic.DEFAULT_SIZE;
-        private int chance = Settings.settings().generic.DEFAULT_CHANCE;
-        private int thickness = Settings.settings().thickness.DEFAULT_THICKNESS;
-        private int angleDistance = Settings.settings().angle.DEFAULT_ANGLE_DISTANCE;
-        private int fractureDistance = Settings.settings().fracture.DEFAULT_FRACTURE_DISTANCE;
-        private int falloffStrength = Settings.settings().generic.DEFAULT_FALLOFF_STRENGTH;
-        private int mixingStrength = Settings.settings().generic.DEFAULT_MIXING_STRENGTH;
-        private double angleHeightDifference = Settings.settings().angle.DEFAULT_ANGLE_HEIGHT_DIFFERENCE;
+        private int size;
+        private int chance;
+        private int thickness;
+        private int angleDistance;
+        private int fractureDistance;
+        private int falloffStrength;
+        private int mixingStrength;
+        private double angleHeightDifference;
 
-        private Builder(@NotNull Brush brush) {
+        private Builder(@NotNull Brush brush, @NotNull Settings settings) {
             this.brush = brush;
+            this.axis = settings.generic().defaultAxis();
+            this.size = settings.generic().defaultSize();
+            this.chance = settings.generic().defaultChance();
+            this.thickness = settings.thickness().defaultThickness();
+            this.angleDistance = settings.angle().defaultAngleDistance();
+            this.fractureDistance = settings.fracture().defaultFractureDistance();
+            this.falloffStrength = settings.generic().defaultFalloffStrength();
+            this.mixingStrength = settings.generic().defaultMixingStrength();
+            this.angleHeightDifference = settings.angle().defaultAngleHeightDifference();
         }
 
         public @NotNull Builder surfaceMode(SurfaceMode surfaceMode) {

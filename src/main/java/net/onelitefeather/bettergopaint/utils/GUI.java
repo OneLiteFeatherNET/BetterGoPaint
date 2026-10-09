@@ -36,7 +36,7 @@ import net.onelitefeather.bettergopaint.objects.brush.PaintBrush;
 import net.onelitefeather.bettergopaint.objects.brush.SplatterBrush;
 import net.onelitefeather.bettergopaint.objects.brush.SprayBrush;
 import net.onelitefeather.bettergopaint.objects.brush.UnderlayBrush;
-import net.onelitefeather.bettergopaint.objects.other.Settings;
+import net.onelitefeather.bettergopaint.settings.Settings;
 import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -142,7 +142,7 @@ public final class GUI {
         brushLore.add(text(locale, playerBrush.enabled() ? "bettergopaint.menu.brush.enabled" : "bettergopaint.menu.brush.disabled"));
         brushLore.addAll(lore(locale, "bettergopaint.menu.brush.export", "bettergopaint.menu.brush.toggle"));
         column(inventory, 1, playerBrush.enabled() ? Material.LIME_STAINED_GLASS_PANE : Material.RED_STAINED_GLASS_PANE,
-                Items.create(Settings.settings().generic.DEFAULT_BRUSH, 1, text(locale, "bettergopaint.menu.brush.name"), brushLore));
+                Items.create(playerBrush.settings().generic().defaultBrush(), 1, text(locale, "bettergopaint.menu.brush.name"), brushLore));
 
         // brush type
         List<Component> typeLore = lore(locale, "bettergopaint.menu.type.select", "bettergopaint.menu.type.cycle");

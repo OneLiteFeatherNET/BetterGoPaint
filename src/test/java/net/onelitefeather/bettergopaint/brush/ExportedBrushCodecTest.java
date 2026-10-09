@@ -19,7 +19,8 @@
 package net.onelitefeather.bettergopaint.brush;
 
 import net.onelitefeather.bettergopaint.objects.brush.Brush;
-import net.onelitefeather.bettergopaint.objects.other.Settings;
+import net.onelitefeather.bettergopaint.settings.Settings;
+import net.onelitefeather.bettergopaint.settings.SettingsHolder;
 import net.onelitefeather.bettergopaint.objects.other.SurfaceMode;
 import org.bukkit.Axis;
 import org.bukkit.Material;
@@ -32,13 +33,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class ExportedBrushCodecTest {
 
-    private final PlayerBrushManager manager = new PlayerBrushManager();
+    private final Settings settings = Settings.defaults();
+    private final PlayerBrushManager manager = new PlayerBrushManager(SettingsHolder.of(settings));
     private final Brush disc = manager.getBrushByName("Disc Brush").orElseThrow();
 
     @Test
     @DisplayName("every setting survives encoding and decoding")
     void roundTrip() {
-        ExportedPlayerBrush original = ExportedPlayerBrush.builder(disc)
+        ExportedPlayerBrush original = ExportedPlayerBrush.builder(disc, settings)
                 .size(17)
                 .chance(30)
                 .thickness(3)
@@ -56,18 +58,18 @@ class ExportedBrushCodecTest {
         String encoded = ExportedBrushCodec.encode(original);
 
         assertThat(encoded).startsWith("version=" + ExportedBrushCodec.FORMAT_VERSION + ";");
-        assertThat(ExportedBrushCodec.decode(encoded, manager::getBrushByName)).contains(original);
+        assertThat(ExportedBrushCodec.decode(encoded, manager::getBrushByName, settings)).contains(original);
     }
 
     @Test
     @DisplayName("unreadable values fall back to the configured defaults")
     void invalidValuesUseDefaults() {
         var decoded = ExportedBrushCodec.decode("version=1;brush=Disc Brush;size=ten;axis=W;blocks=minecraft:stone,nope",
-                manager::getBrushByName);
+                manager::getBrushByName, settings);
 
         assertThat(decoded).hasValueSatisfying(brush -> {
-            assertThat(brush.size()).isEqualTo(Settings.settings().generic.DEFAULT_SIZE);
-            assertThat(brush.axis()).isEqualTo(Settings.settings().generic.DEFAULT_AXIS);
+            assertThat(brush.size()).isEqualTo(settings.generic().defaultSize());
+            assertThat(brush.axis()).isEqualTo(settings.generic().defaultAxis());
             assertThat(brush.blocks()).containsExactly(Material.STONE);
             assertThat(brush.maskEnabled()).isFalse();
         });
@@ -76,8 +78,8 @@ class ExportedBrushCodecTest {
     @Test
     @DisplayName("an unknown or missing brush yields no brush")
     void unknownBrushIsEmpty() {
-        assertThat(ExportedBrushCodec.decode("version=1;brush=Teleport Brush;size=3", manager::getBrushByName)).isEmpty();
-        assertThat(ExportedBrushCodec.decode("garbage", manager::getBrushByName)).isEmpty();
+        assertThat(ExportedBrushCodec.decode("version=1;brush=Teleport Brush;size=3", manager::getBrushByName, settings)).isEmpty();
+        assertThat(ExportedBrushCodec.decode("garbage", manager::getBrushByName, settings)).isEmpty();
     }
 
     @Test
@@ -90,7 +92,7 @@ class ExportedBrushCodecTest {
                 "Blocks: minecraft:stone, minecraft:dirt",
                 "Mask: minecraft:sponge",
                 "Surface Mode: Relative"
-        ));
+        ), settings);
 
         assertThat(brush.size()).isEqualTo(12);
         assertThat(brush.axis()).isEqualTo(Axis.Z);
@@ -102,9 +104,9 @@ class ExportedBrushCodecTest {
     @Test
     @DisplayName("edited legacy lore never throws and keeps the default")
     void editedLegacyLoreUsesDefaults() {
-        ExportedPlayerBrush brush = ExportedBrushCodec.decodeLegacy(disc, List.of("Size: ten", "Chance: %", "Axis:"));
+        ExportedPlayerBrush brush = ExportedBrushCodec.decodeLegacy(disc, List.of("Size: ten", "Chance: %", "Axis:"), settings);
 
-        assertThat(brush.size()).isEqualTo(Settings.settings().generic.DEFAULT_SIZE);
-        assertThat(brush.chance()).isEqualTo(Settings.settings().generic.DEFAULT_CHANCE);
+        assertThat(brush.size()).isEqualTo(settings.generic().defaultSize());
+        assertThat(brush.chance()).isEqualTo(settings.generic().defaultChance());
     }
 }

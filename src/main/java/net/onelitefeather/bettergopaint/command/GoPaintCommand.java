@@ -19,12 +19,14 @@
 package net.onelitefeather.bettergopaint.command;
 
 import net.kyori.adventure.text.Component;
-import net.onelitefeather.bettergopaint.BetterGoPaint;
+import jakarta.inject.Inject;
 import net.onelitefeather.bettergopaint.brush.PlayerBrush;
-import net.onelitefeather.bettergopaint.objects.other.Settings;
+import net.onelitefeather.bettergopaint.brush.PlayerBrushManager;
+import net.onelitefeather.bettergopaint.settings.SettingsHolder;
 import net.onelitefeather.bettergopaint.utils.Constants;
 import net.onelitefeather.bettergopaint.utils.Messages;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 import org.incendo.cloud.annotations.Argument;
 import org.incendo.cloud.annotations.Command;
 import org.incendo.cloud.annotations.CommandDescription;
@@ -44,11 +46,21 @@ import java.util.List;
  */
 public final class GoPaintCommand {
 
-    private final BetterGoPaint plugin;
+    private final Plugin plugin;
+    private final PlayerBrushManager brushManager;
+    private final SettingsHolder settings;
     private final MinecraftHelp<Source> help;
 
-    public GoPaintCommand(@NotNull BetterGoPaint plugin, @NotNull MinecraftHelp<Source> help) {
+    @Inject
+    public GoPaintCommand(
+            @NotNull Plugin plugin,
+            @NotNull PlayerBrushManager brushManager,
+            @NotNull SettingsHolder settings,
+            @NotNull MinecraftHelp<Source> help
+    ) {
         this.plugin = plugin;
+        this.brushManager = brushManager;
+        this.settings = settings;
         this.help = help;
     }
 
@@ -71,28 +83,28 @@ public final class GoPaintCommand {
     @Permission(value = {Constants.USE_PERMISSION, Constants.SIZE_PERMISSION}, mode = Permission.Mode.ALL_OF)
     public void size(PlayerSource sender, @Argument(value = "size", suggestions = "brush-sizes") int size) {
         Player player = sender.source();
-        int maxSize = Settings.settings().generic.MAX_SIZE;
+        int maxSize = settings.get().generic().maxSize();
         if (!BrushSizes.isValid(size, maxSize)) {
             player.sendMessage(Component.translatable(
                     "bettergopaint.command.size.out_of_range",
-                    Messages.prefix(),
+                    Messages.prefix(settings.get()),
                     Component.text(BrushSizes.MIN_SIZE),
                     Component.text(maxSize)
             ));
             return;
         }
-        PlayerBrush brush = plugin.getBrushManager().getBrush(player);
+        PlayerBrush brush = brushManager.getBrush(player);
         brush.setSize(size);
         player.sendMessage(Component.translatable(
                 "bettergopaint.command.size.set",
-                Messages.prefix(),
+                Messages.prefix(settings.get()),
                 Component.text(brush.size())
         ));
     }
 
     @Suggestions("brush-sizes")
     public List<String> brushSizes(CommandContext<Source> context, CommandInput input) {
-        return BrushSizes.suggestions(input.lastRemainingToken(), Settings.settings().generic.MAX_SIZE);
+        return BrushSizes.suggestions(input.lastRemainingToken(), settings.get().generic().maxSize());
     }
 
     @Command("gopaint|gp|bgp toggle")
@@ -100,11 +112,11 @@ public final class GoPaintCommand {
     @Permission(value = {Constants.USE_PERMISSION, Constants.TOGGLE_PERMISSION}, mode = Permission.Mode.ALL_OF)
     public void toggle(PlayerSource sender) {
         Player player = sender.source();
-        PlayerBrush brush = plugin.getBrushManager().getBrush(player);
+        PlayerBrush brush = brushManager.getBrush(player);
         brush.toggle();
         player.sendMessage(brush.enabled()
-                ? Component.translatable("bettergopaint.command.toggle.enabled", Messages.prefix())
-                : Component.translatable("bettergopaint.command.toggle.disabled", Messages.prefix()));
+                ? Component.translatable("bettergopaint.command.toggle.enabled", Messages.prefix(settings.get()))
+                : Component.translatable("bettergopaint.command.toggle.disabled", Messages.prefix(settings.get())));
     }
 
     @Command("gopaint|gp|bgp info")
@@ -113,7 +125,7 @@ public final class GoPaintCommand {
     public void info(Source sender) {
         sender.source().sendMessage(Component.translatable(
                 "bettergopaint.command.info",
-                Messages.prefix(),
+                Messages.prefix(settings.get()),
                 Component.text(plugin.getPluginMeta().getVersion())
         ));
     }
@@ -122,7 +134,7 @@ public final class GoPaintCommand {
     @CommandDescription("Reloads config.yml")
     @Permission(value = {Constants.USE_PERMISSION, Constants.RELOAD_PERMISSION}, mode = Permission.Mode.ALL_OF)
     public void reload(Source sender) {
-        plugin.reloadConfig();
-        sender.source().sendMessage(Component.translatable("bettergopaint.command.reload.done", Messages.prefix()));
+        settings.reload();
+        sender.source().sendMessage(Component.translatable("bettergopaint.command.reload.done", Messages.prefix(settings.get())));
     }
 }

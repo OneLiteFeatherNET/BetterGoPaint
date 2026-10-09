@@ -30,7 +30,8 @@ import net.onelitefeather.bettergopaint.objects.brush.OverlayBrush;
 import net.onelitefeather.bettergopaint.objects.brush.SplatterBrush;
 import net.onelitefeather.bettergopaint.objects.brush.SprayBrush;
 import net.onelitefeather.bettergopaint.objects.brush.UnderlayBrush;
-import net.onelitefeather.bettergopaint.objects.other.Settings;
+import net.onelitefeather.bettergopaint.settings.Settings;
+import net.onelitefeather.bettergopaint.settings.SettingsHolder;
 import net.onelitefeather.bettergopaint.objects.other.SurfaceMode;
 import net.onelitefeather.bettergopaint.utils.GUI;
 import org.bukkit.Axis;
@@ -55,6 +56,7 @@ import java.util.stream.Collectors;
 public final class PlayerBrush implements BrushSettings {
 
     private final PlayerBrushManager brushManager;
+    private final SettingsHolder settings;
     private final Random random = new SecureRandom();
 
     private boolean maskEnabled;
@@ -77,23 +79,24 @@ public final class PlayerBrush implements BrushSettings {
     private final Locale locale;
     private final Inventory gui;
 
-    public PlayerBrush(@NotNull PlayerBrushManager brushManager, @NotNull Locale locale) {
+    public PlayerBrush(@NotNull PlayerBrushManager brushManager, @NotNull SettingsHolder settings, @NotNull Locale locale) {
         this.brushManager = brushManager;
+        this.settings = settings;
         this.locale = locale;
 
-        surfaceMode = Settings.settings().generic.SURFACE_MODE;
-        maskEnabled = Settings.settings().generic.MASK_ENABLED;
-        enabled = Settings.settings().generic.ENABLED_BY_DEFAULT;
-        chance = Settings.settings().generic.DEFAULT_CHANCE;
-        thickness = Settings.settings().thickness.DEFAULT_THICKNESS;
-        fractureDistance = Settings.settings().fracture.DEFAULT_FRACTURE_DISTANCE;
-        angleDistance = Settings.settings().angle.DEFAULT_ANGLE_DISTANCE;
-        angleHeightDifference = Settings.settings().angle.DEFAULT_ANGLE_HEIGHT_DIFFERENCE;
-        falloffStrength = Settings.settings().generic.DEFAULT_FALLOFF_STRENGTH;
-        mixingStrength = Settings.settings().generic.DEFAULT_MIXING_STRENGTH;
-        axis = Settings.settings().generic.DEFAULT_AXIS;
-        size = Settings.settings().generic.DEFAULT_SIZE;
-        mask = Settings.settings().generic.DEFAULT_MASK;
+        surfaceMode = settings.get().generic().surfaceMode();
+        maskEnabled = settings.get().generic().maskEnabled();
+        enabled = settings.get().generic().enabledByDefault();
+        chance = settings.get().generic().defaultChance();
+        thickness = settings.get().thickness().defaultThickness();
+        fractureDistance = settings.get().fracture().defaultFractureDistance();
+        angleDistance = settings.get().angle().defaultAngleDistance();
+        angleHeightDifference = settings.get().angle().defaultAngleHeightDifference();
+        falloffStrength = settings.get().generic().defaultFalloffStrength();
+        mixingStrength = settings.get().generic().defaultMixingStrength();
+        axis = settings.get().generic().defaultAxis();
+        size = settings.get().generic().defaultSize();
+        mask = settings.get().generic().defaultMask();
         brush = brushManager.cycleForward(null);
         blocks.add(Material.STONE);
         gui = GUI.create(this);
@@ -194,6 +197,13 @@ public final class PlayerBrush implements BrushSettings {
     }
 
     /**
+     * @return the current settings snapshot
+     */
+    public @NotNull Settings settings() {
+        return settings.get();
+    }
+
+    /**
      * @return every brush the player can cycle through
      */
     public @NotNull List<Brush> brushes() {
@@ -264,10 +274,10 @@ public final class PlayerBrush implements BrushSettings {
     }
 
     public void setSize(int size) {
-        if (size <= Settings.settings().generic.MAX_SIZE && size > 0) {
+        if (size <= settings.get().generic().maxSize() && size > 0) {
             this.size = size;
-        } else if (size > Settings.settings().generic.MAX_SIZE) {
-            this.size = Settings.settings().generic.MAX_SIZE;
+        } else if (size > settings.get().generic().maxSize()) {
+            this.size = settings.get().generic().maxSize();
         } else {
             this.size = 1;
         }
@@ -280,13 +290,13 @@ public final class PlayerBrush implements BrushSettings {
 
     public void increaseBrushSize(boolean x10) {
         if (x10) {
-            if (size + 10 <= Settings.settings().generic.MAX_SIZE) {
+            if (size + 10 <= settings.get().generic().maxSize()) {
                 size += 10;
             } else {
-                size = Settings.settings().generic.MAX_SIZE;
+                size = settings.get().generic().maxSize();
             }
         } else {
-            if (size < Settings.settings().generic.MAX_SIZE) {
+            if (size < settings.get().generic().maxSize()) {
                 size += 1;
             }
         }
@@ -328,7 +338,7 @@ public final class PlayerBrush implements BrushSettings {
     }
 
     public void increaseThickness() {
-        if (thickness < Settings.settings().thickness.MAX_THICKNESS) {
+        if (thickness < settings.get().thickness().maxThickness()) {
             thickness += 1;
         }
         updateInventory();
@@ -342,7 +352,7 @@ public final class PlayerBrush implements BrushSettings {
     }
 
     public void increaseAngleDistance() {
-        if (angleDistance < Settings.settings().angle.MAX_ANGLE_DISTANCE) {
+        if (angleDistance < settings.get().angle().maxAngleDistance()) {
             angleDistance += 1;
         }
         updateInventory();
@@ -356,7 +366,7 @@ public final class PlayerBrush implements BrushSettings {
     }
 
     public void increaseFractureDistance() {
-        if (this.fractureDistance < Settings.settings().fracture.MAX_FRACTURE_DISTANCE) {
+        if (this.fractureDistance < settings.get().fracture().maxFractureDistance()) {
             this.fractureDistance += 1;
         }
         updateInventory();
@@ -375,8 +385,8 @@ public final class PlayerBrush implements BrushSettings {
         } else {
             angleHeightDifference += 5.0;
         }
-        if (angleHeightDifference > Settings.settings().angle.MAX_ANGLE_HEIGHT_DIFFERENCE) {
-            angleHeightDifference = Settings.settings().angle.MAX_ANGLE_HEIGHT_DIFFERENCE;
+        if (angleHeightDifference > settings.get().angle().maxAngleHeightDifference()) {
+            angleHeightDifference = settings.get().angle().maxAngleHeightDifference();
         }
         updateInventory();
     }
@@ -387,8 +397,8 @@ public final class PlayerBrush implements BrushSettings {
         } else {
             angleHeightDifference -= 5.0;
         }
-        if (angleHeightDifference < Settings.settings().angle.MIN_ANGLE_HEIGHT_DIFFERENCE) {
-            angleHeightDifference = Settings.settings().angle.MIN_ANGLE_HEIGHT_DIFFERENCE;
+        if (angleHeightDifference < settings.get().angle().minAngleHeightDifference()) {
+            angleHeightDifference = settings.get().angle().minAngleHeightDifference();
         }
         updateInventory();
     }

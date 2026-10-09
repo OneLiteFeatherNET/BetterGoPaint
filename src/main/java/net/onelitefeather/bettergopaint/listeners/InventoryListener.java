@@ -18,6 +18,7 @@
  */
 package net.onelitefeather.bettergopaint.listeners;
 
+import jakarta.inject.Inject;
 import net.onelitefeather.bettergopaint.brush.PlayerBrush;
 import net.onelitefeather.bettergopaint.brush.PlayerBrushManager;
 import net.onelitefeather.bettergopaint.menu.BrushMenuHolder;
@@ -32,7 +33,7 @@ import net.onelitefeather.bettergopaint.objects.brush.PaintBrush;
 import net.onelitefeather.bettergopaint.objects.brush.SplatterBrush;
 import net.onelitefeather.bettergopaint.objects.brush.SprayBrush;
 import net.onelitefeather.bettergopaint.objects.brush.UnderlayBrush;
-import net.onelitefeather.bettergopaint.objects.other.Settings;
+import net.onelitefeather.bettergopaint.settings.SettingsHolder;
 import net.onelitefeather.bettergopaint.utils.GUI;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -41,13 +42,18 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.jetbrains.annotations.NotNull;
 
 public final class InventoryListener implements Listener {
 
     private final PlayerBrushManager brushManager;
 
-    public InventoryListener(PlayerBrushManager brushManager) {
+    private final SettingsHolder settings;
+
+    @Inject
+    public InventoryListener(@NotNull PlayerBrushManager brushManager, @NotNull SettingsHolder settings) {
         this.brushManager = brushManager;
+        this.settings = settings;
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -68,7 +74,7 @@ public final class InventoryListener implements Listener {
         if (event.getRawSlot() == 10 || event.getRawSlot() == 1 || event.getRawSlot() == 19) {
             if (event.getClick().equals(ClickType.LEFT)) {
                 if (!event.getCursor().getType().isBlock()) {
-                    if (!event.getCursor().getType().equals(Settings.settings().generic.DEFAULT_BRUSH)) {
+                    if (!event.getCursor().getType().equals(settings.get().generic().defaultBrush())) {
                         playerBrush.export(event.getCursor());
                     }
                 }

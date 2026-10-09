@@ -20,11 +20,12 @@ package net.onelitefeather.bettergopaint.listeners;
 
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import net.kyori.adventure.text.Component;
-import net.onelitefeather.bettergopaint.BetterGoPaint;
+import jakarta.inject.Inject;
 import net.onelitefeather.bettergopaint.brush.BrushSettings;
 import net.onelitefeather.bettergopaint.brush.ExportedBrushes;
 import net.onelitefeather.bettergopaint.brush.PlayerBrush;
-import net.onelitefeather.bettergopaint.objects.other.Settings;
+import net.onelitefeather.bettergopaint.brush.PlayerBrushManager;
+import net.onelitefeather.bettergopaint.settings.SettingsHolder;
 import net.onelitefeather.bettergopaint.utils.Constants;
 import net.onelitefeather.bettergopaint.utils.Messages;
 import org.bukkit.FluidCollisionMode;
@@ -37,15 +38,19 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
 public final class InteractListener implements Listener {
 
-    private final BetterGoPaint plugin;
+    private final PlayerBrushManager brushManager;
+    private final SettingsHolder settings;
 
-    public InteractListener(BetterGoPaint plugin) {
-        this.plugin = plugin;
+    @Inject
+    public InteractListener(@NotNull PlayerBrushManager brushManager, @NotNull SettingsHolder settings) {
+        this.brushManager = brushManager;
+        this.settings = settings;
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -61,8 +66,8 @@ public final class InteractListener implements Listener {
             return;
         }
 
-        if (event.getAction().isLeftClick() && item.getType() == Settings.settings().generic.DEFAULT_BRUSH) {
-            PlayerBrush brush = plugin.getBrushManager().getBrush(player);
+        if (event.getAction().isLeftClick() && item.getType() == settings.get().generic().defaultBrush()) {
+            PlayerBrush brush = brushManager.getBrush(player);
             player.openInventory(brush.getInventory());
             event.setCancelled(true);
             return;
@@ -87,21 +92,21 @@ public final class InteractListener implements Listener {
 
         final boolean hasNotWorldByePassPermission = !player.hasPermission(Constants.WORLD_BYPASS_PERMISSION);
 
-        if (hasNotWorldByePassPermission && Settings.settings().generic.DISABLED_WORLDS
+        if (hasNotWorldByePassPermission && settings.get().generic().disabledWorlds()
                 .contains(location.getWorld().getName())) {
             return;
         }
 
         BrushSettings brushSettings;
 
-        Optional<ExportedBrushes.Result> exported = ExportedBrushes.read(item, plugin.getBrushManager());
+        Optional<ExportedBrushes.Result> exported = ExportedBrushes.read(item, brushManager, settings.get());
         if (exported.isPresent()) {
             brushSettings = exported.get().brush();
             if (exported.get().converted() && event.getHand() != null) {
                 player.getInventory().setItem(event.getHand(), item);
             }
-        } else if (item.getType().equals(Settings.settings().generic.DEFAULT_BRUSH)) {
-            brushSettings = plugin.getBrushManager().getBrush(player);
+        } else if (item.getType().equals(settings.get().generic().defaultBrush())) {
+            brushSettings = brushManager.getBrush(player);
         } else {
             return;
         }
@@ -115,7 +120,7 @@ public final class InteractListener implements Listener {
                     () -> brushSettings.brush().paint(location, player, brushSettings), false, true
             );
         } else {
-            player.sendMessage(Component.translatable("bettergopaint.brush.disabled", Messages.prefix()));
+            player.sendMessage(Component.translatable("bettergopaint.brush.disabled", Messages.prefix(settings.get())));
         }
     }
 

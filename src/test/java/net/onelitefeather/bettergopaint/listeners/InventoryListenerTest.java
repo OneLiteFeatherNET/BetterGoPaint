@@ -20,6 +20,8 @@ package net.onelitefeather.bettergopaint.listeners;
 
 import net.kyori.adventure.text.Component;
 import net.onelitefeather.bettergopaint.brush.PlayerBrushManager;
+import net.onelitefeather.bettergopaint.settings.Settings;
+import net.onelitefeather.bettergopaint.settings.SettingsHolder;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryAction;
@@ -38,7 +40,7 @@ import static org.mockito.Mockito.when;
 class InventoryListenerTest {
 
     private final PlayerBrushManager brushManager = mock(PlayerBrushManager.class);
-    private final InventoryListener listener = new InventoryListener(brushManager);
+    private final InventoryListener listener = new InventoryListener(brushManager, SettingsHolder.of(Settings.defaults()));
 
     private InventoryClickEvent clickInForeignMenuTitled(String title) {
         Inventory top = mock(Inventory.class);

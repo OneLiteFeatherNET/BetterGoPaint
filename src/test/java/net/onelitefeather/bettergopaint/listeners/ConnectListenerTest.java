@@ -19,9 +19,10 @@
 package net.onelitefeather.bettergopaint.listeners;
 
 import net.kyori.adventure.text.Component;
-import net.onelitefeather.bettergopaint.BetterGoPaint;
 import net.onelitefeather.bettergopaint.brush.PlayerBrushManager;
 import net.onelitefeather.bettergopaint.service.UpdateService;
+import net.onelitefeather.bettergopaint.settings.Settings;
+import net.onelitefeather.bettergopaint.settings.SettingsHolder;
 import net.onelitefeather.bettergopaint.utils.Constants;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -43,9 +44,7 @@ class ConnectListenerTest {
 
     @BeforeEach
     void setUp() {
-        BetterGoPaint plugin = mock(BetterGoPaint.class);
-        when(plugin.getUpdateService()).thenReturn(updateService);
-        listener = new ConnectListener(mock(PlayerBrushManager.class), plugin);
+        listener = new ConnectListener(mock(PlayerBrushManager.class), updateService, SettingsHolder.of(Settings.defaults()));
     }
 
     private PlayerJoinEvent join() {

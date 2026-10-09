@@ -20,6 +20,7 @@ package net.onelitefeather.bettergopaint.brush;
 
 import net.onelitefeather.bettergopaint.objects.brush.Brush;
 import net.onelitefeather.bettergopaint.objects.other.SurfaceMode;
+import net.onelitefeather.bettergopaint.settings.Settings;
 import org.bukkit.Axis;
 import org.bukkit.Material;
 import org.jetbrains.annotations.NotNull;
@@ -78,7 +79,8 @@ public final class ExportedBrushCodec {
 
     public static @NotNull Optional<ExportedPlayerBrush> decode(
             @NotNull String encoded,
-            @NotNull Function<String, Optional<Brush>> brushByName
+            @NotNull Function<String, Optional<Brush>> brushByName,
+            @NotNull Settings settings
     ) {
         Map<String, String> values = new LinkedHashMap<>();
         for (String entry : encoded.split(ENTRY_SEPARATOR)) {
@@ -92,7 +94,7 @@ public final class ExportedBrushCodec {
             return Optional.empty();
         }
         return brushByName.apply(brushName).map(brush -> {
-            ExportedPlayerBrush.Builder builder = ExportedPlayerBrush.builder(brush);
+            ExportedPlayerBrush.Builder builder = ExportedPlayerBrush.builder(brush, settings);
             integer(values.get("size")).ifPresent(builder::size);
             integer(values.get("chance")).ifPresent(builder::chance);
             integer(values.get("thickness")).ifPresent(builder::thickness);
@@ -113,8 +115,12 @@ public final class ExportedBrushCodec {
      * Reads the lore written by BetterGoPaint 1.x, for example {@code Size: 10}. Every line is
      * parsed on its own; a line that cannot be read leaves the default in place.
      */
-    public static @NotNull ExportedPlayerBrush decodeLegacy(@NotNull Brush brush, @NotNull List<String> loreLines) {
-        ExportedPlayerBrush.Builder builder = ExportedPlayerBrush.builder(brush);
+    public static @NotNull ExportedPlayerBrush decodeLegacy(
+            @NotNull Brush brush,
+            @NotNull List<String> loreLines,
+            @NotNull Settings settings
+    ) {
+        ExportedPlayerBrush.Builder builder = ExportedPlayerBrush.builder(brush, settings);
         for (String line : loreLines) {
             String value = line.contains(": ") ? line.substring(line.indexOf(": ") + 2).trim() : "";
             if (line.startsWith("Size: ")) {

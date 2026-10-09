@@ -2,14 +2,14 @@
 
 ## 1. Container
 
-- [ ] 1.1 Add Guice and jakarta.inject to the catalog, shade and relocate them; verify the jar contains only relocated packages
-- [ ] 1.2 Create `PlatformModule`, `SettingsModule`, `BrushModule`, `ListenerModule`, `CommandModule`, `ServiceModule`; verify `DIValidationTest` builds the injector with mocks
+- [x] 1.1 Add Guice and jakarta.inject to the catalog, shade and relocate them; verify the jar contains no `com/google/inject`, `jakarta/inject` or `org/aopalliance` outside `net/onelitefeather/bettergopaint/libs`
+- [x] 1.2 Create `PlatformModule`, `SettingsModule`, `BrushModule`, `ListenerModule`, `CommandModule`, `ServiceModule`; verify `DIValidationTest` builds the injector with a mocked plugin
 
 ## 2. Migration
 
-- [ ] 2.1 Replace `Settings.settings()` with an injected provider and atomic reload; verify a unit test that reload swaps values
-- [ ] 2.2 Inject services into listeners and commands instead of `BetterGoPaint`; verify unit tests for `InteractListener` permission and world checks
-- [ ] 2.3 Write docs/development/dependency-injection.md
+- [x] 2.1 Replace `Settings.settings()` (FAWE `Config`) with immutable records, `SettingsLoader` and the injected `SettingsHolder`; verify `SettingsHolderTest` (defaults, invalid values, reload swaps the snapshot)
+- [x] 2.2 Inject services into listeners and commands instead of `BetterGoPaint`; verify unit tests for `InteractListener` permission and world checks
+- [x] 2.3 Write docs/development/dependency-injection.md
 
 ## Workflow follow-up
 

@@ -21,6 +21,8 @@ package net.onelitefeather.bettergopaint.service;
 import com.github.zafarkhaja.semver.Version;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
+import net.onelitefeather.bettergopaint.settings.Settings;
+import net.onelitefeather.bettergopaint.settings.SettingsHolder;
 import org.bukkit.plugin.Plugin;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,7 +42,7 @@ class UpdateServiceTest {
     private final ComponentLogger console = mock(ComponentLogger.class);
 
     private UpdateService service(Optional<String> answer) {
-        return new UpdateService(plugin, console, Version.parse("2.0.0"), () -> answer);
+        return new UpdateService(plugin, console, SettingsHolder.of(Settings.defaults()), Version.parse("2.0.0"), () -> answer);
     }
 
     @Test

@@ -20,6 +20,7 @@ package net.onelitefeather.bettergopaint.brush;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import net.onelitefeather.bettergopaint.settings.Settings;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -51,14 +52,18 @@ public final class ExportedBrushes {
      * only in the lore; they are read through the legacy format and converted in place, so the
      * caller should put the item back into the inventory when {@code converted} is true.
      */
-    public static @NotNull Optional<Result> read(@NotNull ItemStack item, @NotNull PlayerBrushManager brushManager) {
+    public static @NotNull Optional<Result> read(
+            @NotNull ItemStack item,
+            @NotNull PlayerBrushManager brushManager,
+            @NotNull Settings settings
+    ) {
         if (!item.hasItemMeta()) {
             return Optional.empty();
         }
         ItemMeta meta = item.getItemMeta();
         String stored = meta.getPersistentDataContainer().get(KEY, PersistentDataType.STRING);
         if (stored != null) {
-            return ExportedBrushCodec.decode(stored, brushManager::getBrushByName).map(brush -> new Result(brush, false));
+            return ExportedBrushCodec.decode(stored, brushManager::getBrushByName, settings).map(brush -> new Result(brush, false));
         }
         List<Component> lore = meta.lore();
         Component displayName = meta.displayName();
@@ -67,7 +72,7 @@ public final class ExportedBrushes {
         }
         PlainTextComponentSerializer plain = PlainTextComponentSerializer.plainText();
         return brushManager.getBrushHandler(plain.serialize(displayName)).map(brush -> {
-            ExportedPlayerBrush legacy = ExportedBrushCodec.decodeLegacy(brush, lore.stream().map(plain::serialize).toList());
+            ExportedPlayerBrush legacy = ExportedBrushCodec.decodeLegacy(brush, lore.stream().map(plain::serialize).toList(), settings);
             item.editMeta(converted -> write(converted, legacy));
             return new Result(legacy, true);
         });

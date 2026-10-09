@@ -18,61 +18,41 @@
  */
 package net.onelitefeather.bettergopaint;
 
-import com.fastasyncworldedit.core.Fawe;
-import net.kyori.adventure.key.Key;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.Stage;
+import com.google.inject.TypeLiteral;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.minimessage.translation.MiniMessageTranslationStore;
-import net.kyori.adventure.translation.GlobalTranslator;
-import net.onelitefeather.bettergopaint.brush.PlayerBrushManager;
 import net.onelitefeather.bettergopaint.command.GoPaintCommand;
-import net.onelitefeather.bettergopaint.listeners.ConnectListener;
-import net.onelitefeather.bettergopaint.listeners.InteractListener;
-import net.onelitefeather.bettergopaint.listeners.InventoryListener;
-import net.onelitefeather.bettergopaint.objects.other.Settings;
+import net.onelitefeather.bettergopaint.injection.BrushModule;
+import net.onelitefeather.bettergopaint.injection.CommandModule;
+import net.onelitefeather.bettergopaint.injection.ListenerModule;
+import net.onelitefeather.bettergopaint.injection.PlatformModule;
+import net.onelitefeather.bettergopaint.injection.ServiceModule;
+import net.onelitefeather.bettergopaint.injection.SettingsModule;
+import net.onelitefeather.bettergopaint.service.MetricsService;
+import net.onelitefeather.bettergopaint.service.TranslationService;
 import net.onelitefeather.bettergopaint.service.UpdateService;
-import org.bstats.bukkit.Metrics;
-import org.bstats.charts.SimplePie;
+import net.onelitefeather.bettergopaint.settings.Settings;
+import net.onelitefeather.bettergopaint.settings.SettingsHolder;
 import org.bukkit.Material;
 import org.bukkit.event.Listener;
-import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.incendo.cloud.CommandManager;
 import org.incendo.cloud.annotations.AnnotationParser;
-import org.incendo.cloud.execution.ExecutionCoordinator;
-import org.incendo.cloud.minecraft.extras.MinecraftHelp;
-import org.incendo.cloud.paper.PaperCommandManager;
-import org.incendo.cloud.paper.util.sender.PaperSimpleSenderMapper;
 import org.incendo.cloud.paper.util.sender.Source;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.ResourceBundle;
-import java.util.logging.Level;
+import java.util.Set;
 
-public class BetterGoPaint extends JavaPlugin implements Listener {
+/**
+ * Entry point. Everything else is created by Guice; this class only decides the order things start in.
+ */
+public final class BetterGoPaint extends JavaPlugin {
 
-    public static final String PAPER_DOCS = "https://jd.papermc.io/paper/org/bukkit/Material.html";
-
-    private final PlayerBrushManager brushManager = new PlayerBrushManager();
-    private final Metrics metrics = new Metrics(this, 18734);
-    private UpdateService updateService;
-
-    @Override
-    public void onLoad() {
-        metrics.addCustomChart(new SimplePie(
-                "faweVersion",
-                () -> Objects.requireNonNull(Fawe.instance().getVersion()).toString()
-        ));
-    }
+    private @Nullable Injector injector;
 
     @Override
     public void onEnable() {
@@ -84,110 +64,53 @@ public class BetterGoPaint extends JavaPlugin implements Listener {
             return;
         }
 
-        reloadConfig();
+        injector = Guice.createInjector(Stage.PRODUCTION,
+                new PlatformModule(this),
+                new SettingsModule(getDataFolder().toPath()),
+                new BrushModule(),
+                new ServiceModule(),
+                new ListenerModule(),
+                new CommandModule()
+        );
 
-        registerTranslations();
-        donationInformation();
-
-
-        Material brush = Settings.settings().generic.DEFAULT_BRUSH;
+        Material brush = injector.getInstance(SettingsHolder.class).get().generic().defaultBrush();
         if (!brush.isItem()) {
             getComponentLogger().error("{} is not a valid default brush, it has to be an item", brush.name());
-            getComponentLogger().error("For more information visit {}", PAPER_DOCS);
+            getComponentLogger().error("For more information visit {}", Settings.PAPER_MATERIALS);
             getServer().getPluginManager().disablePlugin(this);
+            return;
         }
 
+        injector.getInstance(TranslationService.class).register();
+        getComponentLogger().info(Component.translatable("bettergopaint.notify.donation.console"));
         //noinspection UnnecessaryUnicodeEscape
         getComponentLogger().info(MiniMessage.miniMessage().deserialize(
-                "<white>Made with <red>\u2665</red> <white>in <gradient:black:red:gold>Germany</gradient>"
+                "<white>Made with <red>♥</red> <white>in <gradient:black:red:gold>Germany</gradient>"
         ));
 
-        registerListeners();
-        registerCommands();
-        updateService();
+        injector.getInstance(MetricsService.class).start();
+        injector.getInstance(Key.get(new TypeLiteral<Set<Listener>>() {
+        })).forEach(listener -> getServer().getPluginManager().registerEvents(listener, this));
+        registerCommands(injector);
+        injector.getInstance(UpdateService.class).start();
     }
 
     @Override
     public void onDisable() {
-        metrics.shutdown();
-        if (this.updateService != null) {
-            this.updateService.shutdown();
+        if (injector == null) {
+            return;
         }
+        injector.getInstance(UpdateService.class).shutdown();
+        injector.getInstance(MetricsService.class).shutdown();
     }
 
-    public void reloadConfig() {
-        try {
-            Files.createDirectories(getDataFolder().toPath());
-            final Path resolve = getDataFolder().toPath().resolve("config.yml");
-            Settings.settings().save(resolve.toFile());
-            Settings.settings().load(resolve.toFile());
-        } catch (IOException e) {
-            getLogger().log(Level.SEVERE, "Cannot init config", e);
-        }
-
-    }
-
-    private void registerTranslations() {
-        var translationStore = MiniMessageTranslationStore.create(Key.key("bettergopaint", "translations"));
-        translationStore.defaultLocale(Locale.US);
-        Path langFolder = getDataFolder().toPath().resolve("lang");
-        var languages = new HashSet<>(Settings.settings().generic.LANGUAGES);
-        languages.add("en-US");
-        if (Files.exists(langFolder)) {
-            try (var urlClassLoader = new URLClassLoader(new URL[]{langFolder.toUri().toURL()}, getClassLoader())) {
-                languages.stream().map(Locale::forLanguageTag).forEach(locale -> translationStore.registerAll(
-                        locale,
-                        ResourceBundle.getBundle("bettergopaint", locale, urlClassLoader),
-                        false
-                ));
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        } else {
-            languages.stream().map(Locale::forLanguageTag).forEach(locale -> translationStore.registerAll(
-                    locale,
-                    ResourceBundle.getBundle("bettergopaint", locale),
-                    false
-            ));
-        }
-        GlobalTranslator.translator().addSource(translationStore);
-    }
-
-    private void updateService() {
-        this.updateService = new UpdateService(this, getComponentLogger());
-        this.updateService.start();
-    }
-
-
-    private void registerCommands() {
-        PaperCommandManager<Source> commandManager = PaperCommandManager.builder(PaperSimpleSenderMapper.simpleSenderMapper())
-                .executionCoordinator(ExecutionCoordinator.simpleCoordinator())
-                .buildOnEnable(this);
-        MinecraftHelp<Source> help = MinecraftHelp.create("/gopaint help", commandManager, Source::source);
-        new AnnotationParser<>(commandManager, Source.class).parse(new GoPaintCommand(this, help));
-    }
-
-    private void registerListeners() {
-        PluginManager pm = getServer().getPluginManager();
-        pm.registerEvents(new InventoryListener(getBrushManager()), this);
-        pm.registerEvents(new InteractListener(this), this);
-        pm.registerEvents(new ConnectListener(getBrushManager(), this), this);
+    private void registerCommands(Injector injector) {
+        CommandManager<Source> commandManager = injector.getInstance(Key.get(new TypeLiteral<CommandManager<Source>>() {
+        }));
+        new AnnotationParser<>(commandManager, Source.class).parse(injector.getInstance(GoPaintCommand.class));
     }
 
     private boolean hasOriginalGoPaint() {
         return getServer().getPluginManager().getPlugin("goPaint") != this;
     }
-
-    private void donationInformation() {
-        getComponentLogger().info(Component.translatable("bettergopaint.notify.donation.console"));
-    }
-
-    public @NotNull PlayerBrushManager getBrushManager() {
-        return brushManager;
-    }
-
-    public UpdateService getUpdateService() {
-        return updateService;
-    }
-
 }

@@ -20,7 +20,7 @@ package net.onelitefeather.bettergopaint.utils;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.onelitefeather.bettergopaint.objects.other.Settings;
+import net.onelitefeather.bettergopaint.settings.Settings;
 import org.jetbrains.annotations.NotNull;
 
 public final class Messages {
@@ -32,7 +32,7 @@ public final class Messages {
     /**
      * @return the configured chat prefix, passed as {@code <arg:0>} to every prefixed message
      */
-    public static @NotNull Component prefix() {
-        return MiniMessage.miniMessage().deserialize(Settings.settings().generic.PREFIX);
+    public static @NotNull Component prefix(@NotNull Settings settings) {
+        return MiniMessage.miniMessage().deserialize(settings.generic().prefix());
     }
 }

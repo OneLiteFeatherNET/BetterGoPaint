@@ -21,6 +21,8 @@ package net.onelitefeather.bettergopaint.brush;
 import net.onelitefeather.bettergopaint.objects.brush.Brush;
 import net.onelitefeather.bettergopaint.objects.brush.PaintBrush;
 import net.onelitefeather.bettergopaint.objects.brush.SphereBrush;
+import net.onelitefeather.bettergopaint.settings.Settings;
+import net.onelitefeather.bettergopaint.settings.SettingsHolder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,7 +38,7 @@ class PlayerBrushManagerTest {
 
     @BeforeEach
     void setUp() {
-        manager = new PlayerBrushManager();
+        manager = new PlayerBrushManager(SettingsHolder.of(Settings.defaults()));
         brushes = manager.getBrushes();
     }
 

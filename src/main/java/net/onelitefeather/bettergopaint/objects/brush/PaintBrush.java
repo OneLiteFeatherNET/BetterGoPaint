@@ -19,7 +19,9 @@
 package net.onelitefeather.bettergopaint.objects.brush;
 
 import net.onelitefeather.bettergopaint.brush.BrushSettings;
-import net.onelitefeather.bettergopaint.objects.other.Settings;
+import net.kyori.adventure.text.Component;
+import net.onelitefeather.bettergopaint.settings.SettingsHolder;
+import net.onelitefeather.bettergopaint.utils.Messages;
 import net.onelitefeather.bettergopaint.utils.Height;
 import net.onelitefeather.bettergopaint.utils.Sphere;
 import net.onelitefeather.bettergopaint.utils.curve.BezierSpline;
@@ -41,8 +43,11 @@ public class PaintBrush extends Brush {
     private static final String DESCRIPTION = "Paints strokes\n§8hold shift to end";
     private static final String HEAD = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODBiM2E5ZGZhYmVmYmRkOTQ5YjIxN2JiZDRmYTlhNDg2YmQwYzNmMGNhYjBkMGI5ZGZhMjRjMzMyZGQzZTM0MiJ9fX0=";
 
-    public PaintBrush() {
+    private final SettingsHolder settings;
+
+    public PaintBrush(@NotNull SettingsHolder settings) {
         super(NAME, DESCRIPTION, HEAD);
+        this.settings = settings;
     }
 
     private static final HashMap<UUID, List<Location>> selectedPoints = new HashMap<>();
@@ -53,13 +58,15 @@ public class PaintBrush extends Brush {
             @NotNull Player player,
             @NotNull BrushSettings brushSettings
     ) {
-        String prefix = Settings.settings().generic.PREFIX;
-
         List<Location> locations = selectedPoints.computeIfAbsent(player.getUniqueId(), ignored -> new ArrayList<>());
         locations.add(target);
 
         if (!player.isSneaking()) {
-            player.sendRichMessage(prefix + " Paint brush point #" + locations.size() + " set.");
+            player.sendMessage(Component.translatable(
+                    "bettergopaint.brush.paint.point",
+                    Messages.prefix(settings.get()),
+                    Component.text(locations.size())
+            ));
             return;
         }
 

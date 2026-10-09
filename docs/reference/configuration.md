@@ -1,7 +1,8 @@
 # Configuration
 
 `plugins/BetterGoPaint/config.yml` is written on first start and rewritten on every reload, so
-new keys appear automatically. Materials use the names from the
+new keys and their comments appear automatically. A missing or invalid value is replaced by its
+default and reported once in the console; `/gopaint reload` applies changes without a restart. Materials use the names from the
 [Paper Material list](https://jd.papermc.io/paper/org/bukkit/Material.html).
 
 ## generic
