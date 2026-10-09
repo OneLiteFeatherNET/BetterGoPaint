@@ -18,13 +18,20 @@
  */
 package net.onelitefeather.bettergopaint.listeners;
 
+import com.sk89q.worldedit.LocalSession;
+import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldedit.bukkit.BukkitPlayer;
 import net.kyori.adventure.text.Component;
 import jakarta.inject.Inject;
 import net.onelitefeather.bettergopaint.brush.BrushSettings;
 import net.onelitefeather.bettergopaint.brush.ExportedBrushes;
 import net.onelitefeather.bettergopaint.brush.PlayerBrush;
 import net.onelitefeather.bettergopaint.brush.PlayerBrushManager;
+import net.onelitefeather.bettergopaint.brush.StrokeContext;
+import net.onelitefeather.bettergopaint.brush.StrokeContextFactory;
+import net.onelitefeather.bettergopaint.brush.StrokeRunner;
+import net.onelitefeather.bettergopaint.objects.brush.Brush;
 import net.onelitefeather.bettergopaint.settings.SettingsHolder;
 import net.onelitefeather.bettergopaint.utils.Constants;
 import net.onelitefeather.bettergopaint.utils.Messages;
@@ -41,6 +48,7 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
+import java.util.Random;
 
 public final class InteractListener implements Listener {
 
@@ -116,12 +124,35 @@ public final class InteractListener implements Listener {
         }
 
         if (brushSettings.enabled()) {
-            BukkitAdapter.adapt(player).runAction(
-                    () -> brushSettings.brush().paint(location, player, brushSettings), false, true
-            );
+            paint(player, location, brushSettings);
         } else {
             player.sendMessage(Component.translatable("bettergopaint.brush.disabled", Messages.prefix(settings.get())));
         }
+    }
+
+    /**
+     * Captures everything the stroke needs on the player's thread and queues the stroke. The queued
+     * work only touches WorldEdit types.
+     */
+    private void paint(@NotNull Player player, @NotNull Location target, @NotNull BrushSettings brushSettings) {
+        BukkitPlayer actor = BukkitAdapter.adapt(player);
+        LocalSession localSession = WorldEdit.getInstance().getSessionManager().get(actor);
+        Brush brush = brushSettings.brush();
+
+        StrokeContext captured = StrokeContextFactory.capture(
+                target,
+                player.getLocation(),
+                brushSettings,
+                BukkitAdapter::asBlockType,
+                new Random(brushSettings.random().nextLong())
+        );
+        StrokeContext context = brush.prepare(player.getUniqueId(), player.isSneaking(), player, captured);
+        if (context == null) {
+            return;
+        }
+
+        com.sk89q.worldedit.command.tool.brush.Brush stroke = brush.bind(context);
+        actor.runAction(() -> StrokeRunner.run(actor, localSession, stroke, context), false, true);
     }
 
 }

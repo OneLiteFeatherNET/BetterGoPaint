@@ -18,11 +18,9 @@
  */
 package net.onelitefeather.bettergopaint.utils.curve;
 
-import org.bukkit.Location;
-import org.bukkit.World;
+import com.sk89q.worldedit.math.Vector3;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -32,51 +30,49 @@ import static org.assertj.core.api.Assertions.within;
 
 class BezierSplineTest {
 
-    private final World world = Mockito.mock(World.class);
-
-    private BezierSpline spline(Location... knots) {
+    private BezierSpline spline(Vector3... knots) {
         return new BezierSpline(new LinkedList<>(List.of(knots)));
     }
 
     @Test
     @DisplayName("a spline through two knots is the straight line between them")
     void twoKnotsFormAStraightLine() {
-        BezierSpline spline = spline(new Location(world, 0, 64, 0), new Location(world, 10, 64, 0));
+        BezierSpline spline = spline(Vector3.at(0, 64, 0), Vector3.at(10, 64, 0));
 
         assertThat(spline.getSegmentsCount()).isEqualTo(1);
         assertThat(spline.getCurveLength()).isCloseTo(10, within(1.0));
-        assertThat(spline.getPoint(0.5).getX()).isCloseTo(5, within(0.01));
+        assertThat(spline.getPoint(0.5).x()).isCloseTo(5, within(0.01));
     }
 
     @Test
     @DisplayName("the curve starts on the first knot and ends on the last")
     void curvePassesThroughEndKnots() {
         BezierSpline spline = spline(
-                new Location(world, 0, 64, 0),
-                new Location(world, 5, 64, 8),
-                new Location(world, 12, 64, 3)
+                Vector3.at(0, 64, 0),
+                Vector3.at(5, 64, 8),
+                Vector3.at(12, 64, 3)
         );
 
-        Location start = spline.getPoint(0);
-        Location end = spline.getPoint(spline.getSegmentsCount());
+        Vector3 start = spline.getPoint(0);
+        Vector3 end = spline.getPoint(spline.getSegmentsCount());
 
-        assertThat(start.getX()).isCloseTo(0, within(1e-9));
-        assertThat(start.getZ()).isCloseTo(0, within(1e-9));
-        assertThat(end.getX()).isCloseTo(12, within(1e-9));
-        assertThat(end.getZ()).isCloseTo(3, within(1e-9));
+        assertThat(start.x()).isCloseTo(0, within(1e-9));
+        assertThat(start.z()).isCloseTo(0, within(1e-9));
+        assertThat(end.x()).isCloseTo(12, within(1e-9));
+        assertThat(end.z()).isCloseTo(3, within(1e-9));
     }
 
     @Test
     @DisplayName("knots on one height keep the whole curve on that height")
     void flatKnotsStayFlat() {
         BezierSpline spline = spline(
-                new Location(world, 0, 70, 0),
-                new Location(world, 4, 70, 9),
-                new Location(world, 9, 70, -2)
+                Vector3.at(0, 70, 0),
+                Vector3.at(4, 70, 9),
+                Vector3.at(9, 70, -2)
         );
 
         for (double t = 0; t <= spline.getSegmentsCount(); t += 0.25) {
-            assertThat(spline.getPoint(t).getY()).as("y at t=%s", t).isEqualTo(70);
+            assertThat(spline.getPoint(t).y()).as("y at t=%s", t).isEqualTo(70);
         }
     }
 
@@ -84,9 +80,9 @@ class BezierSplineTest {
     @DisplayName("getT maps walked distance back onto the curve parameter")
     void getTIsMonotonic() {
         BezierSpline spline = spline(
-                new Location(world, 0, 64, 0),
-                new Location(world, 6, 64, 6),
-                new Location(world, 12, 64, 0)
+                Vector3.at(0, 64, 0),
+                Vector3.at(6, 64, 6),
+                Vector3.at(12, 64, 0)
         );
 
         double previous = -1;

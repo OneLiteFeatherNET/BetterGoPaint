@@ -18,8 +18,8 @@
  */
 package net.onelitefeather.bettergopaint.utils;
 
-import org.bukkit.Location;
-import org.bukkit.block.Block;
+import com.sk89q.worldedit.extent.Extent;
+import com.sk89q.worldedit.math.BlockVector3;
 import org.jetbrains.annotations.NotNull;
 
 public class Height {
@@ -29,82 +29,88 @@ public class Height {
     }
 
     /**
-     * Gets the height of the nearest non-empty block at a given location.
+     * Gets the height of the nearest non-empty block at a given position.
      *
-     * @param location the location to check
-     * @return the height of the nearest non-empty block at the location
+     * @param extent   the extent to read from
+     * @param position the position to check
+     * @return the height of the nearest non-empty block at the position
      */
-    public static int getNearestNonEmptyBlock(@NotNull Location location) {
-        if (location.getBlock().getType().isEmpty()) {
-            for (int y = location.getBlockY(); y >= location.getWorld().getMinHeight(); y--) {
-                Block block = location.getWorld().getBlockAt(location.getBlockX(), y, location.getBlockZ());
-                if (!block.isEmpty()) {
+    public static int getNearestNonEmptyBlock(@NotNull Extent extent, @NotNull BlockVector3 position) {
+        int minHeight = extent.getMinY();
+        int maxHeight = extent.getMaxY() + 1;
+        int x = position.x();
+        int z = position.z();
+        if (Blocks.isAir(extent, position)) {
+            for (int y = position.y(); y >= minHeight; y--) {
+                if (!Blocks.isAir(extent, x, y, z)) {
                     return y + 1;
                 }
             }
-            return location.getWorld().getMinHeight();
+            return minHeight;
         } else {
-            for (int y = location.getBlockY(); y <= location.getWorld().getMaxHeight(); y++) {
-                Block block = location.getWorld().getBlockAt(location.getBlockX(), y, location.getBlockZ());
-                if (block.isEmpty()) {
+            for (int y = position.y(); y <= maxHeight; y++) {
+                if (Blocks.isAir(extent, x, y, z)) {
                     return y;
                 }
             }
-            return location.getWorld().getMaxHeight();
+            return maxHeight;
         }
     }
 
     /**
-     * Calculates the average height difference of the surrounding blocks from a given location, within a specified distance.
+     * Calculates the average height difference of the surrounding blocks from a given position, within a specified distance.
      *
-     * @param location the location to calculate the average height difference from
+     * @param extent   the extent to read from
+     * @param position the position to calculate the average height difference from
      * @param height   the reference height of the nearest non-empty block
      * @param distance the distance at which to calculate the average height difference
      * @return the average height difference of the surrounding blocks within the specified distance
      */
-    public static double getAverageHeightDiffFracture(@NotNull Location location, int height, int distance) {
+    public static double getAverageHeightDiffFracture(@NotNull Extent extent, @NotNull BlockVector3 position, int height,
+                                                      int distance) {
         double totalHeight = 0;
-        totalHeight += Math.abs(getNearestNonEmptyBlock(location.clone().add(distance, 0, -distance))) - height;
-        totalHeight += Math.abs(getNearestNonEmptyBlock(location.clone().add(distance, 0, distance))) - height;
-        totalHeight += Math.abs(getNearestNonEmptyBlock(location.clone().add(-distance, 0, distance))) - height;
-        totalHeight += Math.abs(getNearestNonEmptyBlock(location.clone().add(-distance, 0, -distance))) - height;
-        totalHeight += Math.abs(getNearestNonEmptyBlock(location.clone().add(0, 0, -distance))) - height;
-        totalHeight += Math.abs(getNearestNonEmptyBlock(location.clone().add(0, 0, distance))) - height;
-        totalHeight += Math.abs(getNearestNonEmptyBlock(location.clone().add(-distance, 0, 0))) - height;
-        totalHeight += Math.abs(getNearestNonEmptyBlock(location.clone().add(distance, 0, 0))) - height;
+        totalHeight += Math.abs(getNearestNonEmptyBlock(extent, position.add(distance, 0, -distance))) - height;
+        totalHeight += Math.abs(getNearestNonEmptyBlock(extent, position.add(distance, 0, distance))) - height;
+        totalHeight += Math.abs(getNearestNonEmptyBlock(extent, position.add(-distance, 0, distance))) - height;
+        totalHeight += Math.abs(getNearestNonEmptyBlock(extent, position.add(-distance, 0, -distance))) - height;
+        totalHeight += Math.abs(getNearestNonEmptyBlock(extent, position.add(0, 0, -distance))) - height;
+        totalHeight += Math.abs(getNearestNonEmptyBlock(extent, position.add(0, 0, distance))) - height;
+        totalHeight += Math.abs(getNearestNonEmptyBlock(extent, position.add(-distance, 0, 0))) - height;
+        totalHeight += Math.abs(getNearestNonEmptyBlock(extent, position.add(distance, 0, 0))) - height;
         return (totalHeight / 8d) / distance;
     }
 
     /**
-     * Calculates the average height difference angle of the surrounding blocks from a given location within a specified distance.
+     * Calculates the average height difference angle of the surrounding blocks from a given position within a specified distance.
      *
-     * @param location the location to calculate the average height difference angle from
+     * @param extent   the extent to read from
+     * @param position the position to calculate the average height difference angle from
      * @param distance the distance at which to calculate the average height difference angle
      * @return the average height difference angle of the surrounding blocks within the specified distance
      */
-    public static double getAverageHeightDiffAngle(@NotNull Location location, int distance) {
+    public static double getAverageHeightDiffAngle(@NotNull Extent extent, @NotNull BlockVector3 position, int distance) {
         double maxHeightDiff = 0;
         double maxHeightDiff2 = 0;
-        double diff = Math.abs(getNearestNonEmptyBlock(location.clone().add(distance, 0, -distance))
-                - getNearestNonEmptyBlock(location.clone().add(-distance, 0, distance)));
+        double diff = Math.abs(getNearestNonEmptyBlock(extent, position.add(distance, 0, -distance))
+                - getNearestNonEmptyBlock(extent, position.add(-distance, 0, distance)));
         if (diff >= maxHeightDiff) {
             maxHeightDiff = diff;
             maxHeightDiff2 = maxHeightDiff;
         }
-        diff = Math.abs(getNearestNonEmptyBlock(location.clone().add(distance, 0, distance))
-                - getNearestNonEmptyBlock(location.clone().add(-distance, 0, -distance)));
+        diff = Math.abs(getNearestNonEmptyBlock(extent, position.add(distance, 0, distance))
+                - getNearestNonEmptyBlock(extent, position.add(-distance, 0, -distance)));
         if (diff > maxHeightDiff) {
             maxHeightDiff = diff;
             maxHeightDiff2 = maxHeightDiff;
         }
-        diff = Math.abs(getNearestNonEmptyBlock(location.clone().add(distance, 0, 0))
-                - getNearestNonEmptyBlock(location.clone().add(-distance, 0, 0)));
+        diff = Math.abs(getNearestNonEmptyBlock(extent, position.add(distance, 0, 0))
+                - getNearestNonEmptyBlock(extent, position.add(-distance, 0, 0)));
         if (diff > maxHeightDiff) {
             maxHeightDiff = diff;
             maxHeightDiff2 = maxHeightDiff;
         }
-        diff = Math.abs(getNearestNonEmptyBlock(location.clone().add(0, 0, -distance))
-                - getNearestNonEmptyBlock(location.clone().add(0, 0, distance)));
+        diff = Math.abs(getNearestNonEmptyBlock(extent, position.add(0, 0, -distance))
+                - getNearestNonEmptyBlock(extent, position.add(0, 0, distance)));
         if (diff > maxHeightDiff) {
             maxHeightDiff = diff;
             maxHeightDiff2 = maxHeightDiff;

@@ -18,14 +18,11 @@
  */
 package net.onelitefeather.bettergopaint.objects.brush;
 
-import net.onelitefeather.bettergopaint.brush.BrushSettings;
+import com.sk89q.worldedit.extent.Extent;
+import com.sk89q.worldedit.math.BlockVector3;
+import net.onelitefeather.bettergopaint.brush.StrokeContext;
 import net.onelitefeather.bettergopaint.utils.Sphere;
-import org.bukkit.Location;
-import org.bukkit.block.Block;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.stream.Stream;
 
 public class SplatterBrush extends Brush {
 
@@ -38,27 +35,17 @@ public class SplatterBrush extends Brush {
     }
 
     @Override
-    public void paint(
-            @NotNull Location location,
-            @NotNull Player player,
-            @NotNull BrushSettings brushSettings
-    ) {
-        performEdit(player, session -> {
-            Stream<Block> blocks = Sphere.getBlocksInRadius(location, brushSettings.size(), null, false);
-            blocks.filter(block -> passesDefaultChecks(brushSettings, player, block))
-                    .forEach(block -> {
-                        double rate = (block.getLocation().distance(location) - ((double) brushSettings.size() / 2.0)
-                                * ((100.0 - (double) brushSettings.falloffStrength()) / 100.0))
-                                / (((double) brushSettings.size() / 2.0) - ((double) brushSettings.size() / 2.0)
-                                * ((100.0 - (double) brushSettings.falloffStrength()) / 100.0));
+    public void apply(@NotNull Extent extent, @NotNull StrokeContext context) {
+        placeAll(extent, context, Sphere.getBlocksInRadius(extent, context.target(), context.size(), null, false)
+                .filter(position -> passesDefaultChecks(extent, context, position))
+                .filter(position -> {
+                    double rate = (position.distance(context.target()) - ((double) context.size() / 2.0)
+                            * ((100.0 - (double) context.falloffStrength()) / 100.0))
+                            / (((double) context.size() / 2.0) - ((double) context.size() / 2.0)
+                            * ((100.0 - (double) context.falloffStrength()) / 100.0));
 
-                        if (brushSettings.random().nextDouble() <= rate) {
-                            return;
-                        }
-
-                        setBlock(session, block, brushSettings.randomBlock());
-                    });
-        });
+                    return !(context.random().nextDouble() <= rate);
+                })
+                .toList());
     }
-
 }

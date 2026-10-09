@@ -18,15 +18,12 @@
  */
 package net.onelitefeather.bettergopaint.objects.brush;
 
-import net.onelitefeather.bettergopaint.brush.BrushSettings;
+import com.sk89q.worldedit.extent.Extent;
+import com.sk89q.worldedit.math.BlockVector3;
+import net.onelitefeather.bettergopaint.brush.StrokeContext;
+import net.onelitefeather.bettergopaint.utils.Blocks;
 import net.onelitefeather.bettergopaint.utils.Sphere;
-import org.bukkit.Location;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.stream.Stream;
 
 public class UnderlayBrush extends Brush {
 
@@ -39,26 +36,19 @@ public class UnderlayBrush extends Brush {
     }
 
     @Override
-    public void paint(
-            @NotNull Location location,
-            @NotNull Player player,
-            @NotNull BrushSettings brushSettings
-    ) {
-        performEdit(player, session -> {
-            Stream<Block> blocks = Sphere.getBlocksInRadius(location, brushSettings.size(), null, false);
-            blocks.filter(block -> passesMaskCheck(brushSettings, block))
-                    .filter(block -> isUnderlay(block, brushSettings.thickness()))
-                    .forEach(block -> setBlock(session, block, brushSettings.randomBlock()));
-        });
+    public void apply(@NotNull Extent extent, @NotNull StrokeContext context) {
+        placeAll(extent, context, Sphere.getBlocksInRadius(extent, context.target(), context.size(), null, false)
+                .filter(position -> context.passesMask(extent, position))
+                .filter(position -> isUnderlay(extent, position, context.thickness()))
+                .toList());
     }
 
-    private boolean isUnderlay(Block block, int thickness) {
+    private boolean isUnderlay(Extent extent, BlockVector3 position, int thickness) {
         for (int i = 1; i <= thickness; i++) {
-            if (!block.isSolid() || !block.getRelative(BlockFace.UP, i).isSolid()) {
+            if (!Blocks.isSolid(extent, position) || !Blocks.isSolid(extent, position.add(0, i, 0))) {
                 return false;
             }
         }
         return true;
     }
-
 }

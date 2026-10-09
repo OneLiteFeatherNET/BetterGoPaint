@@ -18,15 +18,12 @@
  */
 package net.onelitefeather.bettergopaint.objects.brush;
 
-import net.onelitefeather.bettergopaint.brush.BrushSettings;
+import com.sk89q.worldedit.extent.Extent;
+import com.sk89q.worldedit.math.BlockVector3;
+import net.onelitefeather.bettergopaint.brush.StrokeContext;
 import net.onelitefeather.bettergopaint.utils.Height;
 import net.onelitefeather.bettergopaint.utils.Sphere;
-import org.bukkit.Location;
-import org.bukkit.block.Block;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.stream.Stream;
 
 public class FractureBrush extends Brush {
 
@@ -39,26 +36,21 @@ public class FractureBrush extends Brush {
     }
 
     @Override
-    public void paint(
-            @NotNull Location location,
-            @NotNull Player player,
-            @NotNull BrushSettings brushSettings
-    ) {
-        performEdit(player, session -> {
-            Stream<Block> blocks = Sphere.getBlocksInRadius(location, brushSettings.size(), null, false);
-            blocks.filter(block -> passesMaskCheck(brushSettings, block))
-                    .filter(block -> Height.getAverageHeightDiffFracture(
-                            block.getLocation(),
-                            Height.getNearestNonEmptyBlock(block.getLocation()),
-                            1
-                    ) >= 0.1)
-                    .filter(block -> Height.getAverageHeightDiffFracture(
-                            block.getLocation(),
-                            Height.getNearestNonEmptyBlock(block.getLocation()),
-                            brushSettings.fractureDistance()
-                    ) >= 0.1)
-                    .forEach(block -> setBlock(session, block, brushSettings.randomBlock()));
-        });
+    public void apply(@NotNull Extent extent, @NotNull StrokeContext context) {
+        placeAll(extent, context, Sphere.getBlocksInRadius(extent, context.target(), context.size(), null, false)
+                .filter(position -> context.passesMask(extent, position))
+                .filter(position -> Height.getAverageHeightDiffFracture(
+                        extent,
+                        position,
+                        Height.getNearestNonEmptyBlock(extent, position),
+                        1
+                ) >= 0.1)
+                .filter(position -> Height.getAverageHeightDiffFracture(
+                        extent,
+                        position,
+                        Height.getNearestNonEmptyBlock(extent, position),
+                        context.fractureDistance()
+                ) >= 0.1)
+                .toList());
     }
-
 }
