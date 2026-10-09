@@ -10,3 +10,5 @@ there are the ones offered on Hangar and Modrinth.
 
 Paper 26.x requires Java 25 and BetterGoPaint is compiled for it, so a jar built for 26.x cannot
 load on 1.21.x. Servers that stay on 1.21 keep using BetterGoPaint 1.1.x.
+
+Folia is not supported (yet). See [Scope and non-goals](../explanation/scope-and-non-goals.md).

@@ -6,7 +6,8 @@ shaded jar. `./gradlew test` runs only the tests; the JaCoCo report lands in
 
 ## What is tested
 
-- `PlayerBrushManagerTest` – brush cycling and lookup by name.
+- `PlayerBrushManagerTest` – brush cycling, lookup by name and concurrent lookups sharing one brush.
+- `PaintBrushTest` – collecting the points of a stroke and dropping them when a player quits.
 - `BezierSplineTest` – the curve the Paint Brush follows.
 - `StrokeContextFactoryTest` – the stroke context is captured without asking the world for
   anything, and the palette weights every entry equally.
@@ -30,6 +31,17 @@ Tests use JUnit 6, AssertJ and Mockito. Bukkit types such as `World` are mocked;
 running server. Code that needs a server (the GUI, listeners, running a stroke in a real edit
 session) is covered by manual testing with `./gradlew run-<version>`, which starts Paper with
 FastAsyncWorldEdit preinstalled.
+
+## Testing on Folia
+
+`./gradlew run-folia-26.2 -PfoliaSupported=true -PfoliaFaweUrl=<url>` starts a local Folia 26.2
+server. `-PfoliaSupported=true` makes the built plugin declare Folia support, and `-PfoliaFaweUrl`
+installs FastAsyncWorldEdit from the given URL. Use a Folia-capable FAWE build there. Stable FAWE
+does not support Folia, so the task fails without `-PfoliaFaweUrl`. The same tasks exist for every
+version in `supportedMinecraftVersions`, as `run-folia-<version>`.
+
+This is for local testing only. Do not publish a jar built with `-PfoliaSupported=true`, and do not
+describe Folia as supported until a stable FastAsyncWorldEdit release supports it.
 
 ## Testing brushes without a server
 

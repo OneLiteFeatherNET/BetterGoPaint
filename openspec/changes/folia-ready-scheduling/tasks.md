@@ -13,7 +13,7 @@
 
 - [x] 3.1 Drive `foliaSupported` from the `foliaSupported` Gradle property (default false); verify the generated `paper-plugin.yml` with and without `-PfoliaSupported=true`
 - [x] 3.2 Add `run-folia-<version>` tasks that install FAWE from `-PfoliaFaweUrl`; verify the task fails with a clear message when the property is missing
-- [ ] 3.3 Document the Folia status in docs/explanation/scope-and-non-goals.md and docs/reference/supported-versions.md, and how to test on Folia in docs/development/testing.md
+- [x] 3.3 Document the Folia status in docs/explanation/scope-and-non-goals.md and docs/reference/supported-versions.md, and how to test on Folia in docs/development/testing.md
 
 ## Manual follow-up
 
