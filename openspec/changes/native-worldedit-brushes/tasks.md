@@ -3,7 +3,7 @@
 ## 1. Foundation
 
 - [ ] 1.1 Add `StrokeContext` (captured target, player eye position, settings snapshot, palette `Pattern`, mask, `Random`) and build it on the player's thread in `InteractListener`; verify with a unit test that building it needs no world access
-- [ ] 1.2 Add an in-memory test `Extent` and verify it round-trips `setBlock`/`getBlock`
+- [x] 1.2 Add an in-memory test `Extent` and verify it round-trips `setBlock`/`getBlock` (`MemoryExtent`, `MemoryExtentTest`; block types are Mockito mocks because WorldEdit's registry cannot initialise offline, see `TestBlocks`)
 
 ## 2. Geometry on extents
 
