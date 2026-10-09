@@ -22,9 +22,8 @@ import com.fastasyncworldedit.core.Fawe;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.translation.MiniMessageTranslationStore;
 import net.kyori.adventure.translation.GlobalTranslator;
-import net.kyori.adventure.translation.TranslationRegistry;
-import net.kyori.adventure.util.UTF8ResourceBundleControl;
 import net.onelitefeather.bettergopaint.brush.PlayerBrushManager;
 import net.onelitefeather.bettergopaint.command.GoPaintCommand;
 import net.onelitefeather.bettergopaint.command.ReloadCommand;
@@ -33,7 +32,6 @@ import net.onelitefeather.bettergopaint.listeners.InteractListener;
 import net.onelitefeather.bettergopaint.listeners.InventoryListener;
 import net.onelitefeather.bettergopaint.objects.other.Settings;
 import net.onelitefeather.bettergopaint.service.UpdateService;
-import net.onelitefeather.bettergopaint.translations.PluginTranslationRegistry;
 import org.bstats.bukkit.Metrics;
 import org.bstats.charts.SimplePie;
 import org.bukkit.Bukkit;
@@ -46,12 +44,12 @@ import org.incendo.cloud.annotations.AnnotationParser;
 import org.incendo.cloud.bukkit.CloudBukkitCapabilities;
 import org.incendo.cloud.execution.ExecutionCoordinator;
 import org.incendo.cloud.paper.LegacyPaperCommandManager;
-import org.incendo.serverlib.ServerLib;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
@@ -64,7 +62,7 @@ import java.util.logging.Level;
 
 public class BetterGoPaint extends JavaPlugin implements Listener {
 
-    public static final String PAPER_DOCS = "https://jd.papermc.io/paper/1.20.6/org/bukkit/Material.html#enum-constant-summary";
+    public static final String PAPER_DOCS = "https://jd.papermc.io/paper/org/bukkit/Material.html";
 
     private final PlayerBrushManager brushManager = new PlayerBrushManager();
     private final Metrics metrics = new Metrics(this, 18734);
@@ -80,9 +78,6 @@ public class BetterGoPaint extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
-        // Check if we are in a safe environment
-        ServerLib.checkUnsafeForks();
-
         // disable if goPaint and BetterGoPaint are installed simultaneously
         if (hasOriginalGoPaint()) {
             getComponentLogger().error("BetterGoPaint is a replacement for goPaint. Please use one instead of both");
@@ -93,27 +88,7 @@ public class BetterGoPaint extends JavaPlugin implements Listener {
 
         reloadConfig();
 
-        final TranslationRegistry translationRegistry = new PluginTranslationRegistry(TranslationRegistry.create(Key.key("bettergopaint", "translations")));
-        translationRegistry.defaultLocale(Locale.US);
-        Path langFolder = getDataFolder().toPath().resolve("lang");
-        var languages = new HashSet<>(Settings.settings().generic.LANGUAGES);
-        languages.add("en-US");
-        if (Files.exists(langFolder)) {
-            try (var urlClassLoader = new URLClassLoader(new URL[]{langFolder.toUri().toURL()})) {
-                languages.stream().map(Locale::forLanguageTag).forEach(r -> {
-                    var bundle = ResourceBundle.getBundle("bettergopaint", r, urlClassLoader, UTF8ResourceBundleControl.get());
-                    translationRegistry.registerAll(r, bundle, false);
-                });
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        } else {
-            languages.stream().map(Locale::forLanguageTag).forEach(r -> {
-                var bundle = ResourceBundle.getBundle("bettergopaint", r, UTF8ResourceBundleControl.get());
-                translationRegistry.registerAll(r, bundle, false);
-            });
-        }
-        GlobalTranslator.translator().addSource(translationRegistry);
+        registerTranslations();
         donationInformation();
 
 
@@ -150,6 +125,32 @@ public class BetterGoPaint extends JavaPlugin implements Listener {
             getLogger().log(Level.SEVERE, "Cannot init config", e);
         }
 
+    }
+
+    private void registerTranslations() {
+        var translationStore = MiniMessageTranslationStore.create(Key.key("bettergopaint", "translations"));
+        translationStore.defaultLocale(Locale.US);
+        Path langFolder = getDataFolder().toPath().resolve("lang");
+        var languages = new HashSet<>(Settings.settings().generic.LANGUAGES);
+        languages.add("en-US");
+        if (Files.exists(langFolder)) {
+            try (var urlClassLoader = new URLClassLoader(new URL[]{langFolder.toUri().toURL()}, getClassLoader())) {
+                languages.stream().map(Locale::forLanguageTag).forEach(locale -> translationStore.registerAll(
+                        locale,
+                        ResourceBundle.getBundle("bettergopaint", locale, urlClassLoader),
+                        false
+                ));
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        } else {
+            languages.stream().map(Locale::forLanguageTag).forEach(locale -> translationStore.registerAll(
+                    locale,
+                    ResourceBundle.getBundle("bettergopaint", locale),
+                    false
+            ));
+        }
+        GlobalTranslator.translator().addSource(translationStore);
     }
 
     private void updateService() {

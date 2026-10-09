@@ -1,54 +1,62 @@
 rootProject.name = "BetterGoPaint"
-includeBuild("build-logic")
-
-pluginManagement {
-    repositories {
-        maven("https://eldonexus.de/repository/maven-public/")
-        gradlePluginPortal()
-    }
-}
 
 dependencyResolutionManagement {
+    repositories {
+        mavenCentral()
+        maven("https://repo.papermc.io/repository/maven-public/")
+        maven("https://maven.enginehub.org/repo/")
+    }
     versionCatalogs {
         create("libs") {
-            version("publishdata", "1.4.0")
             version("modrinth", "2.+")
-            version("hangar", "0.1.2")
-            version("paper.yml", "0.6.0")
-            version("paper.run", "2.3.0")
-            version("shadowJar", "8.1.1")
-            version("intellectualsites", "1.51")
+            version("hangar", "0.1.4")
+            version("paper.yml", "0.9.0")
+            version("paper.run", "3.1.0")
+            version("shadowJar", "9.6.1")
+            version("cyclonedx", "3.4.1")
+            version("spotless", "8.10.4")
 
-            version("paper", "1.21.3-R0.1-SNAPSHOT")
-            version("bstats", "3.0.2")
+            // Compile against the newest stable Paper line. Paper 26.x requires Java 25.
+            version("paper", "26.2.build.+")
+            version("fawe", "2.16.1")
+            version("bstats", "3.2.1")
 
-            version("cloudcommand", "2.0.0-SNAPSHOT")
+            version("cloudcommandPaper", "2.0.1")
+            version("cloudcommandAnnotations", "2.1.0")
+            version("cloudcommandExtras", "2.0.1")
 
-            version("adventure", "4.17.0")
             version("semver", "0.10.2")
 
+            // Testing dependencies
+            version("junit", "6.1.3")
+            version("mockito", "5.24.0")
+            version("assertj", "3.27.7")
+
             library("paper", "io.papermc.paper", "paper-api").versionRef("paper")
-            library("minimessage", "net.kyori", "adventure-text-minimessage").versionRef("adventure")
+            library("fawe.core", "com.fastasyncworldedit", "FastAsyncWorldEdit-Core").versionRef("fawe")
+            library("fawe.bukkit", "com.fastasyncworldedit", "FastAsyncWorldEdit-Bukkit").versionRef("fawe")
             library("bstats", "org.bstats", "bstats-bukkit").versionRef("bstats")
 
-            library("fawe.bom", "com.intellectualsites.bom", "bom-newest").versionRef("intellectualsites")
-            library("fawe.bukkit", "com.fastasyncworldedit", "FastAsyncWorldEdit-Bukkit").withoutVersion()
-            library("serverlib", "dev.notmyfault.serverlib", "ServerLib").withoutVersion()
-            library("paperlib", "io.papermc", "paperlib").withoutVersion()
-
-            library("cloud.command.paper", "org.incendo", "cloud-paper").versionRef("cloudcommand")
-            library("cloud.command.annotations", "org.incendo", "cloud-annotations").versionRef("cloudcommand")
-            library("cloud.command.extras", "org.incendo", "cloud-minecraft-extras").versionRef("cloudcommand")
+            library("cloud.command.paper", "org.incendo", "cloud-paper").versionRef("cloudcommandPaper")
+            library("cloud.command.annotations", "org.incendo", "cloud-annotations").versionRef("cloudcommandAnnotations")
+            library("cloud.command.extras", "org.incendo", "cloud-minecraft-extras").versionRef("cloudcommandExtras")
 
             library("semver", "com.github.zafarkhaja", "java-semver").versionRef("semver")
 
-            plugin("publishdata","de.chojo.publishdata").versionRef("publishdata")
+            // Testing libraries
+            library("junit-jupiter", "org.junit.jupiter", "junit-jupiter").versionRef("junit")
+            library("junit-platform-launcher", "org.junit.platform", "junit-platform-launcher").withoutVersion()
+            library("mockito-core", "org.mockito", "mockito-core").versionRef("mockito")
+            library("mockito-junit-jupiter", "org.mockito", "mockito-junit-jupiter").versionRef("mockito")
+            library("assertj-core", "org.assertj", "assertj-core").versionRef("assertj")
+
             plugin("modrinth", "com.modrinth.minotaur").versionRef("modrinth")
             plugin("hangar", "io.papermc.hangar-publish-plugin").versionRef("hangar")
-            plugin("paper.yml", "net.minecrell.plugin-yml.paper").versionRef("paper.yml")
+            plugin("paper.yml", "de.eldoria.plugin-yml.paper").versionRef("paper.yml")
             plugin("paper.run", "xyz.jpenilla.run-paper").versionRef("paper.run")
-            plugin("shadowJar", "com.github.johnrengelman.shadow").versionRef("shadowJar")
-            plugin("spotless", "com.diffplug.spotless").version("6.18.0")
+            plugin("shadowJar", "com.gradleup.shadow").versionRef("shadowJar")
+            plugin("cyclonedx", "org.cyclonedx.bom").versionRef("cyclonedx")
+            plugin("spotless", "com.diffplug.spotless").versionRef("spotless")
         }
     }
 }
