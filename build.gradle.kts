@@ -79,6 +79,8 @@ paper {
     apiVersion = "26.1"
     website = "https://github.com/OneLiteFeatherNET/BetterGoPaint"
     provides = listOf("goPaint")
+    // Folia is only declared with -PfoliaSupported=true (local testing). Release builds never set it.
+    foliaSupported = providers.gradleProperty("foliaSupported").map(String::toBoolean).orElse(false).get()
 
     serverDependencies {
         register("FastAsyncWorldEdit") {
