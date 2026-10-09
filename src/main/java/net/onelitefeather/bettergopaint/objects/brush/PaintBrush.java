@@ -46,13 +46,26 @@ public class PaintBrush extends Brush {
     private static final String DESCRIPTION = "Paints strokes\n§8hold shift to end";
     private static final String HEAD = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODBiM2E5ZGZhYmVmYmRkOTQ5YjIxN2JiZDRmYTlhNDg2YmQwYzNmMGNhYjBkMGI5ZGZhMjRjMzMyZGQzZTM0MiJ9fX0=";
 
-    private static final Map<UUID, List<BlockVector3>> selectedPoints = new ConcurrentHashMap<>();
+    /**
+     * Points of the stroke each player is currently drawing. Owned by this brush instance, so it is dropped with
+     * the player's brush state through {@link #forget(UUID)}.
+     */
+    private final Map<UUID, List<BlockVector3>> selectedPoints = new ConcurrentHashMap<>();
 
     private final SettingsHolder settings;
 
     public PaintBrush(@NotNull SettingsHolder settings) {
         super(NAME, DESCRIPTION, HEAD);
         this.settings = settings;
+    }
+
+    /**
+     * Drops the unfinished stroke of a player, for example when the player quits.
+     *
+     * @param playerId the player whose stroke points should be discarded
+     */
+    public void forget(@NotNull UUID playerId) {
+        selectedPoints.remove(playerId);
     }
 
     @Override

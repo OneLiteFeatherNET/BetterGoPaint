@@ -23,13 +23,29 @@ import net.onelitefeather.bettergopaint.objects.brush.PaintBrush;
 import net.onelitefeather.bettergopaint.objects.brush.SphereBrush;
 import net.onelitefeather.bettergopaint.settings.Settings;
 import net.onelitefeather.bettergopaint.settings.SettingsHolder;
+import org.bukkit.entity.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class PlayerBrushManagerTest {
 
@@ -87,5 +103,44 @@ class PlayerBrushManagerTest {
             assertThat(manager.getBrushByName(brush.getName())).containsSame(brush);
         }
         assertThat(manager.getBrushByName(" ♦ Sphere Brush ♦ ")).isEmpty();
+    }
+
+    @Test
+    @DisplayName("concurrent lookups for one player share a single brush")
+    void concurrentLookupsShareOneBrush() throws Exception {
+        AtomicInteger created = new AtomicInteger();
+        PlayerBrushManager concurrent = new PlayerBrushManager(
+                SettingsHolder.of(Settings.defaults()),
+                (ignored, locale) -> {
+                    created.incrementAndGet();
+                    return mock(PlayerBrush.class);
+                }
+        );
+        Player player = mock(Player.class);
+        when(player.getUniqueId()).thenReturn(UUID.randomUUID());
+        when(player.locale()).thenReturn(Locale.ENGLISH);
+
+        int threads = 16;
+        ExecutorService pool = Executors.newFixedThreadPool(threads);
+        CountDownLatch start = new CountDownLatch(1);
+        try {
+            List<Future<PlayerBrush>> results = new ArrayList<>();
+            for (int i = 0; i < threads; i++) {
+                results.add(pool.submit((Callable<PlayerBrush>) () -> {
+                    start.await();
+                    return concurrent.getBrush(player);
+                }));
+            }
+            start.countDown();
+
+            Set<PlayerBrush> distinct = Collections.newSetFromMap(new IdentityHashMap<>());
+            for (Future<PlayerBrush> result : results) {
+                distinct.add(result.get(10, TimeUnit.SECONDS));
+            }
+            assertThat(distinct).hasSize(1);
+            assertThat(created).hasValue(1);
+        } finally {
+            pool.shutdownNow();
+        }
     }
 }

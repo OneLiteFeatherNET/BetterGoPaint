@@ -6,8 +6,8 @@
 
 ## 2. Shared state
 
-- [ ] 2.1 Make `PlayerBrushManager` use a `ConcurrentHashMap`; verify with a unit test that concurrent `getBrush` calls for one UUID return the same instance
-- [ ] 2.2 Move Paint Brush points from the static map into per-player state that is cleared on quit; verify with a unit test
+- [x] 2.1 Make `PlayerBrushManager` use a `ConcurrentHashMap`; verify with a unit test that concurrent `getBrush` calls for one UUID return the same instance
+- [x] 2.2 Move Paint Brush points from the static map into per-player state that is cleared on quit; verify with a unit test
 
 ## 3. Folia switch
 

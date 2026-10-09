@@ -37,10 +37,13 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
 
 /**
  * The PlayerBrushManager class manages the brush selection for each player.
@@ -48,15 +51,30 @@ import java.util.UUID;
 @Singleton
 public class PlayerBrushManager {
 
-    private final HashMap<UUID, PlayerBrush> playerBrushes;
+    /**
+     * Written from the region thread of each player and read from commands and the FAWE worker, so it must be
+     * safe for concurrent use.
+     */
+    private final Map<UUID, PlayerBrush> playerBrushes;
+    private final BiFunction<PlayerBrushManager, Locale, PlayerBrush> brushFactory;
     private final List<Brush> brushes;
+    private final PaintBrush paintBrush;
 
     private final SettingsHolder settings;
 
     @Inject
     public PlayerBrushManager(@NotNull SettingsHolder settings) {
+        this(settings, (manager, locale) -> new PlayerBrush(manager, settings, locale));
+    }
+
+    PlayerBrushManager(
+            @NotNull SettingsHolder settings,
+            @NotNull BiFunction<PlayerBrushManager, Locale, PlayerBrush> brushFactory
+    ) {
         this.settings = settings;
-        this.playerBrushes = new HashMap<>();
+        this.brushFactory = brushFactory;
+        this.playerBrushes = new ConcurrentHashMap<>();
+        this.paintBrush = new PaintBrush(settings);
         this.brushes = List.of(
                 new SphereBrush(),
                 new SprayBrush(),
@@ -68,7 +86,7 @@ public class PlayerBrushManager {
                 new UnderlayBrush(),
                 new FractureBrush(),
                 new GradientBrush(),
-                new PaintBrush(settings)
+                paintBrush
         );
     }
 
@@ -79,7 +97,7 @@ public class PlayerBrushManager {
      * @return The brush for the specified player.
      */
     public @NotNull PlayerBrush getBrush(@NotNull Player player) {
-        return playerBrushes.computeIfAbsent(player.getUniqueId(), ignored -> new PlayerBrush(this, settings, player.locale()));
+        return playerBrushes.computeIfAbsent(player.getUniqueId(), ignored -> brushFactory.apply(this, player.locale()));
     }
 
     /**
@@ -116,12 +134,13 @@ public class PlayerBrushManager {
     }
 
     /**
-     * Removes the player from the {@link #playerBrushes} map.
+     * Removes the player's brush settings and any unfinished Paint Brush stroke.
      *
      * @param player The player who should be removed.
      */
     public void removeBrush(@NotNull Player player) {
         playerBrushes.remove(player.getUniqueId());
+        paintBrush.forget(player.getUniqueId());
     }
 
     /**
