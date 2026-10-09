@@ -218,17 +218,25 @@ tasks {
             pluginDownloadService.convention(PluginDownloadService.paper(project))
 
             val faweUrl = providers.gradleProperty("foliaFaweUrl").orNull
+            val foliaDeclared = providers.gradleProperty("foliaSupported").map(String::toBoolean).orElse(false).get()
             if (faweUrl != null) {
                 downloadPlugins {
                     url(faweUrl)
                 }
             }
             doFirst {
+                val example = "./gradlew run-folia-$serverVersion -PfoliaSupported=true -PfoliaFaweUrl=<url>"
                 if (faweUrl == null) {
                     throw GradleException(
                         "run-folia-$serverVersion needs a Folia-capable FastAsyncWorldEdit jar. Stable FAWE does not " +
-                            "support Folia yet. Pass -PfoliaFaweUrl=<url of a Folia-capable FAWE jar>, for example " +
-                            "./gradlew run-folia-$serverVersion -PfoliaSupported=true -PfoliaFaweUrl=<url>."
+                            "support Folia yet. Pass -PfoliaFaweUrl=<url of a Folia-capable FAWE jar>, for example $example."
+                    )
+                }
+                if (!foliaDeclared) {
+                    // Without the flag Folia refuses to load the plugin, which looks like a broken test server.
+                    throw GradleException(
+                        "run-folia-$serverVersion needs -PfoliaSupported=true, otherwise Folia skips BetterGoPaint. " +
+                            "Run $example."
                     )
                 }
             }
