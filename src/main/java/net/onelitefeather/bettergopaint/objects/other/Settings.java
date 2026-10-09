@@ -69,6 +69,9 @@ public final class Settings extends Config {
         public int DEFAULT_MIXING_STRENGTH = 50;
         @Comment("Prefix of the plugin")
         public String PREFIX = "<aqua>BetterGoPaint > </aqua>";
+        @Comment("Check Hangar every three hours for a newer release and tell admins about it")
+        public boolean CHECK_FOR_UPDATES = true;
+
         @Comment("World there are disabled to used brushes")
         public List<String> DISABLED_WORLDS = new ArrayList<>();
 

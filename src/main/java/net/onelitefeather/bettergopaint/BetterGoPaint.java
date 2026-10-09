@@ -112,7 +112,9 @@ public class BetterGoPaint extends JavaPlugin implements Listener {
     @Override
     public void onDisable() {
         metrics.shutdown();
-        this.updateService.shutdown();
+        if (this.updateService != null) {
+            this.updateService.shutdown();
+        }
     }
 
     public void reloadConfig() {
@@ -154,9 +156,8 @@ public class BetterGoPaint extends JavaPlugin implements Listener {
     }
 
     private void updateService() {
-        this.updateService = new UpdateService(this);
-        this.updateService.run();
-        this.updateService.notifyConsole(getComponentLogger());
+        this.updateService = new UpdateService(this, getComponentLogger());
+        this.updateService.start();
     }
 
 

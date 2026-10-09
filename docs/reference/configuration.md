@@ -16,6 +16,7 @@ new keys appear automatically. Materials use the names from the
 | `default-axis` | `Y` | Starting axis of the Disc Brush: `X`, `Y` or `Z`. |
 | `default-falloff-strength` | `50` | Starting falloff. |
 | `default-mixing-strength` | `50` | Starting mixing of the Gradient Brush. |
+| `check-for-updates` | `true` | Ask Hangar every three hours for a newer release. Nothing is sent when `false`. |
 | `prefix` | `<aqua>BetterGoPaint > </aqua>` | MiniMessage prefix of chat messages. |
 | `disabled-worlds` | `[]` | Worlds in which painting is blocked. |
 | `enabled-by-default` | `true` | Whether a new player's brush starts enabled. |
