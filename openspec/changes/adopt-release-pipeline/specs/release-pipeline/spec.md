@@ -1,0 +1,59 @@
+# Spec Delta
+
+## Purpose
+
+Describes how changes to BetterGoPaint turn into a versioned release, which checks gate it and
+where it is published.
+
+## ADDED Requirements
+
+### Requirement: Conventional commit messages
+Every pull request title and every commit in a pull request SHALL follow Conventional Commits with
+one of the types build, chore, ci, docs, feat, fix, perf, refactor, revert, style or test.
+
+#### Scenario: Non-conventional title
+- **WHEN** a pull request is opened with the title "Update stuff"
+- **THEN** the pr-lint check fails and names the expected format
+
+#### Scenario: Conventional title
+- **WHEN** a pull request is opened with the title "fix: keep the gradient brush inside the mask"
+- **THEN** the pr-lint title check passes
+
+### Requirement: Version derived from commits
+The next version SHALL be derived from the commits since the last release: a breaking change bumps
+MAJOR, `feat` bumps MINOR, `fix` bumps PATCH, other types do not release.
+
+#### Scenario: Feature merged
+- **WHEN** the last release is 1.1.0 and a `feat:` commit is merged into main
+- **THEN** the release pull request targets 1.2.0
+
+### Requirement: Releases happen only by merging the release pull request
+Pushing to main SHALL NOT publish anything. Merging the release pull request SHALL tag the version,
+update the changelog and start publishing.
+
+#### Scenario: Ordinary merge
+- **WHEN** a feature pull request is merged into main
+- **THEN** no artifact is uploaded to Hangar or Modrinth and the release pull request is updated
+
+### Requirement: Security gate before publishing
+The built jar SHALL be scanned before any public upload, and a HIGH or CRITICAL finding SHALL stop
+the release.
+
+#### Scenario: Vulnerable dependency shaded
+- **WHEN** the release jar contains a dependency with a CRITICAL CVE
+- **THEN** the publish job does not run and nothing is uploaded
+
+### Requirement: Published artifacts
+A successful release SHALL attach the shaded jar to the GitHub release and publish the same jar to
+Hangar and Modrinth for every supported Minecraft version, and SHALL upload a CycloneDX SBOM.
+
+#### Scenario: Hangar rejects the upload
+- **WHEN** Hangar rejects the upload
+- **THEN** the jar is still attached to the GitHub release and the tag can be re-published with workflow_dispatch
+
+### Requirement: Pull request builds
+Every pull request SHALL be built and tested on Linux, Windows and macOS.
+
+#### Scenario: Test fails on one OS
+- **WHEN** a test fails on Windows only
+- **THEN** the pull request build is red
