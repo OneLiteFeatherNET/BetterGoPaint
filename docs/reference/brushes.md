@@ -18,4 +18,5 @@ Settings that a brush does not use are hidden in the menu.
 | Paint Brush | Strokes along a curve through every point you click; sneak to finish the stroke. | Falloff |
 
 Settings shared by all brushes: size, mask (only replace the mask block) and surface mode
-(`DIRECT`, `RELATIVE`, `DISABLED`). Defaults and limits are in [Configuration](configuration.md).
+(`DIRECT`, `RELATIVE`, `DISABLED`). Strokes also respect the global mask of the builder's
+WorldEdit session (`//gmask`). Defaults and limits are in [Configuration](configuration.md).

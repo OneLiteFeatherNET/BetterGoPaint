@@ -18,7 +18,7 @@
 
 ## 4. Docs
 
-- [ ] 4.1 Update docs/explanation/how-a-brush-stroke-is-applied.md (stroke context, WorldEdit session, `//gmask`)
+- [x] 4.1 Update docs/explanation/how-a-brush-stroke-is-applied.md (stroke context, WorldEdit session, `//gmask`) (also docs/development/testing.md and docs/reference/brushes.md)
 
 ## Manual follow-up (needs a Minecraft client)
 
