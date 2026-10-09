@@ -8,17 +8,24 @@ ten blocks, and right-click the ground. Every stroke runs through
 BetterGoPaint is a maintained fork of [goPaint](https://github.com/Arcaniax-Development/goPaint_1.14)
 by Arcaniax.
 
-## Where to start
+## Run it on your server
 
-- New to the plugin: [Paint your first terrain](tutorial/paint-your-first-terrain.md).
-- Looking for a specific task: see the how-to guides in the navigation.
-- Looking up a command, permission or config key: see the [reference](reference/commands.md).
+- First time: [Set up BetterGoPaint for your build team](tutorial/set-up-bettergopaint-for-your-build-team.md).
+- Coming from 1.x: [Upgrade from BetterGoPaint 1.x](how-to/upgrade-from-bettergopaint-1.md).
+- Configure it: [Configuration](reference/configuration.md), [Permissions](reference/permissions.md),
+  [Limit what builders can do](how-to/limit-what-builders-can-do.md).
+- Something looks wrong: [Console messages](reference/console-messages.md),
+  [Report a bug](how-to/report-a-bug.md).
+
+## Paint with it
+
+- First time: [Paint your first terrain](tutorial/paint-your-first-terrain.md).
+- Look up what a brush does: [Brushes](reference/brushes.md).
 
 ## Requirements
 
-- Paper on a version listed in [Supported versions](reference/supported-versions.md).
-- FastAsyncWorldEdit 2.16 or newer.
-- Java 25.
+Paper on a version listed in [Supported versions](reference/supported-versions.md), Java 25 and
+FastAsyncWorldEdit 2.16 or newer.
 
 ## Getting help
 

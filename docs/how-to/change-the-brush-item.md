@@ -7,5 +7,7 @@ By default the feather is the brush. To use another item:
    not a block-only material such as `WATER`.
 3. Run `/gopaint reload`.
 
-If the value is not an item, BetterGoPaint logs an error on start and disables itself.
+The value must be a material that can be held, such as `BLAZE_ROD`, not one that only exists as a
+block, such as `WATER`. With such a value BetterGoPaint disables itself on the next start; after a
+reload, nobody can hold the brush until you fix the value.
 See [Configuration](../reference/configuration.md) for all keys.
