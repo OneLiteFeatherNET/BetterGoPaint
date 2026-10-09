@@ -19,9 +19,8 @@
 package net.onelitefeather.bettergopaint.brush;
 
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.translation.GlobalTranslator;
 import net.onelitefeather.bettergopaint.objects.brush.AngleBrush;
 import net.onelitefeather.bettergopaint.objects.brush.Brush;
 import net.onelitefeather.bettergopaint.objects.brush.DiscBrush;
@@ -46,6 +45,7 @@ import org.jetbrains.annotations.NotNull;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -74,10 +74,12 @@ public final class PlayerBrush implements BrushSettings {
     private Material mask;
     private final List<Material> blocks = new ArrayList<>();
 
+    private final Locale locale;
     private final Inventory gui;
 
-    public PlayerBrush(@NotNull PlayerBrushManager brushManager) {
+    public PlayerBrush(@NotNull PlayerBrushManager brushManager, @NotNull Locale locale) {
         this.brushManager = brushManager;
+        this.locale = locale;
 
         surfaceMode = Settings.settings().generic.SURFACE_MODE;
         maskEnabled = Settings.settings().generic.MASK_ENABLED;
@@ -182,6 +184,20 @@ public final class PlayerBrush implements BrushSettings {
     @Override
     public @NotNull Axis axis() {
         return axis;
+    }
+
+    /**
+     * @return the locale the menu of this brush is rendered in
+     */
+    public @NotNull Locale locale() {
+        return locale;
+    }
+
+    /**
+     * @return every brush the player can cycle through
+     */
+    public @NotNull List<Brush> brushes() {
+        return brushManager.getBrushes();
     }
 
     public void updateInventory() {
@@ -400,48 +416,56 @@ public final class PlayerBrush implements BrushSettings {
         updateInventory();
     }
 
-    public void export(ItemStack itemStack) {
-        List<String> lore = new ArrayList<>();
-        lore.add("");
-        lore.add("Size: " + size);
+    /**
+     * Stores this brush on the given item. The settings go into the item's persistent data, the
+     * lore only shows them.
+     */
+    public void export(@NotNull ItemStack itemStack) {
+        List<Component> lore = new ArrayList<>();
+        lore.add(Component.empty());
+        lore.add(line("bettergopaint.export.size", size));
         if (brush() instanceof SprayBrush) {
-            lore.add("Chance: " + chance() + "%");
+            lore.add(line("bettergopaint.export.chance", chance()));
         } else if (brush() instanceof OverlayBrush || brush() instanceof UnderlayBrush) {
-            lore.add("Thickness: " + thickness());
+            lore.add(line("bettergopaint.export.thickness", thickness()));
         } else if (brush() instanceof DiscBrush) {
-            lore.add("Axis: " + axis().name());
+            lore.add(line("bettergopaint.export.axis", axis().name()));
         } else if (brush() instanceof AngleBrush) {
-            lore.add("AngleDistance: " + angleDistance());
-            lore.add("AngleHeightDifference: " + angleHeightDifference());
+            lore.add(line("bettergopaint.export.angle_distance", angleDistance()));
+            lore.add(line("bettergopaint.export.angle_height", angleHeightDifference()));
         } else if (brush() instanceof SplatterBrush) {
-            lore.add("Falloff: " + falloffStrength());
+            lore.add(line("bettergopaint.export.falloff", falloffStrength()));
         } else if (brush() instanceof GradientBrush) {
-            lore.add("Mixing: " + mixingStrength());
-            lore.add("Falloff: " + falloffStrength());
+            lore.add(line("bettergopaint.export.mixing", mixingStrength()));
+            lore.add(line("bettergopaint.export.falloff", falloffStrength()));
         } else if (brush() instanceof FractureBrush) {
-            lore.add("FractureDistance: " + fractureDistance());
+            lore.add(line("bettergopaint.export.fracture_distance", fractureDistance()));
         }
-        lore.add("Blocks: " + (blocks().isEmpty() ? "none" : blocks().stream()
+        lore.add(line("bettergopaint.export.blocks", blocks().isEmpty() ? "-" : blocks().stream()
                 .map(Material::getKey)
                 .map(NamespacedKey::asMinimalString)
                 .collect(Collectors.joining(", "))));
-
         if (maskEnabled()) {
-            lore.add("Mask: " + mask().getKey().asMinimalString());
+            lore.add(line("bettergopaint.export.mask", mask().getKey().asMinimalString()));
         }
         if (!surfaceMode().equals(SurfaceMode.DISABLED)) {
-            lore.add("Surface Mode: " + surfaceMode.getName());
+            lore.add(line("bettergopaint.export.surface", surfaceMode.getName()));
         }
 
         itemStack.editMeta(itemMeta -> {
-            itemMeta.displayName(Component.text(" ♦ " + brush().getName() + " ♦ ", NamedTextColor.AQUA)
-                    .style(Style.style(TextDecoration.ITALIC.withState(false))));
-            itemMeta.lore(lore.stream().map(string -> Component.text(string).style(Style
-                    .style(TextDecoration.ITALIC.withState(false))
-                    .color(NamedTextColor.DARK_GRAY))).toList());
+            itemMeta.displayName(GlobalTranslator.render(
+                    Component.translatable("bettergopaint.export.name", Component.text(brush().getName())), locale
+            ).decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE));
+            itemMeta.lore(lore);
             itemMeta.addEnchant(Enchantment.INFINITY, 1, false);
             itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+            ExportedBrushes.write(itemMeta, this);
         });
+    }
+
+    private Component line(String key, Object value) {
+        return GlobalTranslator.render(Component.translatable(key, Component.text(String.valueOf(value))), locale)
+                .decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE);
     }
 
 }

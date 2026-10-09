@@ -51,7 +51,9 @@ class TranslationBundleTest {
     private static final Path RESOURCES = Paths.get("src", "main", "resources");
     private static final Path SOURCES = Paths.get("src", "main", "java");
     private static final String BUNDLE = "bettergopaint";
-    private static final Pattern TRANSLATABLE = Pattern.compile("translatable\\(\"(bettergopaint\\.[a-z0-9_.]+)\"");
+    /** Every string literal that looks like a message key. Permission nodes live in Constants and are skipped. */
+    private static final Pattern TRANSLATABLE = Pattern.compile("\"(bettergopaint\\.[a-z0-9_.]+)\"");
+    private static final String PERMISSIONS = "Constants.java";
 
     static List<Path> bundles() throws IOException {
         List<Path> files = new ArrayList<>();
@@ -73,7 +75,9 @@ class TranslationBundleTest {
     private static Set<String> keysUsedInCode() throws IOException {
         Set<String> keys = new TreeSet<>();
         try (var files = Files.walk(SOURCES)) {
-            for (Path file : files.filter(path -> path.toString().endsWith(".java")).toList()) {
+            for (Path file : files.filter(path -> path.toString().endsWith(".java"))
+                    .filter(path -> !path.getFileName().toString().equals(PERMISSIONS))
+                    .toList()) {
                 Matcher matcher = TRANSLATABLE.matcher(Files.readString(file));
                 while (matcher.find()) {
                     keys.add(matcher.group(1));

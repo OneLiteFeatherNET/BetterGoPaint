@@ -20,12 +20,10 @@ package net.onelitefeather.bettergopaint.listeners;
 
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.onelitefeather.bettergopaint.BetterGoPaint;
 import net.onelitefeather.bettergopaint.brush.BrushSettings;
-import net.onelitefeather.bettergopaint.brush.ExportedPlayerBrush;
+import net.onelitefeather.bettergopaint.brush.ExportedBrushes;
 import net.onelitefeather.bettergopaint.brush.PlayerBrush;
-import net.onelitefeather.bettergopaint.objects.brush.Brush;
 import net.onelitefeather.bettergopaint.objects.other.Settings;
 import net.onelitefeather.bettergopaint.utils.Constants;
 import net.onelitefeather.bettergopaint.utils.Messages;
@@ -39,7 +37,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.Optional;
 
@@ -97,14 +94,12 @@ public final class InteractListener implements Listener {
 
         BrushSettings brushSettings;
 
-        ItemMeta itemMeta = item.getItemMeta();
-
-        if (itemMeta != null && itemMeta.hasLore() && itemMeta.displayName() instanceof TextComponent name) {
-
-            Optional<Brush> brush = plugin.getBrushManager().getBrushHandler(name.content());
-
-            //noinspection removal
-            brushSettings = brush.map(current -> ExportedPlayerBrush.parse(current, itemMeta)).orElse(null);
+        Optional<ExportedBrushes.Result> exported = ExportedBrushes.read(item, plugin.getBrushManager());
+        if (exported.isPresent()) {
+            brushSettings = exported.get().brush();
+            if (exported.get().converted() && event.getHand() != null) {
+                player.getInventory().setItem(event.getHand(), item);
+            }
         } else if (item.getType().equals(Settings.settings().generic.DEFAULT_BRUSH)) {
             brushSettings = plugin.getBrushManager().getBrush(player);
         } else {

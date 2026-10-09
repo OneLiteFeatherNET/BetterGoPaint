@@ -79,14 +79,11 @@ class PlayerBrushManagerTest {
     }
 
     @Test
-    @DisplayName("the lore highlights only the selected brush")
-    void loreHighlightsSelectedBrush() {
-        Brush selected = brushes.get(2);
-
-        String lore = manager.getBrushLore(selected);
-
-        assertThat(lore.lines()).hasSize(brushes.size());
-        assertThat(lore.lines().filter(line -> line.startsWith("§e")))
-                .containsExactly("§e" + selected.getName());
+    @DisplayName("an exact name finds exactly that brush")
+    void exactNameLookup() {
+        for (Brush brush : brushes) {
+            assertThat(manager.getBrushByName(brush.getName())).containsSame(brush);
+        }
+        assertThat(manager.getBrushByName(" ♦ Sphere Brush ♦ ")).isEmpty();
     }
 }

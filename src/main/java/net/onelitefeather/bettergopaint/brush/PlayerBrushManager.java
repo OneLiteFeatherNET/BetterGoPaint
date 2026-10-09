@@ -38,7 +38,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * The PlayerBrushManager class manages the brush selection for each player.
@@ -72,24 +71,7 @@ public class PlayerBrushManager {
      * @return The brush for the specified player.
      */
     public @NotNull PlayerBrush getBrush(@NotNull Player player) {
-        return playerBrushes.computeIfAbsent(player.getUniqueId(), ignored -> new PlayerBrush(this));
-    }
-
-    /**
-     * Retrieves the lore for a specific brush. Each brush name is preceded by a color code
-     * indicating whether it is the currently selected brush or not.
-     *
-     * @param brush The brush for which to retrieve the lore.
-     * @return The lore for the specified brush.
-     */
-    public @NotNull String getBrushLore(@NotNull Brush brush) {
-        return brushes.stream().map(current -> {
-            if (current.equals(brush)) {
-                return "§e" + current.getName() + "\n";
-            } else {
-                return "§8" + current.getName() + "\n";
-            }
-        }).collect(Collectors.joining());
+        return playerBrushes.computeIfAbsent(player.getUniqueId(), ignored -> new PlayerBrush(this, player.locale()));
     }
 
     /**
@@ -102,6 +84,18 @@ public class PlayerBrushManager {
         return brushes.stream()
                 .filter(brush -> name.contains(brush.getName()))
                 .findAny();
+    }
+
+    /**
+     * Retrieves the brush with exactly the given name.
+     *
+     * @param name The name of the brush.
+     * @return An optional containing the brush, or empty if no brush has that name.
+     */
+    public @NotNull Optional<Brush> getBrushByName(@NotNull String name) {
+        return brushes.stream()
+                .filter(brush -> brush.getName().equals(name))
+                .findFirst();
     }
 
     /**
