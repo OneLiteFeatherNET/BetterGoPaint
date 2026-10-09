@@ -2,7 +2,7 @@
 
 ## 1. Scheduling
 
-- [ ] 1.1 Move the update check to `Bukkit.getAsyncScheduler().runAtFixedRate`; verify `grep -rn "getScheduler()" src/main/java` finds no `BukkitScheduler` use and `UpdateServiceTest` passes
+- [x] 1.1 Move the update check to `Bukkit.getAsyncScheduler().runAtFixedRate`; verify `grep -rn "getScheduler()" src/main/java` finds no `BukkitScheduler` use and `UpdateServiceTest` passes
 
 ## 2. Shared state
 

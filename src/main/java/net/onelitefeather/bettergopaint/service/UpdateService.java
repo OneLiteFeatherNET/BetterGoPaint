@@ -28,13 +28,14 @@ import net.onelitefeather.bettergopaint.utils.Messages;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitTask;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 /**
@@ -44,7 +45,7 @@ import java.util.function.Supplier;
 public final class UpdateService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UpdateService.class);
-    private static final long CHECK_INTERVAL_TICKS = 20L * 60 * 60 * 3;
+    private static final long CHECK_INTERVAL_HOURS = 3L;
     private static final String DOWNLOAD_URL = "https://hangar.papermc.io/OneLiteFeather/BetterGoPaint/versions/%s";
 
     private final Plugin plugin;
@@ -54,7 +55,7 @@ public final class UpdateService {
     private final Supplier<Optional<String>> latestReleaseSource;
 
     private volatile @Nullable Version remoteVersion;
-    private @Nullable BukkitTask task;
+    private @Nullable ScheduledTask task;
 
     @Inject
     public UpdateService(@NotNull Plugin plugin, @NotNull ComponentLogger console, @NotNull SettingsHolder settings) {
@@ -76,14 +77,21 @@ public final class UpdateService {
     }
 
     /**
-     * Schedules the periodic check, starting immediately but asynchronously. Does nothing when
-     * {@code generic.check-for-updates} is disabled.
+     * Schedules the periodic check on Paper's async scheduler, starting immediately. The check runs off the
+     * server thread, which also keeps it valid on Folia. Does nothing when {@code generic.check-for-updates}
+     * is disabled.
      */
     public void start() {
         if (!settings.get().generic().checkForUpdates()) {
             return;
         }
-        this.task = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::check, 0, CHECK_INTERVAL_TICKS);
+        this.task = Bukkit.getAsyncScheduler().runAtFixedRate(
+                plugin,
+                scheduled -> check(),
+                0,
+                CHECK_INTERVAL_HOURS,
+                TimeUnit.HOURS
+        );
     }
 
     /**
@@ -135,6 +143,7 @@ public final class UpdateService {
     public void shutdown() {
         if (task != null) {
             task.cancel();
+            task = null;
         }
         if (latestReleaseSource instanceof AutoCloseable closeable) {
             try {
