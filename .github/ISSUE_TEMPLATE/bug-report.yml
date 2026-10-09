@@ -1,0 +1,98 @@
+name: Bug Report
+description: Report a brush that misbehaves, an error in the console or an incompatibility with another plugin.
+labels: [ "status: needs triage", "type: bug" ]
+body:
+  - type: checkboxes
+    id: acknowledgements
+    attributes:
+      label: Before you continue
+      description: We close reports that skip these. Please tick every box.
+      options:
+        - label: I am running the latest version of BetterGoPaint from [Hangar](https://hangar.papermc.io/OneLiteFeather/BetterGoPaint) or [Modrinth](https://modrinth.com/plugin/bettergopaint).
+          required: true
+        - label: I am running a Minecraft version that is listed in the [supported versions](https://github.com/OneLiteFeatherNET/BetterGoPaint/blob/main/docs/reference/supported-versions.md).
+          required: true
+        - label: I searched the open and closed issues and this is not a duplicate.
+          required: true
+        - label: I am pasting unmodified console output, not screenshots and not a summary.
+          required: true
+
+  - type: dropdown
+    id: server-software
+    attributes:
+      label: Server software
+      description: |
+        BetterGoPaint supports Paper. Paper forks, Spigot, CraftBukkit, Folia and hybrid servers are not supported.
+      options:
+        - Paper
+        - A Paper fork (Purpur, Pufferfish, Leaves, ...)
+        - Something else
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      description: What you expected to see.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual behavior
+      description: What you actually saw. Screenshots or a short video of the brush result help a lot.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Which brush, which settings (size, chance, mask, surface mode) and which blocks you used.
+    validations:
+      required: true
+
+  - type: input
+    id: log-link
+    attributes:
+      label: Full log (paste service)
+      description: Upload your full `logs/latest.log` to [mclo.gs](https://mclo.gs) and paste the link here.
+      placeholder: https://mclo.gs/xxxxxxx
+    validations:
+      required: false
+
+  - type: textarea
+    id: paper-version
+    attributes:
+      label: Paper version
+      description: Run `/version` on your server and **paste** the full, unmodified output here.
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: plugin-version
+    attributes:
+      label: Plugin versions
+      description: Run `/version BetterGoPaint` and `/version FastAsyncWorldEdit` and **paste** both outputs here.
+      render: text
+    validations:
+      required: true
+
+  - type: input
+    id: fawe-debugpaste
+    attributes:
+      label: FAWE debugpaste
+      description: Run `/fawe debugpaste` and paste the link here.
+    validations:
+      required: false
+
+  - type: textarea
+    id: other-information
+    attributes:
+      label: Other
+      description: Anything else that helps us find the problem.
+    validations:
+      required: false
