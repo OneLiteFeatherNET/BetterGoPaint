@@ -1,7 +1,10 @@
 import io.papermc.hangarpublishplugin.model.Platforms
 import net.minecrell.pluginyml.bukkit.BukkitPluginDescription
 import net.minecrell.pluginyml.paper.PaperPluginDescription
+import org.gradle.api.GradleException
 import xyz.jpenilla.runpaper.task.RunServer
+import xyz.jpenilla.runtask.pluginsapi.PluginDownloadService
+import xyz.jpenilla.runtask.service.DownloadsAPIService
 
 plugins {
     java
@@ -198,6 +201,36 @@ tasks {
             pluginJars(shadowJar.flatMap { it.archiveFile })
             downloadPlugins {
                 modrinth("fastasyncworldedit", libs.versions.fawe.get())
+            }
+        }
+    }
+    // Folia test servers for local testing only. Stable FastAsyncWorldEdit does not support Folia yet, so a
+    // Folia-capable FAWE build has to be passed in with -PfoliaFaweUrl=<url>.
+    supportedMinecraftVersions.forEach { serverVersion ->
+        register<RunServer>("run-folia-$serverVersion") {
+            minecraftVersion(serverVersion)
+            jvmArgs("-DPaper.IgnoreJavaVersion=true", "-Dcom.mojang.eula.agree=true")
+            group = "run folia"
+            description = "Starts a local Folia $serverVersion test server. Needs -PfoliaFaweUrl=<url of a Folia-capable FAWE jar>."
+            runDirectory.set(file("run-folia-$serverVersion"))
+            pluginJars(shadowJar.flatMap { it.archiveFile })
+            downloadsApiService.convention(DownloadsAPIService.folia(project))
+            pluginDownloadService.convention(PluginDownloadService.paper(project))
+
+            val faweUrl = providers.gradleProperty("foliaFaweUrl").orNull
+            if (faweUrl != null) {
+                downloadPlugins {
+                    url(faweUrl)
+                }
+            }
+            doFirst {
+                if (faweUrl == null) {
+                    throw GradleException(
+                        "run-folia-$serverVersion needs a Folia-capable FastAsyncWorldEdit jar. Stable FAWE does not " +
+                            "support Folia yet. Pass -PfoliaFaweUrl=<url of a Folia-capable FAWE jar>, for example " +
+                            "./gradlew run-folia-$serverVersion -PfoliaSupported=true -PfoliaFaweUrl=<url>."
+                    )
+                }
             }
         }
     }
