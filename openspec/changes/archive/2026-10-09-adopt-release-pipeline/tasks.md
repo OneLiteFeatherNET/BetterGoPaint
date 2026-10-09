@@ -16,14 +16,17 @@
 - [x] 3.1 Port `build-pr.yml` with Java 25 and the unshaded jar excluded from the PR artifact
 - [x] 3.2 Add the weekly `security.yml` Trivy scan
 - [x] 3.3 Switch `renovate.json` to the shared OneLiteFeatherNET presets and remove `.github/renovate.json`
-- [x] 3.4 Replace issue templates and the pull request template; verify GitHub renders the forms on the branch
+- [x] 3.4 Replace issue templates and the pull request template; verify every form and workflow parses as YAML
 
-## 4. Repository settings (manual, maintainers)
 
-- [ ] 4.1 Bring `main` up to date and make it the default branch
-- [ ] 4.2 Protect `main` and require `Build Pull Request Branch`, `Conventional PR title` and `Conventional commits`
-- [ ] 4.3 Verify `HANGAR_KEY`, `MODRINTH_KEY` and the Dependency-Track secrets exist
-- [ ] 4.4 Confirm the Dependency-Track `parent-uuid` in `release-please.yml`
+## Manual follow-up (maintainers, GitHub settings)
+
+Not tracked: these are repository settings, not code.
+
+- Bring `main` up to date and make it the default branch
+- Protect `main` and require `Build Pull Request Branch`, `Conventional PR title` and `Conventional commits`
+- Verify `HANGAR_KEY`, `MODRINTH_KEY` and the Dependency-Track secrets exist
+- Confirm the Dependency-Track `parent-uuid` in `release-please.yml`
 
 ## Workflow follow-up
 

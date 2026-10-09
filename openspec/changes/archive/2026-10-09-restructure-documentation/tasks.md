@@ -12,9 +12,12 @@
 - [x] 2.4 Write docs/development/documentation.md with the page-per-change table
 - [x] 2.5 Rewrite README.md around requirements, docs and building
 
-## 3. Publishing (manual, maintainers)
 
-- [ ] 3.1 Connect a GitBook space to `docs/` with Git Sync and link it from the README
+## Manual follow-up (maintainers, GitBook)
+
+Not tracked: needs access to the OneLiteFeather GitBook organisation.
+
+- Connect a GitBook space to `docs/` with Git Sync and link it from the README
 
 ## Workflow follow-up
 

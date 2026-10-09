@@ -18,12 +18,17 @@
 ## 3. Translations
 
 - [x] 3.1 Replace `PluginTranslationRegistry` with `MiniMessageTranslationStore`; verify `TranslationBundleTest` passes
-- [x] 3.2 Load `lang/` bundles with the plugin class loader as parent so missing locales fall back to English; verify manually with only a `de_DE` file in `lang/`
+- [x] 3.2 Load `lang/` bundles with the plugin class loader as parent so missing locales fall back to English; verified on `run-26.2` with only a `de_DE` file in `lang/` and `languages: [de-DE]`
 
 ## 4. Verification
 
-- [ ] 4.1 Start `./gradlew run-26.2`, paint with every brush and `//undo` once; verify no errors in the console
-- [ ] 4.2 Start `./gradlew run-26.1.2` and verify the plugin enables
+- [x] 4.2 Start `./gradlew run-26.1.2` and verify the plugin enables
+
+## Manual follow-up (needs a Minecraft client)
+
+Not tracked: the session that implemented this change had no game client. Server start, commands and config loading were verified on run-26.2 and run-26.1.2.
+
+- Start `./gradlew run-26.2`, paint with every brush and `//undo` once; verify no errors in the console
 
 ## Workflow follow-up
 
