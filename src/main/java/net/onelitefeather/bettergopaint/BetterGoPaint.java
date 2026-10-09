@@ -26,7 +26,6 @@ import net.kyori.adventure.text.minimessage.translation.MiniMessageTranslationSt
 import net.kyori.adventure.translation.GlobalTranslator;
 import net.onelitefeather.bettergopaint.brush.PlayerBrushManager;
 import net.onelitefeather.bettergopaint.command.GoPaintCommand;
-import net.onelitefeather.bettergopaint.command.ReloadCommand;
 import net.onelitefeather.bettergopaint.listeners.ConnectListener;
 import net.onelitefeather.bettergopaint.listeners.InteractListener;
 import net.onelitefeather.bettergopaint.listeners.InventoryListener;
@@ -34,18 +33,17 @@ import net.onelitefeather.bettergopaint.objects.other.Settings;
 import net.onelitefeather.bettergopaint.service.UpdateService;
 import org.bstats.bukkit.Metrics;
 import org.bstats.charts.SimplePie;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.command.CommandSender;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.incendo.cloud.annotations.AnnotationParser;
-import org.incendo.cloud.bukkit.CloudBukkitCapabilities;
 import org.incendo.cloud.execution.ExecutionCoordinator;
-import org.incendo.cloud.paper.LegacyPaperCommandManager;
+import org.incendo.cloud.minecraft.extras.MinecraftHelp;
+import org.incendo.cloud.paper.PaperCommandManager;
+import org.incendo.cloud.paper.util.sender.PaperSimpleSenderMapper;
+import org.incendo.cloud.paper.util.sender.Source;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
@@ -161,15 +159,12 @@ public class BetterGoPaint extends JavaPlugin implements Listener {
     }
 
 
-    @SuppressWarnings("UnstableApiUsage")
     private void registerCommands() {
-        Bukkit.getCommandMap().register("gopaint", getPluginMeta().getName(), new GoPaintCommand(this));
-
-        var annotationParser = enableCommandSystem();
-        if (annotationParser != null) {
-            annotationParser.parse(new ReloadCommand(this));
-            annotationParser.parse(new GoPaintCommand(this));
-        }
+        PaperCommandManager<Source> commandManager = PaperCommandManager.builder(PaperSimpleSenderMapper.simpleSenderMapper())
+                .executionCoordinator(ExecutionCoordinator.simpleCoordinator())
+                .buildOnEnable(this);
+        MinecraftHelp<Source> help = MinecraftHelp.create("/gopaint help", commandManager, Source::source);
+        new AnnotationParser<>(commandManager, Source.class).parse(new GoPaintCommand(this, help));
     }
 
     private void registerListeners() {
@@ -185,24 +180,6 @@ public class BetterGoPaint extends JavaPlugin implements Listener {
 
     private void donationInformation() {
         getComponentLogger().info(Component.translatable("bettergopaint.notify.donation.console"));
-    }
-
-    private @Nullable AnnotationParser<CommandSender> enableCommandSystem() {
-        try {
-            LegacyPaperCommandManager<CommandSender> commandManager = LegacyPaperCommandManager.createNative(
-                    this,
-                    ExecutionCoordinator.simpleCoordinator()
-            );
-            if (commandManager.hasCapability(CloudBukkitCapabilities.BRIGADIER)) {
-                commandManager.registerBrigadier();
-                getLogger().info("Brigadier support enabled");
-            }
-            return new AnnotationParser<>(commandManager, CommandSender.class);
-
-        } catch (Exception exception) {
-            getLogger().log(Level.SEVERE, "Cannot init command manager", exception);
-            return null;
-        }
     }
 
     public @NotNull PlayerBrushManager getBrushManager() {

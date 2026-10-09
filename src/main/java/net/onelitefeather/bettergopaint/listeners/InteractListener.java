@@ -19,6 +19,7 @@
 package net.onelitefeather.bettergopaint.listeners;
 
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.onelitefeather.bettergopaint.BetterGoPaint;
 import net.onelitefeather.bettergopaint.brush.BrushSettings;
@@ -27,6 +28,7 @@ import net.onelitefeather.bettergopaint.brush.PlayerBrush;
 import net.onelitefeather.bettergopaint.objects.brush.Brush;
 import net.onelitefeather.bettergopaint.objects.other.Settings;
 import net.onelitefeather.bettergopaint.utils.Constants;
+import net.onelitefeather.bettergopaint.utils.Messages;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -118,9 +120,7 @@ public final class InteractListener implements Listener {
                     () -> brushSettings.brush().paint(location, player, brushSettings), false, true
             );
         } else {
-            player.sendRichMessage(
-                    Settings.settings().generic.PREFIX + "<red>Your brush is disabled, left click to enable the brush."
-            );
+            player.sendMessage(Component.translatable("bettergopaint.brush.disabled", Messages.prefix()));
         }
     }
 

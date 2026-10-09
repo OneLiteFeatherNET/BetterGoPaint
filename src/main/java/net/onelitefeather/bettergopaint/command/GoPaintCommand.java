@@ -18,104 +18,111 @@
  */
 package net.onelitefeather.bettergopaint.command;
 
+import net.kyori.adventure.text.Component;
 import net.onelitefeather.bettergopaint.BetterGoPaint;
-import net.onelitefeather.bettergopaint.objects.other.Settings;
 import net.onelitefeather.bettergopaint.brush.PlayerBrush;
+import net.onelitefeather.bettergopaint.objects.other.Settings;
 import net.onelitefeather.bettergopaint.utils.Constants;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.PluginIdentifiableCommand;
+import net.onelitefeather.bettergopaint.utils.Messages;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
+import org.incendo.cloud.annotations.Argument;
+import org.incendo.cloud.annotations.Command;
+import org.incendo.cloud.annotations.CommandDescription;
+import org.incendo.cloud.annotations.Permission;
+import org.incendo.cloud.annotations.suggestion.Suggestions;
+import org.incendo.cloud.context.CommandContext;
+import org.incendo.cloud.context.CommandInput;
+import org.incendo.cloud.minecraft.extras.MinecraftHelp;
+import org.incendo.cloud.paper.util.sender.PlayerSource;
+import org.incendo.cloud.paper.util.sender.Source;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class GoPaintCommand extends Command implements PluginIdentifiableCommand {
+/**
+ * The {@code /gopaint} command tree. Every subcommand needs {@link Constants#USE_PERMISSION} and its own node.
+ */
+public final class GoPaintCommand {
 
     private final BetterGoPaint plugin;
+    private final MinecraftHelp<Source> help;
 
-    public GoPaintCommand(BetterGoPaint main) {
-        super("gopaint", "goPaint command", "/gp size|toggle|info|reload", List.of("gp"));
-        plugin = main;
+    public GoPaintCommand(@NotNull BetterGoPaint plugin, @NotNull MinecraftHelp<Source> help) {
+        this.plugin = plugin;
+        this.help = help;
     }
 
-    @Override
-    public boolean execute(
-            @NotNull final CommandSender sender,
-            @NotNull final String commandLabel,
-            final @NotNull String[] args
-    ) {
-        if (!(sender instanceof final Player p)) {
-            return false;
-        }
-        PlayerBrush pb = plugin.getBrushManager().getBrush(p);
-        String prefix = Settings.settings().generic.PREFIX;
-        if (!p.hasPermission(Constants.USE_PERMISSION)) {
-            p.sendRichMessage(prefix + "<red>You are lacking the permission bettergopaint.use");
-            return true;
-        }
-        if (args.length == 0) {
-            if (p.hasPermission(Constants.ADMIN_PERMISSION)) {
-                p.sendRichMessage(prefix + "<red>/gp size<gray>|<red>toggle<gray>|<red>info<gray>|<red>reload");
-                return true;
-            }
-            p.sendRichMessage(prefix + "<red>/gp size<gray>|<red>toggle<gray>|<red>info<gray>");
-            return true;
-        } else if (args.length == 1) {
-            if (args[0].equalsIgnoreCase("size")) {
-                p.sendRichMessage(prefix + "<red>/gp size [number]");
-                return true;
-            } else if (args[0].equalsIgnoreCase("toggle")) {
-                if (pb.enabled()) {
-                    pb.toggle();
-                    p.sendRichMessage(prefix + "<red>Disabled brush");
-                } else {
-                    pb.toggle();
-                    p.sendRichMessage(prefix + "<green>Enabled brush");
-                }
-                return true;
-            } else if ((args[0].equalsIgnoreCase("reload") || args[0].equalsIgnoreCase("r")) && p.hasPermission(
-                    Constants.ADMIN_PERMISSION)) {
-                plugin.reloadConfig();
-                p.sendRichMessage(prefix + "<green>Reloaded");
-                return true;
-            } else if (args[0].equalsIgnoreCase("info") || args[0].equalsIgnoreCase("i")) {
-                p.sendRichMessage(prefix + "<aqua>Created by: <gold>TheMeinerLP");
-                p.sendRichMessage(prefix + "<aqua>Links: <gold><click:open_url:https://twitter.com/themeinerlp'><u>Twitter</u></click>");
-                return true;
-            }
-            if (p.hasPermission(Constants.ADMIN_PERMISSION)) {
-                p.sendRichMessage(prefix + "<red>/gp size<gray>|<red>toggle<gray>|<red>info<gray>|<red>reload");
-                return true;
-            }
-            p.sendRichMessage(prefix + "<red>/gp size<gray>|<red>toggle<gray>|<red>info");
-            return true;
-        } else if (args.length == 2) {
-            if (args[0].equalsIgnoreCase("size") || args[0].equalsIgnoreCase("s")) {
-                try {
-                    int sizeAmount = Integer.parseInt(args[1]);
-                    pb.setSize(sizeAmount);
-                    p.sendRichMessage(prefix + "<gold>Size set to: <yellow>" + pb.size());
-                    return true;
-                } catch (Exception e) {
-                    p.sendRichMessage(prefix + "<red>/gb size [number]");
-                    return true;
-                }
-            }
-            if (p.hasPermission(Constants.ADMIN_PERMISSION)) {
-                p.sendRichMessage(prefix + "<red>/gp size<gray>|<red>toggle<gray>|<red>info<gray>|<red>reload");
-                return true;
-            }
-            p.sendRichMessage(prefix + "<red>/gp size<gray>|<red>toggle<gray>|<red>info<gray>");
-            return true;
-        }
-        return false;
+    @Command("gopaint|gp|bgp")
+    @CommandDescription("Shows the BetterGoPaint commands")
+    @Permission(value = {Constants.USE_PERMISSION, Constants.HELP_PERMISSION}, mode = Permission.Mode.ALL_OF)
+    public void root(Source sender) {
+        help.queryCommands("", sender);
     }
 
-    @Override
-    public @NotNull Plugin getPlugin() {
-        return plugin;
+    @Command("gopaint|gp|bgp help [query]")
+    @CommandDescription("Shows the BetterGoPaint commands")
+    @Permission(value = {Constants.USE_PERMISSION, Constants.HELP_PERMISSION}, mode = Permission.Mode.ALL_OF)
+    public void help(Source sender, @Argument("query") String query) {
+        help.queryCommands(query == null ? "" : query, sender);
     }
 
+    @Command("gopaint|gp|bgp size <size>")
+    @CommandDescription("Sets the size of your brush")
+    @Permission(value = {Constants.USE_PERMISSION, Constants.SIZE_PERMISSION}, mode = Permission.Mode.ALL_OF)
+    public void size(PlayerSource sender, @Argument(value = "size", suggestions = "brush-sizes") int size) {
+        Player player = sender.source();
+        int maxSize = Settings.settings().generic.MAX_SIZE;
+        if (!BrushSizes.isValid(size, maxSize)) {
+            player.sendMessage(Component.translatable(
+                    "bettergopaint.command.size.out_of_range",
+                    Messages.prefix(),
+                    Component.text(BrushSizes.MIN_SIZE),
+                    Component.text(maxSize)
+            ));
+            return;
+        }
+        PlayerBrush brush = plugin.getBrushManager().getBrush(player);
+        brush.setSize(size);
+        player.sendMessage(Component.translatable(
+                "bettergopaint.command.size.set",
+                Messages.prefix(),
+                Component.text(brush.size())
+        ));
+    }
+
+    @Suggestions("brush-sizes")
+    public List<String> brushSizes(CommandContext<Source> context, CommandInput input) {
+        return BrushSizes.suggestions(input.lastRemainingToken(), Settings.settings().generic.MAX_SIZE);
+    }
+
+    @Command("gopaint|gp|bgp toggle")
+    @CommandDescription("Enables or disables your brush")
+    @Permission(value = {Constants.USE_PERMISSION, Constants.TOGGLE_PERMISSION}, mode = Permission.Mode.ALL_OF)
+    public void toggle(PlayerSource sender) {
+        Player player = sender.source();
+        PlayerBrush brush = plugin.getBrushManager().getBrush(player);
+        brush.toggle();
+        player.sendMessage(brush.enabled()
+                ? Component.translatable("bettergopaint.command.toggle.enabled", Messages.prefix())
+                : Component.translatable("bettergopaint.command.toggle.disabled", Messages.prefix()));
+    }
+
+    @Command("gopaint|gp|bgp info")
+    @CommandDescription("Shows who made BetterGoPaint")
+    @Permission(value = {Constants.USE_PERMISSION, Constants.INFO_PERMISSION}, mode = Permission.Mode.ALL_OF)
+    public void info(Source sender) {
+        sender.source().sendMessage(Component.translatable(
+                "bettergopaint.command.info",
+                Messages.prefix(),
+                Component.text(plugin.getPluginMeta().getVersion())
+        ));
+    }
+
+    @Command("gopaint|gp|bgp reload")
+    @CommandDescription("Reloads config.yml")
+    @Permission(value = {Constants.USE_PERMISSION, Constants.RELOAD_PERMISSION}, mode = Permission.Mode.ALL_OF)
+    public void reload(Source sender) {
+        plugin.reloadConfig();
+        sender.source().sendMessage(Component.translatable("bettergopaint.command.reload.done", Messages.prefix()));
+    }
 }

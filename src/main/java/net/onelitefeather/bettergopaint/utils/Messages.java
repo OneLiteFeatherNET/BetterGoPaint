@@ -16,25 +16,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package net.onelitefeather.bettergopaint.command;
+package net.onelitefeather.bettergopaint.utils;
 
-import net.onelitefeather.bettergopaint.BetterGoPaint;
-import net.onelitefeather.bettergopaint.utils.Constants;
-import org.bukkit.entity.Player;
-import org.incendo.cloud.annotations.Command;
-import org.incendo.cloud.annotations.Permission;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.onelitefeather.bettergopaint.objects.other.Settings;
+import org.jetbrains.annotations.NotNull;
 
-public final class ReloadCommand {
+public final class Messages {
 
-    private final BetterGoPaint betterGoPaint;
-
-    public ReloadCommand(final BetterGoPaint betterGoPaint) {
-        this.betterGoPaint = betterGoPaint;
+    private Messages() {
+        throw new UnsupportedOperationException("This class cannot be instantiated");
     }
 
-    @Command("bgp|gp reload")
-    @Permission(Constants.RELOAD_PERMISSION)
-    public void onReload(Player player) {
-        betterGoPaint.reloadConfig();
+    /**
+     * @return the configured chat prefix, passed as {@code <arg:0>} to every prefixed message
+     */
+    public static @NotNull Component prefix() {
+        return MiniMessage.miniMessage().deserialize(Settings.settings().generic.PREFIX);
     }
 }

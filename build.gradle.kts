@@ -83,16 +83,33 @@ paper {
 
     permissions {
         register("bettergopaint.use") {
-            description = "Use the goPaint brush and the /gopaint command."
+            description = "Use the goPaint brush. Every /gopaint subcommand also needs its own node."
             default = BukkitPluginDescription.Permission.Default.OP
         }
-        register("bettergopaint.admin") {
-            description = "Use the administrative /gopaint subcommands such as reload."
-            default = BukkitPluginDescription.Permission.Default.FALSE
+        register("bettergopaint.command.help") {
+            description = "List the /gopaint commands with /gopaint help."
+            default = BukkitPluginDescription.Permission.Default.TRUE
+        }
+        register("bettergopaint.command.size") {
+            description = "Set the brush size with /gopaint size <size>."
+            default = BukkitPluginDescription.Permission.Default.TRUE
+        }
+        register("bettergopaint.command.toggle") {
+            description = "Enable or disable the brush with /gopaint toggle."
+            default = BukkitPluginDescription.Permission.Default.TRUE
+        }
+        register("bettergopaint.command.info") {
+            description = "Show the plugin credits with /gopaint info."
+            default = BukkitPluginDescription.Permission.Default.TRUE
         }
         register("bettergopaint.command.admin.reload") {
             description = "Reload config.yml with /gopaint reload."
             default = BukkitPluginDescription.Permission.Default.OP
+        }
+        register("bettergopaint.admin") {
+            description = "Bundle of the administrative permissions."
+            children = listOf("bettergopaint.command.admin.reload")
+            default = BukkitPluginDescription.Permission.Default.FALSE
         }
         register("bettergopaint.world.bypass") {
             description = "Paint in worlds listed under disabled worlds in config.yml."
