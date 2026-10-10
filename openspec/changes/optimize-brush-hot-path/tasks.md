@@ -2,8 +2,8 @@
 
 ## 0. Test support
 
-- [ ] 0.1 Add `CountingExtent` (decorator over `MemoryExtent`, counts both `getBlock` overloads per position, fresh per test) under `src/test/java/.../support/`; verify with a unit test that two reads of one position count 2
-- [ ] 0.2 Add a reference sphere helper (strict `distance < size / 2d`) for equivalence tests; verify it matches `SphereTest` expectations
+- [x] 0.1 Add `CountingExtent` (decorator over `MemoryExtent`, counts both `getBlock` overloads per position, fresh per test) under `src/test/java/.../support/`; verify with a unit test that two reads of one position count 2
+- [x] 0.2 Add a reference sphere helper (strict `distance < size / 2d`) for equivalence tests; verify it matches `SphereTest` expectations
 
 ## 1. C1 Paint curve once per stroke
 
