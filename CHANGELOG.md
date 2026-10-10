@@ -24,26 +24,43 @@
 
 * **gui:** split menu layout into sections ([#42](https://github.com/OneLiteFeatherNET/BetterGoPaint/issues/42)) ([f5f45c1](https://github.com/OneLiteFeatherNET/BetterGoPaint/commit/f5f45c17b8d0cbed484b9cfdc74f818f4993fc6e))
 
-## [Unreleased]
+## [1.1.0](https://github.com/OneLiteFeatherNET/BetterGoPaint/compare/1.0.0...1.1.0) (2024-12-05)
 
-### Added
-- Hard requirement of FastAsyncWorldEdit
-- Modrinth support
-- Hangar support
+### Features
 
-### Changed
-- XMaterial support now compatible with 1.18 upwards
-- Settings system
-- [Own BStats page](https://bstats.org/plugin/bukkit/BetterGoPaint/18734)
-- Build gradle - Improved many thing
-- Remove reflection code
+* Drop 1.20 support to add 1.21 support
+* Send an update notification when starting and joining
+* Add official 1.20.6 support
 
-### Deprecated
+### Bug Fixes
 
-### Removed
-- NMS Code
-- Hard Coded XMaterial
-- Authlib from Mojang
-### Fixed
+* Fix relocation of dependencies
 
-### Security
+### Code Refactoring
+
+* Migrate plugin descriptor to the Paper plugin format
+* Improve annotation usage
+* Code cleanup and performance improvements
+
+## [1.0.0](https://github.com/OneLiteFeatherNET/BetterGoPaint/releases/tag/1.0.0) (2024-05-13)
+
+### Features
+
+* Hard requirement of FastAsyncWorldEdit
+* Publish to Hangar and Modrinth
+* Own bStats page
+* New settings system
+* XMaterial support compatible with 1.18 and upwards
+* Add 1.20.2 - 1.20.4 support
+* Drop 1.13 - 1.16.4 support
+* Change release system
+
+### Bug Fixes
+
+* Fix loading issue
+* Fix legacy colors
+
+### Code Refactoring
+
+* Remove NMS code, reflection and the Mojang authlib
+* Remove hard-coded XMaterial
