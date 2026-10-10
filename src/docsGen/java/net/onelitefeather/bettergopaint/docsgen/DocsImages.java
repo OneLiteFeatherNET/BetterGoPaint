@@ -32,9 +32,10 @@ import java.util.TreeSet;
 import java.util.stream.Stream;
 
 /**
- * Writes the generated images and compares a folder with them. A folder matches when it holds exactly the generated
- * files with the same bytes. A missing, a differing and an extra file each make the check fail, and the message names
- * the file.
+ * Writes the generated images and compares the generated folders with them. A generated folder matches when it holds
+ * exactly the generated files with the same bytes. A missing, a differing and an extra file each make the check fail,
+ * and the message names the file. Other folders under the images folder, such as hand-captured screenshots, are not
+ * checked.
  */
 final class DocsImages {
 
@@ -55,12 +56,16 @@ final class DocsImages {
     }
 
     /**
+     * Checks the generated folders only. A folder is owned by the generator when a generated image lies below it; the
+     * owned folders are the top-level directories of the generated keys. Files in any other folder, for example
+     * hand-captured screenshots in {@code screenshots/}, are not checked for staleness.
+     *
      * @param imagesDirectory the folder to check; a missing folder holds no files
      * @param expected        the generated images keyed by their path below the folder
-     * @return one message per problem, in file name order; empty when the folder matches the generator
+     * @return one message per problem, in file name order; empty when the owned folders match the generator
      */
     static List<String> problems(Path imagesDirectory, Map<String, byte[]> expected) {
-        Map<String, byte[]> actual = present(imagesDirectory);
+        Map<String, byte[]> actual = present(imagesDirectory, expected.keySet());
         Set<String> names = new TreeSet<>(expected.keySet());
         names.addAll(actual.keySet());
 
@@ -79,7 +84,23 @@ final class DocsImages {
         return problems;
     }
 
-    private static Map<String, byte[]> present(Path imagesDirectory) {
+    private static Set<String> ownedFolders(Set<String> generatedNames) {
+        Set<String> folders = new TreeSet<>();
+        for (String name : generatedNames) {
+            int slash = name.indexOf('/');
+            if (slash > 0) {
+                folders.add(name.substring(0, slash));
+            }
+        }
+        return folders;
+    }
+
+    /**
+     * Reads the files that the check compares: every generated name and every file in an owned folder. Files in other
+     * folders are left alone.
+     */
+    private static Map<String, byte[]> present(Path imagesDirectory, Set<String> generatedNames) {
+        Set<String> owned = ownedFolders(generatedNames);
         Map<String, byte[]> files = new TreeMap<>();
         if (!Files.isDirectory(imagesDirectory)) {
             return files;
@@ -87,7 +108,11 @@ final class DocsImages {
         try (Stream<Path> paths = Files.walk(imagesDirectory)) {
             for (Path file : paths.filter(Files::isRegularFile).sorted().toList()) {
                 String name = imagesDirectory.relativize(file).toString().replace('\\', '/');
-                files.put(name, Files.readAllBytes(file));
+                int slash = name.indexOf('/');
+                boolean inOwnedFolder = slash > 0 && owned.contains(name.substring(0, slash));
+                if (inOwnedFolder || generatedNames.contains(name)) {
+                    files.put(name, Files.readAllBytes(file));
+                }
             }
         } catch (IOException exception) {
             throw new UncheckedIOException("could not read " + imagesDirectory, exception);

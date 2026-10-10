@@ -63,14 +63,26 @@ class DocsImagesTest {
     }
 
     @Test
-    @DisplayName("an image in the folder that the generator does not produce is reported by its name")
+    @DisplayName("an extra image inside a generated folder is reported by its name")
     void extraFileIsReported() throws IOException {
-        writeFile("menu/screenshot.png", "not generated");
+        writeFile("brushes/a.svg", "same");
+        writeFile("brushes/extra.svg", "not generated");
 
-        List<String> problems = DocsImages.problems(images, Map.of());
+        List<String> problems = DocsImages.problems(images, Map.of("brushes/a.svg", bytes("same")));
 
         assertThat(problems).as("the problems of an extra image")
-                .singleElement().asString().contains("menu/screenshot.png").contains("not generated");
+                .singleElement().asString().contains("brushes/extra.svg").contains("not generated");
+    }
+
+    @Test
+    @DisplayName("a hand-added screenshot outside the generated folders is ignored")
+    void handAddedScreenshotIsIgnored() throws IOException {
+        writeFile("brushes/a.svg", "same");
+        writeFile("screenshots/tour.gif", "captured in game");
+
+        List<String> problems = DocsImages.problems(images, Map.of("brushes/a.svg", bytes("same")));
+
+        assertThat(problems).as("the problems of a screenshot outside the generated folders").isEmpty();
     }
 
     @Test
