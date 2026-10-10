@@ -39,6 +39,7 @@
 * [Files and folders](reference/files-and-folders.md)
 * [Supported versions](reference/supported-versions.md)
 * [Brushes](reference/brushes.md)
+* [Brush menu](reference/brush-menu.md)
 
 ## Background
 
