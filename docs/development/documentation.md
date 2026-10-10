@@ -67,5 +67,7 @@ Pages that embed each generated file:
 
 | Generated file | Embedded by |
 |---|---|
-| `images/brushes/*.svg`, one per brush | No page yet; the change `builder-guides-with-images` embeds them |
-| `images/menu/menu-sphere-default.svg`, `menu-spray-disabled.svg`, `menu-angle.svg` | No page yet; the change `builder-guides-with-images` embeds them |
+| `images/brushes/*.svg`, one per brush | `reference/brushes.md` (all eleven). Also `how-to/paint-a-path-with-the-paint-brush.md` (`paint-brush.svg`), `how-to/shape-cliffs-with-the-angle-brush.md` (`angle-brush.svg`) and `how-to/blend-a-gradient.md` (`gradient-brush.svg`) |
+| `images/menu/menu-sphere-default.svg` | `tutorial/paint-your-first-terrain.md`, `how-to/mix-a-block-palette.md`, `how-to/share-a-brush-as-an-item.md`, `reference/brush-menu.md` |
+| `images/menu/menu-spray-disabled.svg` | `how-to/paint-only-on-one-block-with-a-mask.md`, `reference/brush-menu.md` |
+| `images/menu/menu-angle.svg` | `how-to/shape-cliffs-with-the-angle-brush.md`, `reference/brush-menu.md` |
