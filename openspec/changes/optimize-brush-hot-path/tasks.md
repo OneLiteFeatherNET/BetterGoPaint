@@ -17,8 +17,8 @@
 
 ## 3. C3 Random filter first
 
-- [ ] 3.1 Write failing tests: Spray chance 0 performs no mask or surface read; chance 100 selects all passing candidates; selected positions satisfy mask and sphere invariants
-- [ ] 3.2 Reorder filters in `SprayBrush`, `SplatterBrush`, `GradientBrush`; update or replace tests that pin exact seeded output with invariant tests or new golden values; verify `ShapeBrushesTest` and `StrokeRulesTest` pass
+- [x] 3.1 Write failing tests: Spray chance 0 performs no mask or surface read; chance 100 selects all passing candidates; selected positions satisfy mask and sphere invariants
+- [x] 3.2 Reorder filters in `SprayBrush`, `SplatterBrush`, `GradientBrush`; update or replace tests that pin exact seeded output with invariant tests or new golden values; verify `ShapeBrushesTest` and `StrokeRulesTest` pass
 - [ ] 3.3 Note the changed seeded output in the PR description
 
 ## 4. C4 Allocation-free sphere
