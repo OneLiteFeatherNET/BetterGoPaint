@@ -27,7 +27,7 @@ jobs:
     permissions:
       contents: read
       security-events: write # to upload the SARIF report to code scanning
-    uses: OneLiteFeatherNET/workflows/.github/workflows/security-scan.yml@v2.9.0
+    uses: OneLiteFeatherNET/workflows/.github/workflows/security-scan.yml@ec5d37fed94ad59e54868d63af6ea4ef4ee4e84c # v2.9.0
     with:
       scan-type: fs
       severity: "CRITICAL,HIGH"

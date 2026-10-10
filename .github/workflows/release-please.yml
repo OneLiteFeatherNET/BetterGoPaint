@@ -43,7 +43,7 @@ jobs:
     steps:
       - name: Release Please
         id: release
-        uses: googleapis/release-please-action@v5
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
@@ -69,7 +69,7 @@ jobs:
       BUILD_REF: ${{ github.event_name == 'workflow_dispatch' && (inputs.ref || inputs.tag) || needs.release-please.outputs.tag_name }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && (inputs.ref || inputs.tag) || needs.release-please.outputs.tag_name }}
 
@@ -86,22 +86,22 @@ jobs:
           echo "ref=$BUILD_REF" >> "$GITHUB_OUTPUT"
 
       - name: Validate Gradle Wrapper
-        uses: gradle/actions/wrapper-validation@v6
+        uses: gradle/actions/wrapper-validation@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
 
       - name: Setup Java
-        uses: actions/setup-java@v6
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
           java-version: 25
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v6
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
 
       - name: Build
         run: ./gradlew check shadowJar cyclonedxBom
 
       - name: Upload plugin JAR
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: plugin-jar
           path: |
@@ -111,7 +111,7 @@ jobs:
           retention-days: 14
 
       - name: Upload SBOM artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: sbom
           path: build/reports/cyclonedx/bom.xml
@@ -120,7 +120,7 @@ jobs:
 
       - name: Upload build reports
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: publish-reports
           path: build/reports/**
@@ -137,7 +137,7 @@ jobs:
     permissions:
       contents: read
       security-events: write # SARIF upload to code scanning
-    uses: OneLiteFeatherNET/workflows/.github/workflows/security-scan.yml@v2.9.0
+    uses: OneLiteFeatherNET/workflows/.github/workflows/security-scan.yml@ec5d37fed94ad59e54868d63af6ea4ef4ee4e84c # v2.9.0
     with:
       scan-type: rootfs
       artifact-name: plugin-jar
@@ -162,12 +162,12 @@ jobs:
       TAG_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || needs.release-please.outputs.tag_name }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ needs.build.outputs.ref }}
 
       - name: Download plugin JAR
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: plugin-jar
           path: build/libs
@@ -182,13 +182,13 @@ jobs:
         run: gh release upload "$TAG_NAME" build/libs/BetterGoPaint-*.jar --clobber
 
       - name: Setup Java
-        uses: actions/setup-java@v6
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
           java-version: 25
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v6
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
 
       - name: Publish to Hangar and Modrinth
         env:
@@ -214,7 +214,7 @@ jobs:
   sbom:
     name: Publish SBOM
     needs: [build, publish]
-    uses: OneLiteFeatherNET/workflows/.github/workflows/sbom-publish.yml@v2.9.0
+    uses: OneLiteFeatherNET/workflows/.github/workflows/sbom-publish.yml@ec5d37fed94ad59e54868d63af6ea4ef4ee4e84c # v2.9.0
     with:
       project-name: "BetterGoPaint"
       project-version: ${{ needs.build.outputs.version }}
