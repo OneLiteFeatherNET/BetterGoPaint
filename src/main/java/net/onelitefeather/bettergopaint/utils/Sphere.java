@@ -49,59 +49,55 @@ public final class Sphere {
     @Contract(value = "_, _, _, _, _ -> new", pure = true)
     public static @NotNull Stream<BlockVector3> getBlocksInRadius(@NotNull Extent extent, @NotNull BlockVector3 middlePoint,
                                                                   int radius, @Nullable Axis axis, boolean air) {
-        List<BlockVector3> blocks = new ArrayList<>();
-        int minX = floor(middlePoint.x() + -radius / 2d);
-        int minY = floor(middlePoint.y() + -radius / 2d);
-        int minZ = floor(middlePoint.z() + -radius / 2d);
-        int maxX = floor(middlePoint.x() + radius / 2d);
-        int maxY = floor(middlePoint.y() + radius / 2d);
-        int maxZ = floor(middlePoint.z() + radius / 2d);
+        int centerX = middlePoint.x();
+        int centerY = middlePoint.y();
+        int centerZ = middlePoint.z();
+        int minX = floor(centerX + -radius / 2d);
+        int minY = floor(centerY + -radius / 2d);
+        int minZ = floor(centerZ + -radius / 2d);
+        int maxX = floor(centerX + radius / 2d);
+        int maxY = floor(centerY + radius / 2d);
+        int maxZ = floor(centerZ + radius / 2d);
 
-        switch (axis) {
-            case Y:
-                for (int x = minX; x <= maxX; x++) {
-                    for (int z = minZ; z <= maxZ; z++) {
-                        add(blocks, BlockVector3.at(x, middlePoint.y(), z), middlePoint, radius);
-                    }
+        // A disc fixes one coordinate to the middle; the other two range over the sphere's box.
+        int fromX = axis == Axis.X ? centerX : minX;
+        int toX = axis == Axis.X ? centerX : maxX;
+        int fromY = axis == Axis.Y ? centerY : minY;
+        int toY = axis == Axis.Y ? centerY : maxY;
+        int fromZ = axis == Axis.Z ? centerZ : minZ;
+        int toZ = axis == Axis.Z ? centerZ : maxZ;
+
+        // Both sides of the membership test are non-negative, so comparing squares keeps the strict ordering of
+        // the distance test: distance < radius / 2 exactly when the squared distance < (radius / 2)^2.
+        double halfRadius = radius / 2d;
+        double limit = halfRadius * halfRadius;
+
+        // The loop order (x, then y, then z) is part of the contract: seeded brushes draw random numbers per position
+        // in this order.
+        List<BlockVector3> blocks = new ArrayList<>();
+        for (int x = fromX; x <= toX; x++) {
+            int dx = x - centerX;
+            for (int y = fromY; y <= toY; y++) {
+                if (!Blocks.isInBounds(extent, y)) {
+                    continue;
                 }
-                break;
-            case X:
-                for (int y = minY; y <= maxY; y++) {
-                    for (int z = minZ; z <= maxZ; z++) {
-                        add(blocks, BlockVector3.at(middlePoint.x(), y, z), middlePoint, radius);
+                int dy = y - centerY;
+                for (int z = fromZ; z <= toZ; z++) {
+                    int dz = z - centerZ;
+                    if (dx * dx + dy * dy + dz * dz >= limit) {
+                        continue;
                     }
-                }
-                break;
-            case Z:
-                for (int x = minX; x <= maxX; x++) {
-                    for (int y = minY; y <= maxY; y++) {
-                        add(blocks, BlockVector3.at(x, y, middlePoint.z()), middlePoint, radius);
+                    if (!air && Blocks.isAir(extent, x, y, z)) {
+                        continue;
                     }
+                    blocks.add(BlockVector3.at(x, y, z));
                 }
-                break;
-            case null:
-                for (int x = minX; x <= maxX; x++) {
-                    for (int y = minY; y <= maxY; y++) {
-                        for (int z = minZ; z <= maxZ; z++) {
-                            add(blocks, BlockVector3.at(x, y, z), middlePoint, radius);
-                        }
-                    }
-                }
-                break;
+            }
         }
-        return blocks.stream()
-                .filter(position -> Blocks.isInBounds(extent, position.y()))
-                .filter(position -> air || !Blocks.isAir(extent, position));
+        return blocks.stream();
     }
 
     private static int floor(double value) {
         return (int) Math.floor(value);
-    }
-
-    private static void add(@NotNull List<BlockVector3> blocks, @NotNull BlockVector3 position,
-                            @NotNull BlockVector3 middlePoint, int radius) {
-        if (position.distance(middlePoint) < radius / 2d) {
-            blocks.add(position);
-        }
     }
 }
