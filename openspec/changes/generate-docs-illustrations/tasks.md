@@ -1,12 +1,12 @@
 ## 1. Build scaffolding (build(docs))
 
-- [ ] 1.1 Red: add `src/docsGenTest/java/net/onelitefeather/bettergopaint/docsgen/SvgWriterTest.java` that fails to compile against the missing `SvgWriter` (no test body passes yet)
-- [ ] 1.2 Green: add source sets `docsGen` and `docsGenTest` extending the test dependencies, tasks `docsGenTest`, `generateDocsImages`, `checkDocsImages`, `checkDocsLinks` in group `documentation`, `check` depends on the three checks; add `.gitattributes` with `docs/images/**/*.svg text eol=lf`
+- [x] 1.1 Red: add `src/docsGenTest/java/net/onelitefeather/bettergopaint/docsgen/SvgWriterTest.java` that fails to compile against the missing `SvgWriter` (no test body passes yet)
+- [x] 1.2 Green: add source sets `docsGen` and `docsGenTest` extending the test dependencies, tasks `docsGenTest`, `generateDocsImages`, `checkDocsImages`, `checkDocsLinks` in group `documentation`, `check` depends on the three checks; add `.gitattributes` with `docs/images/**/*.svg text eol=lf`
 
 ## 2. Deterministic SVG writer (build(docs))
 
-- [ ] 2.1 Red: tests that the writer escapes `< > & " '`, writes the same model to the same string twice, uses only `\n` and integer coordinates, and writes nothing to disk
-- [ ] 2.2 Green: implement `SvgWriter` on an in-memory `SvgDocument` model with `Locale.ROOT` number formatting and UTF-8 output
+- [x] 2.1 Red: tests that the writer escapes `< > & " '`, writes the same model to the same string twice, uses only `\n` and integer coordinates, and writes nothing to disk
+- [x] 2.2 Green: implement `SvgWriter` on an in-memory `SvgDocument` model with `Locale.ROOT` number formatting and UTF-8 output
 
 ## 3. Brush illustrations (build(docs))
 
