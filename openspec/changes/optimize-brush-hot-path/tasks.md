@@ -12,8 +12,8 @@
 
 ## 2. C2 Height memo
 
-- [ ] 2.1 Write failing tests: no repeated column scan per query, Fracture self height computed once (counting extent)
-- [ ] 2.2 Add a per-stroke `HeightCache`, hoist the Fracture self height, drop the per-neighbour `BlockVector3`; verify `HeightTest` and `TerrainBrushesTest` pass
+- [x] 2.1 Write failing tests: no repeated column scan per query, Fracture self height computed once (counting extent)
+- [x] 2.2 Add a per-stroke `HeightCache`, hoist the Fracture self height, drop the per-neighbour `BlockVector3`; verify `HeightTest` and `TerrainBrushesTest` pass
 
 ## 3. C3 Random filter first
 
