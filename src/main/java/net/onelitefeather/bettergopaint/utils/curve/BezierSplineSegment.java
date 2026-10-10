@@ -18,27 +18,27 @@
  */
 package net.onelitefeather.bettergopaint.utils.curve;
 
-import org.bukkit.Location;
+import com.fastasyncworldedit.core.math.MutableVector3;
+import com.sk89q.worldedit.math.Vector3;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
 public class BezierSplineSegment {
 
     private final double[] lengths = new double[20];
-    private Location p0, p1, p2, p3;
+    private MutableVector3 p0, p1, p2, p3;
     private float a, b, c;
     private Double xFlat, yFlat, zFlat;
-    private Location r;
+    private MutableVector3 r;
     private double curveLength;
 
-    public BezierSplineSegment(@NotNull Location p0, @NotNull Location p3) {
+    public BezierSplineSegment(@NotNull MutableVector3 p0, @NotNull MutableVector3 p3) {
         this.p0 = p0;
         this.p3 = p3;
-        p1 = new Location(p0.getWorld(), 0, 0, 0);
-        p2 = new Location(p0.getWorld(), 0, 0, 0);
-        r = new Location(p0.getWorld(), 0, 0, 0);
+        p1 = new MutableVector3(0, 0, 0);
+        p2 = new MutableVector3(0, 0, 0);
+        r = new MutableVector3(0, 0, 0);
     }
 
     public double getCurveLength() {
@@ -46,34 +46,34 @@ public class BezierSplineSegment {
     }
 
     public void setX(double xflat2) {
-        p0.setX(xflat2);
-        p1.setX(xflat2);
-        p2.setX(xflat2);
-        p3.setX(xflat2);
+        p0.mutX(xflat2);
+        p1.mutX(xflat2);
+        p2.mutX(xflat2);
+        p3.mutX(xflat2);
         xFlat = xflat2;
     }
 
     public void setY(double yflat2) {
-        p0.setY(yflat2);
-        p1.setY(yflat2);
-        p2.setY(yflat2);
-        p3.setY(yflat2);
+        p0.mutY(yflat2);
+        p1.mutY(yflat2);
+        p2.mutY(yflat2);
+        p3.mutY(yflat2);
         yFlat = yflat2;
     }
 
     public void setZ(double zflat2) {
-        p0.setZ(zflat2);
-        p1.setZ(zflat2);
-        p2.setZ(zflat2);
-        p3.setZ(zflat2);
+        p0.mutZ(zflat2);
+        p1.mutZ(zflat2);
+        p2.mutZ(zflat2);
+        p3.mutZ(zflat2);
         zFlat = zflat2;
     }
 
     public void calculateCurveLength() {
-        Location current = p0.clone();
+        Vector3 current = Vector3.at(p0.x(), p0.y(), p0.z());
         double step = 0.05;
         lengths[0] = 0;
-        Location temp;
+        Vector3 temp;
         for (int i = 1; i < 20; i++) {
             temp = getPoint(i * step);
             lengths[i] = lengths[i - 1] + temp.distance(current);
@@ -85,21 +85,21 @@ public class BezierSplineSegment {
     public double getdXdT(double t) {
         assert (t >= 0);
         assert (t <= 1);
-        return 3 * (1 - t) * (1 - t) * (p1.getX() - p0.getX()) + 6 * (1 - t) * t
-                * (p2.getX() - p1.getX()) + 3 * t * t * (p3.getX() - p2.getX());
+        return 3 * (1 - t) * (1 - t) * (p1.x() - p0.x()) + 6 * (1 - t) * t
+                * (p2.x() - p1.x()) + 3 * t * t * (p3.x() - p2.x());
     }
 
     public double getdYdT(double t) {
         assert (t <= 1);
-        return 3 * (1 - t) * (1 - t) * (p1.getY() - p0.getY()) + 6 * (1 - t) * t
-                * (p2.getY() - p1.getY()) + 3 * t * t * (p3.getY() - p2.getY());
+        return 3 * (1 - t) * (1 - t) * (p1.y() - p0.y()) + 6 * (1 - t) * t
+                * (p2.y() - p1.y()) + 3 * t * t * (p3.y() - p2.y());
     }
 
     public double getdZdT(double t) {
         assert (t >= 0);
         assert (t <= 1);
-        return 3 * (1 - t) * (1 - t) * (p1.getZ() - p0.getZ()) + 6 * (1 - t) * t
-                * (p2.getZ() - p1.getZ()) + 3 * t * t * (p3.getZ() - p2.getZ());
+        return 3 * (1 - t) * (1 - t) * (p1.z() - p0.z()) + 6 * (1 - t) * t
+                * (p2.z() - p1.z()) + 3 * t * t * (p3.z() - p2.z());
     }
 
     public double getdTdS(double t) {
@@ -149,53 +149,52 @@ public class BezierSplineSegment {
         return (i + (d - lengths[i - 1]) / (lengths[i] - lengths[i - 1])) / 20;
     }
 
-    public Location getPoint(double f) {
-        Location result = new Location(p0.getWorld(), 0, 0, 0);
-        result.setX(Objects.requireNonNullElseGet(xFlat, () -> (Math.pow(1 - f, 3) * p0.getX())
-                + (3 * Math.pow(1 - f, 2) * f * p1.getX())
-                + (3 * (1 - f) * f * f * p2.getX()) + (Math.pow(f, 3) * p3.getX())));
-        result.setY(Objects.requireNonNullElseGet(yFlat, () -> (Math.pow(1 - f, 3) * p0.getY())
-                + (3 * Math.pow(1 - f, 2) * f * p1.getY())
-                + (3 * (1 - f) * f * f * p2.getY()) + (Math.pow(f, 3) * p3.getY())));
-        result.setZ(Objects.requireNonNullElseGet(zFlat, () -> (Math.pow(1 - f, 3) * p0.getZ())
-                + (3 * Math.pow(1 - f, 2) * f * p1.getZ())
-                + (3 * (1 - f) * f * f * p2.getZ()) + (Math.pow(f, 3) * p3.getZ())));
-        return result;
+    public @NotNull Vector3 getPoint(double f) {
+        double x = Objects.requireNonNullElseGet(xFlat, () -> (Math.pow(1 - f, 3) * p0.x())
+                + (3 * Math.pow(1 - f, 2) * f * p1.x())
+                + (3 * (1 - f) * f * f * p2.x()) + (Math.pow(f, 3) * p3.x()));
+        double y = Objects.requireNonNullElseGet(yFlat, () -> (Math.pow(1 - f, 3) * p0.y())
+                + (3 * Math.pow(1 - f, 2) * f * p1.y())
+                + (3 * (1 - f) * f * f * p2.y()) + (Math.pow(f, 3) * p3.y()));
+        double z = Objects.requireNonNullElseGet(zFlat, () -> (Math.pow(1 - f, 3) * p0.z())
+                + (3 * Math.pow(1 - f, 2) * f * p1.z())
+                + (3 * (1 - f) * f * f * p2.z()) + (Math.pow(f, 3) * p3.z()));
+        return Vector3.at(x, y, z);
     }
 
     public double getLinearLength() {
         return p0.distance(p3);
     }
 
-    public @NotNull Location getP0() {
+    public @NotNull MutableVector3 getP0() {
         return p0;
     }
 
-    public void setP0(@NotNull Location p0) {
+    public void setP0(@NotNull MutableVector3 p0) {
         this.p0 = p0;
     }
 
-    public @NotNull Location getP1() {
+    public @NotNull MutableVector3 getP1() {
         return p1;
     }
 
-    public void setP1(@NotNull Location p1) {
+    public void setP1(@NotNull MutableVector3 p1) {
         this.p1 = p1;
     }
 
-    public @NotNull Location getP2() {
+    public @NotNull MutableVector3 getP2() {
         return p2;
     }
 
-    public void setP2(@NotNull Location p2) {
+    public void setP2(@NotNull MutableVector3 p2) {
         this.p2 = p2;
     }
 
-    public @NotNull Location getP3() {
+    public @NotNull MutableVector3 getP3() {
         return p3;
     }
 
-    public void setP3(@NotNull Location p3) {
+    public void setP3(@NotNull MutableVector3 p3) {
         this.p3 = p3;
     }
 
@@ -223,11 +222,11 @@ public class BezierSplineSegment {
         this.c = c;
     }
 
-    public @NotNull Location getR() {
+    public @NotNull MutableVector3 getR() {
         return r;
     }
 
-    public void setR(@NotNull Location r) {
+    public void setR(@NotNull MutableVector3 r) {
         this.r = r;
     }
 

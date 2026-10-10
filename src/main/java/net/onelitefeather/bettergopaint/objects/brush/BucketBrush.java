@@ -18,16 +18,14 @@
  */
 package net.onelitefeather.bettergopaint.objects.brush;
 
-import net.onelitefeather.bettergopaint.brush.BrushSettings;
+import com.sk89q.worldedit.extent.Extent;
+import com.sk89q.worldedit.math.BlockVector3;
+import net.onelitefeather.bettergopaint.brush.StrokeContext;
 import net.onelitefeather.bettergopaint.utils.ConnectedBlocks;
 import net.onelitefeather.bettergopaint.utils.Sphere;
-import org.bukkit.Location;
-import org.bukkit.block.Block;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 public class BucketBrush extends Brush {
 
@@ -40,17 +38,11 @@ public class BucketBrush extends Brush {
     }
 
     @Override
-    public void paint(
-            @NotNull Location location,
-            @NotNull Player player,
-            @NotNull BrushSettings brushSettings
-    ) {
-        performEdit(player, session -> {
-            List<Block> blocks = Sphere.getBlocksInRadius(location, brushSettings.size(), null, false).toList();
-            Stream<Block> connectedBlocks = ConnectedBlocks.getConnectedBlocks(location, blocks);
-            connectedBlocks.filter(block -> passesDefaultChecks(brushSettings, player, block))
-                    .forEach(block -> setBlock(session, block, brushSettings.randomBlock()));
-        });
+    public void apply(@NotNull Extent extent, @NotNull StrokeContext context) {
+        List<BlockVector3> blocks = Sphere.getBlocksInRadius(extent, context.target(), context.size(), null, false)
+                .toList();
+        placeAll(extent, context, ConnectedBlocks.getConnectedBlocks(extent, context.target(), blocks)
+                .filter(position -> passesDefaultChecks(extent, context, position))
+                .toList());
     }
-
 }

@@ -20,37 +20,34 @@ package net.onelitefeather.bettergopaint.utils;
 
 import com.destroystokyo.paper.profile.ProfileProperty;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 public final class Items {
 
+    private Items() {
+        throw new UnsupportedOperationException("This class cannot be instantiated");
+    }
+
     public static @NotNull ItemStack create(
             @NotNull Material material,
             int amount,
-            @NotNull String name,
-            @NotNull String lore
+            @NotNull Component name,
+            @NotNull List<Component> lore
     ) {
         ItemStack itemStack = new ItemStack(material);
         itemStack.setAmount(amount);
         itemStack.editMeta(itemMeta -> {
+            itemMeta.displayName(plain(name));
             if (!lore.isEmpty()) {
-                String[] loreListArray = lore.split("\n");
-                List<Component> loreList = new ArrayList<>();
-                for (String s : loreListArray) {
-                    loreList.add(Component.text(s));
-                }
-                itemMeta.lore(loreList);
-            }
-            if (!name.isEmpty()) {
-                itemMeta.displayName(Component.text(name));
+                itemMeta.lore(lore.stream().map(Items::plain).toList());
             }
         });
         return itemStack;
@@ -58,11 +55,10 @@ public final class Items {
 
     public static @NotNull ItemStack createHead(
             @NotNull String texture,
-            int amount,
-            @NotNull String name,
-            @NotNull String lore
+            @NotNull Component name,
+            @NotNull List<Component> lore
     ) {
-        ItemStack head = create(Material.PLAYER_HEAD, amount, name, lore);
+        ItemStack head = create(Material.PLAYER_HEAD, 1, name, lore);
         head.editMeta(SkullMeta.class, skullMeta -> {
             var profile = Bukkit.createProfile(UUID.randomUUID());
             profile.setProperty(new ProfileProperty("textures", texture));
@@ -71,4 +67,7 @@ public final class Items {
         return head;
     }
 
+    private static @NotNull Component plain(@NotNull Component component) {
+        return component.decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE);
+    }
 }

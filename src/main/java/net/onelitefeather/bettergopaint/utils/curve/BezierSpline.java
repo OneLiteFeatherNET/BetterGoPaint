@@ -18,34 +18,32 @@
  */
 package net.onelitefeather.bettergopaint.utils.curve;
 
-import org.bukkit.Location;
-import org.bukkit.World;
-import org.bukkit.util.Vector;
+import com.fastasyncworldedit.core.math.MutableVector3;
+import com.sk89q.worldedit.math.Vector3;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.LinkedList;
 
 public class BezierSpline {
 
-    private final LinkedList<Location> knotsList;
-    private Location[] knots;
+    private final LinkedList<Vector3> knotsList;
+    private MutableVector3[] knots;
     private BezierSplineSegment[] segments;
     private double length = 0;
-    private Location anchorPoint;
+    private Vector3 anchorPoint;
 
     public BezierSpline() {
         knotsList = new LinkedList<>();
         segments = new BezierSplineSegment[0];
     }
 
-    public BezierSpline(@NotNull LinkedList<Location> knotsList) {
+    public BezierSpline(@NotNull LinkedList<Vector3> knotsList) {
         this.knotsList = knotsList;
         recalculate();
     }
 
     private void recalculate() {
-        knots = knotsList.toArray(new Location[0]);
+        knots = knotsList.stream().map(MutableVector3::new).toArray(MutableVector3[]::new);
         segments = new BezierSplineSegment[knots.length - 1];
         for (int i = 0; i < knots.length - 1; i++) {
             segments[i] = new BezierSplineSegment(knots[i], knots[i + 1]);
@@ -54,8 +52,8 @@ public class BezierSpline {
         calculateLength();
     }
 
-    public void addKnot(@NotNull Location location) {
-        knotsList.add(location);
+    public void addKnot(@NotNull Vector3 knot) {
+        knotsList.add(knot);
         recalculate();
     }
 
@@ -116,7 +114,7 @@ public class BezierSpline {
         return i + segments[i].getT(blocks - current);
     }
 
-    public @NotNull Location getPoint(double point) {
+    public @NotNull Vector3 getPoint(double point) {
         if (point >= segments.length) {
             return getPoint(segments.length - 1, 1);
         } else {
@@ -124,7 +122,7 @@ public class BezierSpline {
         }
     }
 
-    public @NotNull Location getPoint(int n, double f) {
+    public @NotNull Vector3 getPoint(int n, double f) {
         assert (n < segments.length);
         assert (0 <= f && f <= 1);
         BezierSplineSegment segment = segments[n];
@@ -161,45 +159,43 @@ public class BezierSpline {
         }
 
         Double xflat, yflat, zflat;
-        xflat = knots[0].getX();
-        yflat = knots[0].getY();
-        zflat = knots[0].getZ();
-        for (Location l : knots) {
-            if (l.getBlockX() != xflat) {
+        xflat = knots[0].x();
+        yflat = knots[0].y();
+        zflat = knots[0].z();
+        for (MutableVector3 l : knots) {
+            if (floor(l.x()) != xflat) {
                 xflat = null;
                 break;
             }
         }
-        for (Location l : knots) {
-            if (l.getBlockY() != yflat) {
+        for (MutableVector3 l : knots) {
+            if (floor(l.y()) != yflat) {
                 yflat = null;
                 break;
             }
         }
-        for (Location l : knots) {
-            if (l.getBlockZ() != zflat) {
+        for (MutableVector3 l : knots) {
+            if (floor(l.z()) != zflat) {
                 zflat = null;
                 break;
             }
         }
 
         if (segments.length == 1) {
-            Location midpoint = new Location(segments[0].getP0().getWorld(), 0, 0, 0);
-            midpoint
-                    .setX((segments[0].getP0().getX() + segments[0].getP3().getX()) / 2);
-            midpoint
-                    .setY((segments[0].getP0().getY() + segments[0].getP3().getY()) / 2);
-            midpoint
-                    .setZ((segments[0].getP0().getZ() + segments[0].getP3().getZ()) / 2);
+            MutableVector3 midpoint = new MutableVector3(
+                    (segments[0].getP0().x() + segments[0].getP3().x()) / 2,
+                    (segments[0].getP0().y() + segments[0].getP3().y()) / 2,
+                    (segments[0].getP0().z() + segments[0].getP3().z()) / 2
+            );
             segments[0].setP1(midpoint);
-            segments[0].setP2(midpoint.clone());
+            segments[0].setP2(new MutableVector3(midpoint));
         } else {
             segments[0].setA(0);
             segments[0].setB(2);
             segments[0].setC(1);
-            segments[0].getR().setX(knots[0].getX() + 2 * knots[1].getX());
-            segments[0].getR().setY(knots[0].getY() + 2 * knots[1].getY());
-            segments[0].getR().setZ(knots[0].getZ() + 2 * knots[1].getZ());
+            segments[0].getR().mutX(knots[0].x() + 2 * knots[1].x());
+            segments[0].getR().mutY(knots[0].y() + 2 * knots[1].y());
+            segments[0].getR().mutZ(knots[0].z() + 2 * knots[1].z());
             int n = knots.length - 1;
             int i;
             float m;
@@ -208,64 +204,64 @@ public class BezierSpline {
                 segments[i].setA(1);
                 segments[i].setB(4);
                 segments[i].setC(1);
-                segments[i].getR().setX(4 * knots[i].getX() + 2 * knots[i + 1].getX());
-                segments[i].getR().setY(4 * knots[i].getY() + 2 * knots[i + 1].getY());
-                segments[i].getR().setZ(4 * knots[i].getZ() + 2 * knots[i + 1].getZ());
+                segments[i].getR().mutX(4 * knots[i].x() + 2 * knots[i + 1].x());
+                segments[i].getR().mutY(4 * knots[i].y() + 2 * knots[i + 1].y());
+                segments[i].getR().mutZ(4 * knots[i].z() + 2 * knots[i + 1].z());
             }
 
             segments[n - 1].setA(2);
             segments[n - 1].setB(7);
             segments[n - 1].setC(0);
-            segments[n - 1].getR().setX(8 * knots[n - 1].getX() + knots[n].getX());
-            segments[n - 1].getR().setY(8 * knots[n - 1].getY() + knots[n].getY());
-            segments[n - 1].getR().setZ(8 * knots[n - 1].getZ() + knots[n].getZ());
+            segments[n - 1].getR().mutX(8 * knots[n - 1].x() + knots[n].x());
+            segments[n - 1].getR().mutY(8 * knots[n - 1].y() + knots[n].y());
+            segments[n - 1].getR().mutZ(8 * knots[n - 1].z() + knots[n].z());
 
             for (i = 1; i < n; i++) {
                 m = segments[i].getA() / segments[i - 1].getB();
                 segments[i].setB(segments[i].getB() - m * segments[i - 1].getC());
-                segments[i].getR().setX(
-                        segments[i].getR().getX() - m * segments[i - 1].getR().getX());
-                segments[i].getR().setY(
-                        segments[i].getR().getY() - m * segments[i - 1].getR().getY());
-                segments[i].getR().setZ(
-                        segments[i].getR().getZ() - m * segments[i - 1].getR().getZ());
+                segments[i].getR().mutX(
+                        segments[i].getR().x() - m * segments[i - 1].getR().x());
+                segments[i].getR().mutY(
+                        segments[i].getR().y() - m * segments[i - 1].getR().y());
+                segments[i].getR().mutZ(
+                        segments[i].getR().z() - m * segments[i - 1].getR().z());
             }
-            segments[n - 1].getP1().setX(
-                    segments[n - 1].getR().getX() / segments[n - 1].getB());
-            segments[n - 1].getP1().setY(
-                    segments[n - 1].getR().getY() / segments[n - 1].getB());
-            segments[n - 1].getP1().setZ(
-                    segments[n - 1].getR().getZ() / segments[n - 1].getB());
+            segments[n - 1].getP1().mutX(
+                    segments[n - 1].getR().x() / segments[n - 1].getB());
+            segments[n - 1].getP1().mutY(
+                    segments[n - 1].getR().y() / segments[n - 1].getB());
+            segments[n - 1].getP1().mutZ(
+                    segments[n - 1].getR().z() / segments[n - 1].getB());
 
             for (i = n - 2; i >= 0; i--) {
-                segments[i].getP1().setX(
-                        (segments[i].getR().getX() - segments[i].getC()
-                                * segments[i + 1].getP1().getX())
+                segments[i].getP1().mutX(
+                        (segments[i].getR().x() - segments[i].getC()
+                                * segments[i + 1].getP1().x())
                                 / segments[i].getB());
-                segments[i].getP1().setY(
-                        (segments[i].getR().getY() - segments[i].getC()
-                                * segments[i + 1].getP1().getY())
+                segments[i].getP1().mutY(
+                        (segments[i].getR().y() - segments[i].getC()
+                                * segments[i + 1].getP1().y())
                                 / segments[i].getB());
-                segments[i].getP1().setZ(
-                        (segments[i].getR().getZ() - segments[i].getC()
-                                * segments[i + 1].getP1().getZ())
+                segments[i].getP1().mutZ(
+                        (segments[i].getR().z() - segments[i].getC()
+                                * segments[i + 1].getP1().z())
                                 / segments[i].getB());
             }
 
             for (i = 0; i < n - 1; i++) {
-                segments[i].getP2().setX(
-                        2 * knots[i + 1].getX() - segments[i + 1].getP1().getX());
-                segments[i].getP2().setY(
-                        2 * knots[i + 1].getY() - segments[i + 1].getP1().getY());
-                segments[i].getP2().setZ(
-                        2 * knots[i + 1].getZ() - segments[i + 1].getP1().getZ());
+                segments[i].getP2().mutX(
+                        2 * knots[i + 1].x() - segments[i + 1].getP1().x());
+                segments[i].getP2().mutY(
+                        2 * knots[i + 1].y() - segments[i + 1].getP1().y());
+                segments[i].getP2().mutZ(
+                        2 * knots[i + 1].z() - segments[i + 1].getP1().z());
             }
-            segments[n - 1].getP2().setX(
-                    0.5 * (knots[n].getX() + segments[n - 1].getP1().getX()));
-            segments[n - 1].getP2().setY(
-                    0.5 * (knots[n].getY() + segments[n - 1].getP1().getY()));
-            segments[n - 1].getP2().setZ(
-                    0.5 * (knots[n].getZ() + segments[n - 1].getP1().getZ()));
+            segments[n - 1].getP2().mutX(
+                    0.5 * (knots[n].x() + segments[n - 1].getP1().x()));
+            segments[n - 1].getP2().mutY(
+                    0.5 * (knots[n].y() + segments[n - 1].getP1().y()));
+            segments[n - 1].getP2().mutZ(
+                    0.5 * (knots[n].z() + segments[n - 1].getP1().z()));
         }
 
         if (xflat != null) {
@@ -285,41 +281,23 @@ public class BezierSpline {
         }
     }
 
-    public void shift(@NotNull Vector vector) {
-        for (Location location : knotsList) {
-            location.add(vector);
-        }
+    public void shift(@NotNull Vector3 vector) {
+        knotsList.replaceAll(knot -> knot.add(vector));
         recalculate();
     }
 
     public void scale(double d) {
-        for (Location l : knotsList) {
-            l.subtract(anchorPoint);
-            l.multiply(d);
-            l.add(anchorPoint);
-        }
+        knotsList.replaceAll(knot -> knot.subtract(anchorPoint).multiply(d).add(anchorPoint));
         recalculate();
     }
 
-    public void scale(@NotNull Vector vector) {
-        for (Location l : knotsList) {
-            l.subtract(anchorPoint);
-            l.setX(l.getX() * vector.getX());
-            l.setY(l.getY() * vector.getY());
-            l.setZ(l.getZ() * vector.getZ());
-            l.add(anchorPoint);
-        }
+    public void scale(@NotNull Vector3 vector) {
+        knotsList.replaceAll(knot -> knot.subtract(anchorPoint).multiply(vector).add(anchorPoint));
         recalculate();
     }
 
-    public @Nullable World getWorld() {
-        if (knots == null) {
-            return null;
-        }
-        if (knots.length == 0) {
-            return null;
-        }
-        return knots[0].getWorld();
+    private static int floor(double value) {
+        return (int) Math.floor(value);
     }
 
     @Override

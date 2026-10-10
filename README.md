@@ -4,41 +4,36 @@
 
 ---
 
-BetterGoPaint is a plugin that's designed to simplify painting inside of Minecraft.
-This plugin is a [fork](https://github.com/Arcaniax-Development/goPaint_1.14) of original one, but with many improvements and 
-fixes.  
+BetterGoPaint paints terrain in Minecraft: hold a feather, pick a brush and a block palette,
+right-click. Every stroke is a [FastAsyncWorldEdit](https://modrinth.com/plugin/fastasyncworldedit)
+edit and can be undone with `//undo`.
 
+It is a maintained [fork](https://github.com/Arcaniax-Development/goPaint_1.14) of goPaint by Arcaniax.
 
-## Major Changes
-### Done
-- Improved configuration file
-- Better XMaterial Support
-- Modrinth auto deployment
-- Hangar auto deployment
-- New CI Development builds
-- New download link
-- Better build gradle
-- **Drop 1.13-1.19.4 support. Please use the original plugin!**
+## Requirements
 
-### To-Do
-- Fix performance impacts
-- Memory leaks
-- Better FAWE integration
-- Reduce duplicated code
-- Stability
-- Replace default commands with cloud framework
+| | |
+|---|---|
+| Server | Paper 26.1.1, 26.1.2, 26.2 ([details](docs/reference/supported-versions.md)) |
+| Java | 25 |
+| Required plugin | FastAsyncWorldEdit 2.16 or newer |
+
+Servers on Minecraft 1.21 keep using BetterGoPaint 1.1.x.
+
+## Documentation
+
+- [Paint your first terrain](docs/tutorial/paint-your-first-terrain.md)
+- [Brushes](docs/reference/brushes.md), [commands](docs/reference/commands.md),
+  [permissions](docs/reference/permissions.md), [configuration](docs/reference/configuration.md)
 
 ## Links
 
-* [Download](https://hangar.papermc.io/TheMeinerLP/BetterGoPaint)
-  * [Mirror](https://modrinth.com/plugin/bettergopaint)
-* [Development Builds](https://hangar.papermc.io/TheMeinerLP/BetterGoPaint)
-  * [Mirror](https://modrinth.com/plugin/bettergopaint)
+* [Download on Hangar](https://hangar.papermc.io/OneLiteFeather/BetterGoPaint) ·
+  [Modrinth](https://modrinth.com/plugin/bettergopaint)
 * [Discord](https://discord.onelitefeather.net)
-* [Issues](https://github.com/TheMeinerLP/BetterGoPaint/issues)
+* [Issues](https://github.com/OneLiteFeatherNET/BetterGoPaint/issues)
 
-# Building
-Gradle is the recommended way to build the project. Use `./gradlew shadowJar` in the main project directory to build the project.
+## Building
 
-## Suggestions
-Suggestions are welcome! We have a separate issue form for suggestions, that can be found [here](https://github.com/TheMeinerLP/BetterGoPaint/issues).
+Java 25 is required. `./gradlew build` compiles, tests and builds `build/libs/BetterGoPaint-<version>.jar`.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for commit conventions and the release process.

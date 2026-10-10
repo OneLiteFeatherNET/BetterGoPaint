@@ -6,9 +6,9 @@ on:
 
 jobs:
   run:
-    if: ${{ github.repository != github.event.pull_request.head.repo.full_name && github.head_ref == 'master' }}
+    if: ${{ github.repository != github.event.pull_request.head.repo.full_name && github.head_ref == 'main' }}
     runs-on: ubuntu-latest
     steps:
       - uses: superbrothers/close-pull-request@v3
         with:
-          comment: "Please do not open pull requests from the `develop` branch, create a new branch instead."
+          comment: "Please do not open pull requests from the `main` branch, create a new branch instead."

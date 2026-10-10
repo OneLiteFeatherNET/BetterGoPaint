@@ -18,14 +18,11 @@
  */
 package net.onelitefeather.bettergopaint.objects.brush;
 
-import net.onelitefeather.bettergopaint.brush.BrushSettings;
+import com.sk89q.worldedit.extent.Extent;
+import com.sk89q.worldedit.math.BlockVector3;
+import net.onelitefeather.bettergopaint.brush.StrokeContext;
 import net.onelitefeather.bettergopaint.utils.Sphere;
-import org.bukkit.Location;
-import org.bukkit.block.Block;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.stream.Stream;
 
 public class DiscBrush extends Brush {
 
@@ -38,16 +35,9 @@ public class DiscBrush extends Brush {
     }
 
     @Override
-    public void paint(
-            @NotNull Location location,
-            @NotNull Player player,
-            @NotNull BrushSettings brushSettings
-    ) {
-        performEdit(player, session -> {
-            Stream<Block> blocks = Sphere.getBlocksInRadius(location, brushSettings.size(), brushSettings.axis(), false);
-            blocks.filter(block -> passesDefaultChecks(brushSettings, player, block))
-                    .forEach(block -> setBlock(session, block, brushSettings.randomBlock()));
-        });
+    public void apply(@NotNull Extent extent, @NotNull StrokeContext context) {
+        placeAll(extent, context, Sphere.getBlocksInRadius(extent, context.target(), context.size(), context.axis(), false)
+                .filter(position -> passesDefaultChecks(extent, context, position))
+                .toList());
     }
-
 }

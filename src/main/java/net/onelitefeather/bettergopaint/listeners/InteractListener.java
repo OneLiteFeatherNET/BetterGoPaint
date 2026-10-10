@@ -18,15 +18,23 @@
  */
 package net.onelitefeather.bettergopaint.listeners;
 
+import com.sk89q.worldedit.LocalSession;
+import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
-import net.kyori.adventure.text.TextComponent;
-import net.onelitefeather.bettergopaint.BetterGoPaint;
+import com.sk89q.worldedit.bukkit.BukkitPlayer;
+import net.kyori.adventure.text.Component;
+import jakarta.inject.Inject;
 import net.onelitefeather.bettergopaint.brush.BrushSettings;
-import net.onelitefeather.bettergopaint.brush.ExportedPlayerBrush;
+import net.onelitefeather.bettergopaint.brush.ExportedBrushes;
 import net.onelitefeather.bettergopaint.brush.PlayerBrush;
+import net.onelitefeather.bettergopaint.brush.PlayerBrushManager;
+import net.onelitefeather.bettergopaint.brush.StrokeContext;
+import net.onelitefeather.bettergopaint.brush.StrokeContextFactory;
+import net.onelitefeather.bettergopaint.brush.StrokeRunner;
 import net.onelitefeather.bettergopaint.objects.brush.Brush;
-import net.onelitefeather.bettergopaint.objects.other.Settings;
+import net.onelitefeather.bettergopaint.settings.SettingsHolder;
 import net.onelitefeather.bettergopaint.utils.Constants;
+import net.onelitefeather.bettergopaint.utils.Messages;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -37,16 +45,20 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
+import java.util.Random;
 
 public final class InteractListener implements Listener {
 
-    private final BetterGoPaint plugin;
+    private final PlayerBrushManager brushManager;
+    private final SettingsHolder settings;
 
-    public InteractListener(BetterGoPaint plugin) {
-        this.plugin = plugin;
+    @Inject
+    public InteractListener(@NotNull PlayerBrushManager brushManager, @NotNull SettingsHolder settings) {
+        this.brushManager = brushManager;
+        this.settings = settings;
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -62,8 +74,8 @@ public final class InteractListener implements Listener {
             return;
         }
 
-        if (event.getAction().isLeftClick() && item.getType() == Settings.settings().generic.DEFAULT_BRUSH) {
-            PlayerBrush brush = plugin.getBrushManager().getBrush(player);
+        if (event.getAction().isLeftClick() && item.getType() == settings.get().generic().defaultBrush()) {
+            PlayerBrush brush = brushManager.getBrush(player);
             player.openInventory(brush.getInventory());
             event.setCancelled(true);
             return;
@@ -88,23 +100,21 @@ public final class InteractListener implements Listener {
 
         final boolean hasNotWorldByePassPermission = !player.hasPermission(Constants.WORLD_BYPASS_PERMISSION);
 
-        if (hasNotWorldByePassPermission && Settings.settings().generic.DISABLED_WORLDS
+        if (hasNotWorldByePassPermission && settings.get().generic().disabledWorlds()
                 .contains(location.getWorld().getName())) {
             return;
         }
 
         BrushSettings brushSettings;
 
-        ItemMeta itemMeta = item.getItemMeta();
-
-        if (itemMeta != null && itemMeta.hasLore() && itemMeta.displayName() instanceof TextComponent name) {
-
-            Optional<Brush> brush = plugin.getBrushManager().getBrushHandler(name.content());
-
-            //noinspection removal
-            brushSettings = brush.map(current -> ExportedPlayerBrush.parse(current, itemMeta)).orElse(null);
-        } else if (item.getType().equals(Settings.settings().generic.DEFAULT_BRUSH)) {
-            brushSettings = plugin.getBrushManager().getBrush(player);
+        Optional<ExportedBrushes.Result> exported = ExportedBrushes.read(item, brushManager, settings.get());
+        if (exported.isPresent()) {
+            brushSettings = exported.get().brush();
+            if (exported.get().converted() && event.getHand() != null) {
+                player.getInventory().setItem(event.getHand(), item);
+            }
+        } else if (item.getType().equals(settings.get().generic().defaultBrush())) {
+            brushSettings = brushManager.getBrush(player);
         } else {
             return;
         }
@@ -114,14 +124,35 @@ public final class InteractListener implements Listener {
         }
 
         if (brushSettings.enabled()) {
-            BukkitAdapter.adapt(player).runAction(
-                    () -> brushSettings.brush().paint(location, player, brushSettings), false, true
-            );
+            paint(player, location, brushSettings);
         } else {
-            player.sendRichMessage(
-                    Settings.settings().generic.PREFIX + "<red>Your brush is disabled, left click to enable the brush."
-            );
+            player.sendMessage(Component.translatable("bettergopaint.brush.disabled", Messages.prefix(settings.get())));
         }
+    }
+
+    /**
+     * Captures everything the stroke needs on the player's thread and queues the stroke. The queued
+     * work only touches WorldEdit types.
+     */
+    private void paint(@NotNull Player player, @NotNull Location target, @NotNull BrushSettings brushSettings) {
+        BukkitPlayer actor = BukkitAdapter.adapt(player);
+        LocalSession localSession = WorldEdit.getInstance().getSessionManager().get(actor);
+        Brush brush = brushSettings.brush();
+
+        StrokeContext captured = StrokeContextFactory.capture(
+                target,
+                player.getLocation(),
+                brushSettings,
+                BukkitAdapter::asBlockType,
+                new Random(brushSettings.random().nextLong())
+        );
+        StrokeContext context = brush.prepare(player.getUniqueId(), player.isSneaking(), player, captured);
+        if (context == null) {
+            return;
+        }
+
+        com.sk89q.worldedit.command.tool.brush.Brush stroke = brush.bind(context);
+        actor.runAction(() -> StrokeRunner.run(actor, localSession, stroke, context), false, true);
     }
 
 }

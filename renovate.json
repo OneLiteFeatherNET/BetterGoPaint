@@ -1,11 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:base",
-    ":semanticCommitsDisabled"
-  ],
-  "labels": ["Renovate"],
-  "rebaseWhen": "conflicted",
-  "schedule": ["on the first day of the month"],
-  "automerge": true
+    "github>OneLiteFeatherNET/renovate:default(OneLiteFeatherNET/bettergopaint-core)",
+    "github>OneLiteFeatherNET/renovate:paper"
+  ]
 }

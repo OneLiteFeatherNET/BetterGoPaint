@@ -19,20 +19,16 @@
 package net.onelitefeather.bettergopaint.brush;
 
 import net.onelitefeather.bettergopaint.objects.brush.Brush;
-import net.onelitefeather.bettergopaint.objects.other.Settings;
+import net.onelitefeather.bettergopaint.settings.Settings;
 import net.onelitefeather.bettergopaint.objects.other.SurfaceMode;
 import org.bukkit.Axis;
 import org.bukkit.Material;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.security.SecureRandom;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.Random;
 
 public record ExportedPlayerBrush(
@@ -91,8 +87,8 @@ public record ExportedPlayerBrush(
         return RANDOM;
     }
 
-    public static Builder builder(@NotNull Brush brush) {
-        return new Builder(brush);
+    public static Builder builder(@NotNull Brush brush, @NotNull Settings settings) {
+        return new Builder(brush, settings);
     }
 
     public static final class Builder {
@@ -100,7 +96,7 @@ public record ExportedPlayerBrush(
         private final Brush brush;
 
         private List<Material> blocks = Collections.emptyList();
-        private Axis axis = Settings.settings().generic.DEFAULT_AXIS;
+        private Axis axis;
         private SurfaceMode surfaceMode = SurfaceMode.DISABLED;
 
         private Material mask;
@@ -114,8 +110,17 @@ public record ExportedPlayerBrush(
         private int mixingStrength;
         private double angleHeightDifference;
 
-        private Builder(@NotNull Brush brush) {
+        private Builder(@NotNull Brush brush, @NotNull Settings settings) {
             this.brush = brush;
+            this.axis = settings.generic().defaultAxis();
+            this.size = settings.generic().defaultSize();
+            this.chance = settings.generic().defaultChance();
+            this.thickness = settings.thickness().defaultThickness();
+            this.angleDistance = settings.angle().defaultAngleDistance();
+            this.fractureDistance = settings.fracture().defaultFractureDistance();
+            this.falloffStrength = settings.generic().defaultFalloffStrength();
+            this.mixingStrength = settings.generic().defaultMixingStrength();
+            this.angleHeightDifference = settings.angle().defaultAngleHeightDifference();
         }
 
         public @NotNull Builder surfaceMode(SurfaceMode surfaceMode) {
@@ -182,44 +187,6 @@ public record ExportedPlayerBrush(
             return new ExportedPlayerBrush(this);
         }
 
-    }
-
-    @Deprecated(forRemoval = true)
-    public static ExportedPlayerBrush parse(@NotNull Brush brush, @NotNull ItemMeta itemMeta) {
-        ExportedPlayerBrush.Builder builder = ExportedPlayerBrush.builder(brush);
-        Optional.ofNullable(itemMeta.getLore()).ifPresent(lore -> lore.stream()
-                .map(line -> line.replace("§8", ""))
-                .forEach(line -> {
-                    if (line.startsWith("Size: ")) {
-                        builder.size(Integer.parseInt(line.substring(6)));
-                    } else if (line.startsWith("Chance: ")) {
-                        builder.chance(Integer.parseInt(line.substring(8, line.length() - 1)));
-                    } else if (line.startsWith("Thickness: ")) {
-                        builder.thickness(Integer.parseInt(line.substring(11)));
-                    } else if (line.startsWith("Axis: ")) {
-                        builder.axis(Axis.valueOf(line.substring(6).toUpperCase()));
-                    } else if (line.startsWith("FractureDistance: ")) {
-                        builder.fractureDistance(Integer.parseInt(line.substring(18)));
-                    } else if (line.startsWith("AngleDistance: ")) {
-                        builder.angleDistance(Integer.parseInt(line.substring(15)));
-                    } else if (line.startsWith("AngleHeightDifference: ")) {
-                        builder.angleHeightDifference(Double.parseDouble(line.substring(23)));
-                    } else if (line.startsWith("Mixing: ")) {
-                        builder.mixingStrength(Integer.parseInt(line.substring(8)));
-                    } else if (line.startsWith("Falloff: ")) {
-                        builder.falloffStrength(Integer.parseInt(line.substring(9)));
-                    } else if (line.startsWith("Blocks: ")) {
-                        builder.blocks(Arrays.stream(line.substring(8).split(", "))
-                                .map(Material::matchMaterial)
-                                .filter(Objects::nonNull)
-                                .toList());
-                    } else if (line.startsWith("Mask: ")) {
-                        builder.mask(Material.matchMaterial(line.substring(6)));
-                    } else if (line.startsWith("Surface Mode: ")) {
-                        SurfaceMode.byName(line.substring(14)).ifPresent(builder::surfaceMode);
-                    }
-                }));
-        return builder.build();
     }
 
 }
