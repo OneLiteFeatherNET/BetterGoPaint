@@ -21,7 +21,7 @@ package net.onelitefeather.bettergopaint.objects.brush;
 import com.sk89q.worldedit.extent.Extent;
 import com.sk89q.worldedit.math.BlockVector3;
 import net.onelitefeather.bettergopaint.brush.StrokeContext;
-import net.onelitefeather.bettergopaint.utils.Height;
+import net.onelitefeather.bettergopaint.utils.HeightCache;
 import net.onelitefeather.bettergopaint.utils.Sphere;
 import org.jetbrains.annotations.NotNull;
 
@@ -37,10 +37,11 @@ public class AngleBrush extends Brush {
 
     @Override
     public void apply(@NotNull Extent extent, @NotNull StrokeContext context) {
+        HeightCache heights = new HeightCache(extent);
         placeAll(extent, context, Sphere.getBlocksInRadius(extent, context.target(), context.size(), null, false)
                 .filter(position -> passesDefaultChecks(extent, context, position))
-                .filter(position -> Height.getAverageHeightDiffAngle(extent, position, 1) >= 0.1
-                        && Height.getAverageHeightDiffAngle(extent, position, context.angleDistance())
+                .filter(position -> heights.averageHeightDiffAngle(position, 1) >= 0.1
+                        && heights.averageHeightDiffAngle(position, context.angleDistance())
                         >= Math.tan(Math.toRadians(context.angleHeightDifference())))
                 .toList());
     }

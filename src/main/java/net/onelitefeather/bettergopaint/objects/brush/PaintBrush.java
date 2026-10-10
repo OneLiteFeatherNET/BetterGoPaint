@@ -27,7 +27,7 @@ import net.kyori.adventure.text.Component;
 import net.onelitefeather.bettergopaint.brush.StrokeContext;
 import net.onelitefeather.bettergopaint.settings.SettingsHolder;
 import net.onelitefeather.bettergopaint.utils.Blocks;
-import net.onelitefeather.bettergopaint.utils.Height;
+import net.onelitefeather.bettergopaint.utils.HeightCache;
 import net.onelitefeather.bettergopaint.utils.Messages;
 import net.onelitefeather.bettergopaint.utils.Sphere;
 import net.onelitefeather.bettergopaint.utils.curve.BezierSpline;
@@ -110,11 +110,12 @@ public class PaintBrush extends Brush {
         List<BlockVector3> points = context.points();
         BlockVector3 first = points.getFirst();
         List<Vector3> offsets = sampleOffsets(points, first);
+        HeightCache heights = new HeightCache(extent);
         List<BlockVector3> positions = new ArrayList<>();
 
         Sphere.getBlocksInRadius(extent, first, context.size(), null, false).forEach(block -> {
-            if (Height.getAverageHeightDiffAngle(extent, block, 1) >= 0.1
-                    && Height.getAverageHeightDiffAngle(extent, block, context.angleDistance())
+            if (heights.averageHeightDiffAngle(block, 1) >= 0.1
+                    && heights.averageHeightDiffAngle(block, context.angleDistance())
                     >= Math.tan(Math.toRadians(context.angleHeightDifference()))) {
                 return;
             }

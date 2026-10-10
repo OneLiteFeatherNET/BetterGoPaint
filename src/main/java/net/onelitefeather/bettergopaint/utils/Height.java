@@ -36,25 +36,47 @@ public class Height {
      * @return the height of the nearest non-empty block at the position
      */
     public static int getNearestNonEmptyBlock(@NotNull Extent extent, @NotNull BlockVector3 position) {
+        return getNearestNonEmptyBlock(extent, position.x(), position.y(), position.z());
+    }
+
+    /**
+     * Gets the height of the nearest non-empty block at a given position, see
+     * {@link #getNearestNonEmptyBlock(Extent, BlockVector3)}.
+     *
+     * @param extent the extent to read from
+     * @param x      the x coordinate of the position
+     * @param y      the y coordinate of the position
+     * @param z      the z coordinate of the position
+     * @return the height of the nearest non-empty block at the position
+     */
+    public static int getNearestNonEmptyBlock(@NotNull Extent extent, int x, int y, int z) {
         int minHeight = extent.getMinY();
         int maxHeight = extent.getMaxY() + 1;
-        int x = position.x();
-        int z = position.z();
-        if (Blocks.isAir(extent, position)) {
-            for (int y = position.y(); y >= minHeight; y--) {
-                if (!Blocks.isAir(extent, x, y, z)) {
-                    return y + 1;
+        if (Blocks.isAir(extent, x, y, z)) {
+            for (int currentY = y; currentY >= minHeight; currentY--) {
+                if (!Blocks.isAir(extent, x, currentY, z)) {
+                    return currentY + 1;
                 }
             }
             return minHeight;
         } else {
-            for (int y = position.y(); y <= maxHeight; y++) {
-                if (Blocks.isAir(extent, x, y, z)) {
-                    return y;
+            for (int currentY = y; currentY <= maxHeight; currentY++) {
+                if (Blocks.isAir(extent, x, currentY, z)) {
+                    return currentY;
                 }
             }
             return maxHeight;
         }
+    }
+
+    /**
+     * The source of nearest non-empty heights for the averages. The averages only ask for heights, so a stroke can
+     * pass a memoised lookup instead of the extent.
+     */
+    @FunctionalInterface
+    interface NearestNonEmpty {
+
+        int heightAt(int x, int y, int z);
     }
 
     /**
@@ -68,15 +90,21 @@ public class Height {
      */
     public static double getAverageHeightDiffFracture(@NotNull Extent extent, @NotNull BlockVector3 position, int height,
                                                       int distance) {
+        return getAverageHeightDiffFracture((x, y, z) -> getNearestNonEmptyBlock(extent, x, y, z),
+                position.x(), position.y(), position.z(), height, distance);
+    }
+
+    static double getAverageHeightDiffFracture(@NotNull NearestNonEmpty nearest, int x, int y, int z, int height,
+                                               int distance) {
         double totalHeight = 0;
-        totalHeight += Math.abs(getNearestNonEmptyBlock(extent, position.add(distance, 0, -distance))) - height;
-        totalHeight += Math.abs(getNearestNonEmptyBlock(extent, position.add(distance, 0, distance))) - height;
-        totalHeight += Math.abs(getNearestNonEmptyBlock(extent, position.add(-distance, 0, distance))) - height;
-        totalHeight += Math.abs(getNearestNonEmptyBlock(extent, position.add(-distance, 0, -distance))) - height;
-        totalHeight += Math.abs(getNearestNonEmptyBlock(extent, position.add(0, 0, -distance))) - height;
-        totalHeight += Math.abs(getNearestNonEmptyBlock(extent, position.add(0, 0, distance))) - height;
-        totalHeight += Math.abs(getNearestNonEmptyBlock(extent, position.add(-distance, 0, 0))) - height;
-        totalHeight += Math.abs(getNearestNonEmptyBlock(extent, position.add(distance, 0, 0))) - height;
+        totalHeight += Math.abs(nearest.heightAt(x + distance, y, z - distance)) - height;
+        totalHeight += Math.abs(nearest.heightAt(x + distance, y, z + distance)) - height;
+        totalHeight += Math.abs(nearest.heightAt(x - distance, y, z + distance)) - height;
+        totalHeight += Math.abs(nearest.heightAt(x - distance, y, z - distance)) - height;
+        totalHeight += Math.abs(nearest.heightAt(x, y, z - distance)) - height;
+        totalHeight += Math.abs(nearest.heightAt(x, y, z + distance)) - height;
+        totalHeight += Math.abs(nearest.heightAt(x - distance, y, z)) - height;
+        totalHeight += Math.abs(nearest.heightAt(x + distance, y, z)) - height;
         return (totalHeight / 8d) / distance;
     }
 
@@ -89,28 +117,33 @@ public class Height {
      * @return the average height difference angle of the surrounding blocks within the specified distance
      */
     public static double getAverageHeightDiffAngle(@NotNull Extent extent, @NotNull BlockVector3 position, int distance) {
+        return getAverageHeightDiffAngle((x, y, z) -> getNearestNonEmptyBlock(extent, x, y, z),
+                position.x(), position.y(), position.z(), distance);
+    }
+
+    static double getAverageHeightDiffAngle(@NotNull NearestNonEmpty nearest, int x, int y, int z, int distance) {
         double maxHeightDiff = 0;
         double maxHeightDiff2 = 0;
-        double diff = Math.abs(getNearestNonEmptyBlock(extent, position.add(distance, 0, -distance))
-                - getNearestNonEmptyBlock(extent, position.add(-distance, 0, distance)));
+        double diff = Math.abs(nearest.heightAt(x + distance, y, z - distance)
+                - nearest.heightAt(x - distance, y, z + distance));
         if (diff >= maxHeightDiff) {
             maxHeightDiff = diff;
             maxHeightDiff2 = maxHeightDiff;
         }
-        diff = Math.abs(getNearestNonEmptyBlock(extent, position.add(distance, 0, distance))
-                - getNearestNonEmptyBlock(extent, position.add(-distance, 0, -distance)));
+        diff = Math.abs(nearest.heightAt(x + distance, y, z + distance)
+                - nearest.heightAt(x - distance, y, z - distance));
         if (diff > maxHeightDiff) {
             maxHeightDiff = diff;
             maxHeightDiff2 = maxHeightDiff;
         }
-        diff = Math.abs(getNearestNonEmptyBlock(extent, position.add(distance, 0, 0))
-                - getNearestNonEmptyBlock(extent, position.add(-distance, 0, 0)));
+        diff = Math.abs(nearest.heightAt(x + distance, y, z)
+                - nearest.heightAt(x - distance, y, z));
         if (diff > maxHeightDiff) {
             maxHeightDiff = diff;
             maxHeightDiff2 = maxHeightDiff;
         }
-        diff = Math.abs(getNearestNonEmptyBlock(extent, position.add(0, 0, -distance))
-                - getNearestNonEmptyBlock(extent, position.add(0, 0, distance)));
+        diff = Math.abs(nearest.heightAt(x, y, z - distance)
+                - nearest.heightAt(x, y, z + distance));
         if (diff > maxHeightDiff) {
             maxHeightDiff = diff;
             maxHeightDiff2 = maxHeightDiff;
