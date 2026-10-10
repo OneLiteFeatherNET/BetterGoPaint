@@ -57,6 +57,18 @@ Rules for the generated files:
   pull request.
 - A change to the menu layout needs no code change here: run `./gradlew generateDocsImages` and commit
   the menu SVGs.
+- The blocks are drawn in Minecraft's colours and patterns, but no Minecraft texture is used. Each material has a
+  representative colour and an 8x8 pixel tile that the generator computes from the material name (`BlockLooks`);
+  pixel icons for menu items that are not cubes are shapes written in code (`ItemIcons`). The generator never
+  downloads, copies, embeds or reads a Minecraft texture, a resource pack or any other third-party texture file,
+  because the licence of those files does not allow it. Do not add one to `src/docsGen` or to the pictures.
+- A new block material needs an entry in `BlockPalette` (the fixture it stands for) and in `BlockLooks`; a new
+  non-cube menu item needs an icon in `ItemIcons`. Until then the generator fails and names the material.
+- Reading the brush pictures: a block the brush changed is drawn at full colour with a white border, a block it did
+  not change is faded, air is the light blue sky, and the clicked block is outlined. The legend names every material
+  by its Minecraft name. The paint brush numbers its clicked points in click order and joins them with a line. In the
+  menu, a numbered badge marks each functional slot and the legend gives the number, the slot and the English text;
+  filler panes have no badge.
 - The generator reads no clock and no network. Fixed terrain comes from the test fixtures
   (`MemoryExtent`, `StrokeBuilder`, `Terrain`); the generator contains no copy of a brush algorithm.
 - Every builder page needs an image or a link to the screenshot shotlist; `DocsLinkChecker` fails the
