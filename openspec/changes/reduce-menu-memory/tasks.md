@@ -29,5 +29,5 @@
 
 ## 7. Delivery
 
-- [ ] 7.1 Run `./gradlew check` and confirm no sleeps, clock reads or shared static state in the new tests
+- [x] 7.1 Run `./gradlew check` and confirm no sleeps, clock reads or shared static state in the new tests
 - [ ] 7.2 Open the pull request titled `perf(gui): build brush menus lazily and cache rendered items`

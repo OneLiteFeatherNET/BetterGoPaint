@@ -52,9 +52,11 @@ class BrushMenuRenderingTest {
     private final BrushMenuFactory menus = new BrushMenuFactory(translations::get, renderer, backend);
     private final PlayerBrushManager manager = new PlayerBrushManager(SettingsHolder.of(Settings.defaults()), menus);
 
-    private static Player player(Locale locale) {
+    private long players;
+
+    private Player player(Locale locale) {
         Player player = mock(Player.class);
-        when(player.getUniqueId()).thenReturn(UUID.randomUUID());
+        when(player.getUniqueId()).thenReturn(new UUID(0, ++players));
         when(player.locale()).thenReturn(locale);
         return player;
     }

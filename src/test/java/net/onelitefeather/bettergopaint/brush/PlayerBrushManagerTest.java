@@ -172,7 +172,7 @@ class PlayerBrushManagerTest {
 
     private static Player player() {
         Player player = mock(Player.class);
-        when(player.getUniqueId()).thenReturn(UUID.randomUUID());
+        when(player.getUniqueId()).thenReturn(new UUID(0, 1));
         when(player.locale()).thenReturn(Locale.ENGLISH);
         return player;
     }
