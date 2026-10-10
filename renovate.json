@@ -1,7 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "github>OneLiteFeatherNET/renovate:default(OneLiteFeatherNET/bettergopaint-core)",
+    "github>OneLiteFeatherNET/renovate:default(team:bettergopaint-maintainers)",
     "github>OneLiteFeatherNET/renovate:paper"
   ]
 }
