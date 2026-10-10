@@ -26,7 +26,6 @@ import org.bukkit.Material;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.security.SecureRandom;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -44,10 +43,9 @@ public record ExportedPlayerBrush(
         int fractureDistance,
         int falloffStrength,
         int mixingStrength,
-        double angleHeightDifference
+        double angleHeightDifference,
+        @NotNull Random random
 ) implements BrushSettings {
-
-    private static final Random RANDOM = new SecureRandom();
 
     public ExportedPlayerBrush(@NotNull Builder builder) {
         this(
@@ -63,7 +61,8 @@ public record ExportedPlayerBrush(
                 builder.fractureDistance,
                 builder.falloffStrength,
                 builder.mixingStrength,
-                builder.angleHeightDifference
+                builder.angleHeightDifference,
+                new Random()
         );
     }
 
@@ -84,7 +83,7 @@ public record ExportedPlayerBrush(
 
     @Override
     public @NotNull Random random() {
-        return RANDOM;
+        return random;
     }
 
     public static Builder builder(@NotNull Brush brush, @NotNull Settings settings) {
