@@ -18,9 +18,14 @@
  */
 package net.onelitefeather.bettergopaint.brush;
 
+import com.sk89q.worldedit.math.BlockVector3;
+import net.kyori.adventure.audience.Audience;
+import net.onelitefeather.bettergopaint.menu.BrushMenu;
+import net.onelitefeather.bettergopaint.menu.BrushMenuFactory;
 import net.onelitefeather.bettergopaint.objects.brush.Brush;
 import net.onelitefeather.bettergopaint.objects.brush.PaintBrush;
 import net.onelitefeather.bettergopaint.objects.brush.SphereBrush;
+import net.onelitefeather.bettergopaint.support.StrokeBuilder;
 import net.onelitefeather.bettergopaint.settings.Settings;
 import net.onelitefeather.bettergopaint.settings.SettingsHolder;
 import org.bukkit.entity.Player;
@@ -44,7 +49,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class PlayerBrushManagerTest {
@@ -54,7 +63,7 @@ class PlayerBrushManagerTest {
 
     @BeforeEach
     void setUp() {
-        manager = new PlayerBrushManager(SettingsHolder.of(Settings.defaults()));
+        manager = new PlayerBrushManager(SettingsHolder.of(Settings.defaults()), mock(BrushMenuFactory.class));
         brushes = manager.getBrushes();
     }
 
@@ -142,5 +151,55 @@ class PlayerBrushManagerTest {
         } finally {
             pool.shutdownNow();
         }
+    }
+
+    @Test
+    @DisplayName("removing a player drops the brush settings and the unfinished paint stroke")
+    void removingPlayerDropsBrushAndStroke() {
+        Player player = player();
+        PlayerBrush before = manager.getBrush(player);
+        PaintBrush paint = (PaintBrush) manager.getBrushByName("Paint Brush").orElseThrow();
+        Audience feedback = mock(Audience.class);
+        paint.prepare(player.getUniqueId(), false, feedback, StrokeBuilder.stroke().target(BlockVector3.at(1, 64, 1)).build());
+
+        manager.removeBrush(player);
+
+        assertThat(manager.getBrush(player)).as("brush settings after quitting").isNotSameAs(before);
+        StrokeContext next = paint.prepare(player.getUniqueId(), true, feedback,
+                StrokeBuilder.stroke().target(BlockVector3.at(9, 64, 9)).build());
+        assertThat(next.points()).as("stroke points after quitting").containsExactly(BlockVector3.at(9, 64, 9));
+    }
+
+    private static Player player() {
+        Player player = mock(Player.class);
+        when(player.getUniqueId()).thenReturn(new UUID(0, 1));
+        when(player.locale()).thenReturn(Locale.ENGLISH);
+        return player;
+    }
+
+    @Test
+    @DisplayName("getting a brush does not create its menu")
+    void gettingBrushCreatesNoMenu() {
+        BrushMenuFactory menus = mock(BrushMenuFactory.class);
+        PlayerBrushManager lazy = new PlayerBrushManager(SettingsHolder.of(Settings.defaults()), menus);
+
+        lazy.getBrush(player());
+
+        verify(menus, never()).create(any());
+    }
+
+    @Test
+    @DisplayName("the menu is created on the first open and reused by later opens")
+    void menuIsCreatedOnFirstOpenOnly() {
+        BrushMenuFactory menus = mock(BrushMenuFactory.class);
+        when(menus.create(any())).thenReturn(mock(BrushMenu.class));
+        PlayerBrushManager lazy = new PlayerBrushManager(SettingsHolder.of(Settings.defaults()), menus);
+        Player player = player();
+        PlayerBrush brush = lazy.getBrush(player);
+
+        brush.openMenu(player);
+        brush.openMenu(player);
+
+        verify(menus, times(1)).create(any());
     }
 }

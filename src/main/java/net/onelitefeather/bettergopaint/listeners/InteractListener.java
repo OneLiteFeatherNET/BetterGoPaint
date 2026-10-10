@@ -76,7 +76,7 @@ public final class InteractListener implements Listener {
 
         if (event.getAction().isLeftClick() && item.getType() == settings.get().generic().defaultBrush()) {
             PlayerBrush brush = brushManager.getBrush(player);
-            player.openInventory(brush.getInventory());
+            brush.openMenu(player);
             event.setCancelled(true);
             return;
         }

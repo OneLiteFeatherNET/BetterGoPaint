@@ -18,6 +18,8 @@
  */
 package net.onelitefeather.bettergopaint.service;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,14 +46,23 @@ public final class HangarReleaseSource implements Supplier<Optional<String>>, Au
             .GET()
             .build();
 
-    private final HttpClient client = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(5))
-            .build();
+    private final Supplier<HttpClient> clientFactory;
+    private @Nullable HttpClient client;
+
+    public HangarReleaseSource() {
+        this(() -> HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(5))
+                .build());
+    }
+
+    HangarReleaseSource(@NotNull Supplier<HttpClient> clientFactory) {
+        this.clientFactory = clientFactory;
+    }
 
     @Override
     public Optional<String> get() {
         try {
-            HttpResponse<String> response = client.send(LATEST_RELEASE_REQUEST, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = client().send(LATEST_RELEASE_REQUEST, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200) {
                 LOGGER.debug("Update check: Hangar answered with status {}", response.statusCode());
                 return Optional.empty();
@@ -66,8 +77,21 @@ public final class HangarReleaseSource implements Supplier<Optional<String>>, Au
         }
     }
 
+    /**
+     * Creates the client on the first request, so a plugin that never checks for updates never allocates one.
+     */
+    private synchronized HttpClient client() {
+        if (client == null) {
+            client = clientFactory.get();
+        }
+        return client;
+    }
+
     @Override
-    public void close() {
-        client.shutdownNow();
+    public synchronized void close() {
+        if (client != null) {
+            client.shutdownNow();
+            client = null;
+        }
     }
 }

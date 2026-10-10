@@ -21,6 +21,7 @@ package net.onelitefeather.bettergopaint.listeners;
 import jakarta.inject.Inject;
 import net.onelitefeather.bettergopaint.brush.PlayerBrush;
 import net.onelitefeather.bettergopaint.brush.PlayerBrushManager;
+import net.onelitefeather.bettergopaint.menu.BrushMenuFactory;
 import net.onelitefeather.bettergopaint.menu.BrushMenuHolder;
 import net.onelitefeather.bettergopaint.menu.BrushPickerHolder;
 import net.onelitefeather.bettergopaint.objects.brush.AngleBrush;
@@ -34,7 +35,6 @@ import net.onelitefeather.bettergopaint.objects.brush.SplatterBrush;
 import net.onelitefeather.bettergopaint.objects.brush.SprayBrush;
 import net.onelitefeather.bettergopaint.objects.brush.UnderlayBrush;
 import net.onelitefeather.bettergopaint.settings.SettingsHolder;
-import net.onelitefeather.bettergopaint.utils.GUI;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -42,6 +42,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.jetbrains.annotations.NotNull;
 
 public final class InventoryListener implements Listener {
@@ -49,11 +52,33 @@ public final class InventoryListener implements Listener {
     private final PlayerBrushManager brushManager;
 
     private final SettingsHolder settings;
+    private final BrushMenuFactory menuFactory;
 
     @Inject
-    public InventoryListener(@NotNull PlayerBrushManager brushManager, @NotNull SettingsHolder settings) {
+    public InventoryListener(
+            @NotNull PlayerBrushManager brushManager,
+            @NotNull SettingsHolder settings,
+            @NotNull BrushMenuFactory menuFactory
+    ) {
         this.brushManager = brushManager;
         this.settings = settings;
+        this.menuFactory = menuFactory;
+    }
+
+    /**
+     * Items cannot be dragged into the brush menu or the picker. Every slot of those inventories is a control, and
+     * a dragged item would stay until the slot is rendered again.
+     */
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void menuDrag(InventoryDragEvent event) {
+        Inventory top = event.getView().getTopInventory();
+        InventoryHolder holder = top.getHolder(false);
+        if (!(holder instanceof BrushMenuHolder || holder instanceof BrushPickerHolder)) {
+            return;
+        }
+        if (event.getRawSlots().stream().anyMatch(slot -> slot < top.getSize())) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -88,7 +113,7 @@ public final class InventoryListener implements Listener {
             } else if (event.getClick().equals(ClickType.RIGHT)) {
                 playerBrush.cycleBrushBackwards();
             } else if (event.getClick().isShiftClick()) {
-                player.openInventory(GUI.generateBrushes(brushManager.getBrushes(), player.locale()));
+                player.openInventory(menuFactory.createPicker(brushManager.getBrushes(), player.locale()));
             }
             event.setCancelled(true);
         } else if (event.getRawSlot() == 12 || event.getRawSlot() == 3 || event.getRawSlot() == 21) {
@@ -219,7 +244,7 @@ public final class InventoryListener implements Listener {
         PlayerBrush playerBrush = brushManager.getBrush(player);
         playerBrush.setBrush(brushManager.getBrushes().get(slot));
         playerBrush.updateInventory();
-        player.openInventory(playerBrush.getInventory());
+        playerBrush.openMenu(player);
     }
 
 }

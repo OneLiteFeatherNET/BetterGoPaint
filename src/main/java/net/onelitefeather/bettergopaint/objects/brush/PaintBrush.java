@@ -44,6 +44,10 @@ public class PaintBrush extends Brush {
 
     private static final String NAME = "Paint Brush";
     private static final String DESCRIPTION = "Paints strokes\n§8hold shift to end";
+    /**
+     * The most points one unfinished stroke can hold. A fixed limit, not a config key, so no server owner has to set it.
+     */
+    public static final int MAX_STROKE_POINTS = 256;
     private static final String HEAD = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODBiM2E5ZGZhYmVmYmRkOTQ5YjIxN2JiZDRmYTlhNDg2YmQwYzNmMGNhYjBkMGI5ZGZhMjRjMzMyZGQzZTM0MiJ9fX0=";
 
     /**
@@ -76,7 +80,16 @@ public class PaintBrush extends Brush {
             @NotNull StrokeContext context
     ) {
         List<BlockVector3> points = selectedPoints.computeIfAbsent(playerId, ignored -> new ArrayList<>());
-        points.add(context.target());
+        if (points.size() < MAX_STROKE_POINTS) {
+            points.add(context.target());
+        } else if (!sneaking) {
+            feedback.sendMessage(Component.translatable(
+                    "bettergopaint.brush.paint.limit",
+                    Messages.prefix(settings.get()),
+                    Component.text(MAX_STROKE_POINTS)
+            ));
+            return null;
+        }
 
         if (!sneaking) {
             feedback.sendMessage(Component.translatable(

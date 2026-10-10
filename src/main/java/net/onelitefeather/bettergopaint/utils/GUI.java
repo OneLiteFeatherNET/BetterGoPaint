@@ -22,10 +22,11 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import net.kyori.adventure.translation.GlobalTranslator;
 import net.onelitefeather.bettergopaint.brush.PlayerBrush;
 import net.onelitefeather.bettergopaint.menu.BrushMenuHolder;
 import net.onelitefeather.bettergopaint.menu.BrushPickerHolder;
+import net.onelitefeather.bettergopaint.menu.MenuItem;
+import net.onelitefeather.bettergopaint.menu.MenuRenderCache;
 import net.onelitefeather.bettergopaint.objects.brush.AngleBrush;
 import net.onelitefeather.bettergopaint.objects.brush.Brush;
 import net.onelitefeather.bettergopaint.objects.brush.DiscBrush;
@@ -36,10 +37,7 @@ import net.onelitefeather.bettergopaint.objects.brush.PaintBrush;
 import net.onelitefeather.bettergopaint.objects.brush.SplatterBrush;
 import net.onelitefeather.bettergopaint.objects.brush.SprayBrush;
 import net.onelitefeather.bettergopaint.objects.brush.UnderlayBrush;
-import net.onelitefeather.bettergopaint.settings.Settings;
 import org.bukkit.Material;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -48,150 +46,114 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Builds the brush menu and the brush picker. All text comes from the translation bundles and is
- * rendered for the locale of the player who owns the menu.
+ * Lays out the brush menu and the brush picker as plain {@link MenuItem}s. Labels are rendered through the
+ * {@link MenuRenderCache} of the owning factory, so nothing here is static.
  */
 public final class GUI {
 
     private static final Component SPACER = Component.text(" ");
 
-    private GUI() {
-        throw new UnsupportedOperationException("This class cannot be instantiated");
+    private final MenuRenderCache cache;
+
+    public GUI(@NotNull MenuRenderCache cache) {
+        this.cache = cache;
     }
 
-    public static @NotNull Inventory create(@NotNull PlayerBrush playerBrush) {
-        Inventory inventory = new BrushMenuHolder(text(playerBrush.locale(), "bettergopaint.menu.title")).getInventory();
-        update(inventory, playerBrush);
-        return inventory;
+    /**
+     * @return the translation generation the labels are rendered under
+     */
+    public int generation() {
+        return cache.generation();
     }
 
-    public static @NotNull Inventory generateBrushes(@NotNull List<Brush> brushes, @NotNull Locale locale) {
-        Inventory inventory = new BrushPickerHolder(text(locale, "bettergopaint.menu.picker.title")).getInventory();
-        formatDefault(inventory);
-        for (int index = 0; index < brushes.size() && index < inventory.getSize(); index++) {
+    public @NotNull Component menuTitle(@NotNull Locale locale) {
+        return text(locale, "bettergopaint.menu.title");
+    }
+
+    public @NotNull Component pickerTitle(@NotNull Locale locale) {
+        return text(locale, "bettergopaint.menu.picker.title");
+    }
+
+    /**
+     * @return one item per picker slot: the brushes first, gray panes after them
+     */
+    public @NotNull MenuItem[] picker(@NotNull List<Brush> brushes, @NotNull Locale locale) {
+        MenuItem[] items = filled(BrushPickerHolder.SIZE);
+        for (int index = 0; index < brushes.size() && index < items.length; index++) {
             Brush brush = brushes.get(index);
             List<Component> lore = new ArrayList<>();
             lore.add(Component.empty());
             lore.add(text(locale, "bettergopaint.menu.picker.select"));
             lore.add(Component.empty());
             lore.addAll(description(brush));
-            inventory.setItem(index, Items.createHead(
-                    brush.getHead(),
-                    Component.text(brush.getName(), NamedTextColor.GOLD),
-                    lore
-            ));
+            items[index] = head(brush.getHead(), Component.text(brush.getName(), NamedTextColor.GOLD), lore);
         }
-        return inventory;
+        return items;
     }
 
     /**
-     * Lists every brush, the selected one highlighted.
+     * @return one item per slot of the brush menu
      */
-    public static @NotNull List<Component> brushList(@NotNull List<Brush> brushes, @NotNull Brush selected, @NotNull Locale locale) {
-        return brushes.stream()
-                .map(brush -> brush.equals(selected)
-                        ? text(locale, "bettergopaint.menu.type.entry.selected", Component.text(brush.getName()))
-                        : text(locale, "bettergopaint.menu.type.entry", Component.text(brush.getName())))
-                .toList();
-    }
-
-    private static List<Component> description(Brush brush) {
-        return Arrays.stream(brush.getDescription().split("\n"))
-                .<Component>map(line -> LegacyComponentSerializer.legacySection().deserialize(line)
-                        .colorIfAbsent(NamedTextColor.DARK_GRAY))
-                .toList();
-    }
-
-    private static Component text(Locale locale, String key, ComponentLike... arguments) {
-        return GlobalTranslator.render(Component.translatable(key, arguments), locale);
-    }
-
-    private static List<Component> lore(Locale locale, String... keys) {
-        List<Component> lines = new ArrayList<>();
-        lines.add(Component.empty());
-        for (String key : keys) {
-            lines.add(text(locale, key));
-        }
-        return lines;
-    }
-
-    private static ItemStack pane(Material material) {
-        return Items.create(material, 1, SPACER, List.of());
-    }
-
-    private static void formatDefault(@NotNull Inventory inventory) {
-        for (int slot = 0; slot < inventory.getSize(); slot++) {
-            inventory.setItem(slot, pane(Material.GRAY_STAINED_GLASS_PANE));
-        }
-    }
-
-    private static void column(Inventory inventory, int top, Material frame, ItemStack item) {
-        inventory.setItem(top, pane(frame));
-        inventory.setItem(top + 9, item);
-        inventory.setItem(top + 18, pane(frame));
-    }
-
-    public static void update(@NotNull Inventory inventory, @NotNull PlayerBrush playerBrush) {
+    public @NotNull MenuItem[] layout(@NotNull PlayerBrush playerBrush) {
         Brush brush = playerBrush.brush();
         Locale locale = playerBrush.locale();
-
-        formatDefault(inventory);
+        MenuItem[] items = filled(BrushMenuHolder.SIZE);
 
         // brush item: export and toggle
         List<Component> brushLore = new ArrayList<>();
         brushLore.add(text(locale, playerBrush.enabled() ? "bettergopaint.menu.brush.enabled" : "bettergopaint.menu.brush.disabled"));
         brushLore.addAll(lore(locale, "bettergopaint.menu.brush.export", "bettergopaint.menu.brush.toggle"));
-        column(inventory, 1, playerBrush.enabled() ? Material.LIME_STAINED_GLASS_PANE : Material.RED_STAINED_GLASS_PANE,
-                Items.create(playerBrush.settings().generic().defaultBrush(), 1, text(locale, "bettergopaint.menu.brush.name"), brushLore));
+        column(items, 1, playerBrush.enabled() ? Material.LIME_STAINED_GLASS_PANE : Material.RED_STAINED_GLASS_PANE,
+                item(playerBrush.settings().generic().defaultBrush(), 1, text(locale, "bettergopaint.menu.brush.name"), brushLore));
 
         // brush type
         List<Component> typeLore = lore(locale, "bettergopaint.menu.type.select", "bettergopaint.menu.type.cycle");
         typeLore.add(Component.empty());
         typeLore.addAll(brushList(playerBrush.brushes(), brush, locale));
-        column(inventory, 2, Material.ORANGE_STAINED_GLASS_PANE,
-                Items.createHead(brush.getHead(), text(locale, "bettergopaint.menu.type.name"), typeLore));
+        column(items, 2, Material.ORANGE_STAINED_GLASS_PANE,
+                head(brush.getHead(), text(locale, "bettergopaint.menu.type.name"), typeLore));
 
         List<Component> increaseDecrease = lore(locale, "bettergopaint.menu.click.increase", "bettergopaint.menu.click.decrease");
 
         // first brush specific setting
         if (brush instanceof SprayBrush) {
-            column(inventory, 3, Material.WHITE_STAINED_GLASS_PANE, Items.create(Material.GOLD_NUGGET, 1,
+            column(items, 3, Material.WHITE_STAINED_GLASS_PANE, item(Material.GOLD_NUGGET, 1,
                     text(locale, "bettergopaint.menu.chance", Component.text(playerBrush.chance())), increaseDecrease));
         }
         if (brush instanceof DiscBrush) {
-            column(inventory, 3, Material.WHITE_STAINED_GLASS_PANE, Items.create(Material.COMPASS, 1,
+            column(items, 3, Material.WHITE_STAINED_GLASS_PANE, item(Material.COMPASS, 1,
                     text(locale, "bettergopaint.menu.axis", Component.text(playerBrush.axis().name())),
                     lore(locale, "bettergopaint.menu.click.change")));
         }
         if (brush instanceof OverlayBrush || brush instanceof UnderlayBrush) {
-            column(inventory, 3, Material.WHITE_STAINED_GLASS_PANE, Items.create(Material.BOOK, 1,
+            column(items, 3, Material.WHITE_STAINED_GLASS_PANE, item(Material.BOOK, 1,
                     text(locale, "bettergopaint.menu.thickness", Component.text(playerBrush.thickness())), increaseDecrease));
         }
         if (brush instanceof AngleBrush) {
-            column(inventory, 3, Material.WHITE_STAINED_GLASS_PANE, Items.create(Material.DAYLIGHT_DETECTOR, 1,
+            column(items, 3, Material.WHITE_STAINED_GLASS_PANE, item(Material.DAYLIGHT_DETECTOR, 1,
                     text(locale, "bettergopaint.menu.angle_distance", Component.text(playerBrush.angleDistance())),
                     increaseDecrease));
-            column(inventory, 4, Material.WHITE_STAINED_GLASS_PANE, Items.create(Material.BLAZE_ROD, 1,
+            column(items, 4, Material.WHITE_STAINED_GLASS_PANE, item(Material.BLAZE_ROD, 1,
                     text(locale, "bettergopaint.menu.angle_height", Component.text(playerBrush.angleHeightDifference())),
                     lore(locale, "bettergopaint.menu.click.increase", "bettergopaint.menu.click.decrease",
                             "bettergopaint.menu.click.shift_15")));
         }
         if (brush instanceof FractureBrush) {
-            column(inventory, 3, Material.WHITE_STAINED_GLASS_PANE, Items.create(Material.DAYLIGHT_DETECTOR, 1,
+            column(items, 3, Material.WHITE_STAINED_GLASS_PANE, item(Material.DAYLIGHT_DETECTOR, 1,
                     text(locale, "bettergopaint.menu.fracture_distance", Component.text(playerBrush.fractureDistance())),
                     increaseDecrease));
         }
         if (brush instanceof GradientBrush) {
-            column(inventory, 4, Material.WHITE_STAINED_GLASS_PANE, Items.create(Material.MAGMA_CREAM, 1,
+            column(items, 4, Material.WHITE_STAINED_GLASS_PANE, item(Material.MAGMA_CREAM, 1,
                     text(locale, "bettergopaint.menu.mixing", Component.text(playerBrush.mixingStrength())), increaseDecrease));
         }
         if (brush instanceof SplatterBrush || brush instanceof PaintBrush || brush instanceof GradientBrush) {
-            column(inventory, 3, Material.WHITE_STAINED_GLASS_PANE, Items.create(Material.BLAZE_POWDER, 1,
+            column(items, 3, Material.WHITE_STAINED_GLASS_PANE, item(Material.BLAZE_POWDER, 1,
                     text(locale, "bettergopaint.menu.falloff", Component.text(playerBrush.falloffStrength())), increaseDecrease));
         }
 
         // size
-        column(inventory, 5, Material.WHITE_STAINED_GLASS_PANE, Items.create(Material.BROWN_MUSHROOM, 1,
+        column(items, 5, Material.WHITE_STAINED_GLASS_PANE, item(Material.BROWN_MUSHROOM, 1,
                 text(locale, "bettergopaint.menu.size", Component.text(playerBrush.size())),
                 lore(locale, "bettergopaint.menu.click.increase", "bettergopaint.menu.click.decrease",
                         "bettergopaint.menu.click.shift_10")));
@@ -200,8 +162,8 @@ public final class GUI {
         List<Component> maskLore = new ArrayList<>();
         maskLore.add(text(locale, playerBrush.maskEnabled() ? "bettergopaint.menu.brush.enabled" : "bettergopaint.menu.brush.disabled"));
         maskLore.addAll(lore(locale, "bettergopaint.menu.click.toggle"));
-        column(inventory, 6, playerBrush.maskEnabled() ? Material.LIME_STAINED_GLASS_PANE : Material.RED_STAINED_GLASS_PANE,
-                Items.create(playerBrush.maskEnabled() ? Material.JACK_O_LANTERN : Material.CARVED_PUMPKIN, 1,
+        column(items, 6, playerBrush.maskEnabled() ? Material.LIME_STAINED_GLASS_PANE : Material.RED_STAINED_GLASS_PANE,
+                item(playerBrush.maskEnabled() ? Material.JACK_O_LANTERN : Material.CARVED_PUMPKIN, 1,
                         text(locale, "bettergopaint.menu.mask"), maskLore));
 
         // surface mode
@@ -218,30 +180,97 @@ public final class GUI {
         List<Component> surfaceLore = new ArrayList<>();
         surfaceLore.add(text(locale, surfaceKey));
         surfaceLore.addAll(lore(locale, "bettergopaint.menu.click.toggle"));
-        column(inventory, 7, surfacePane, Items.create(Material.LIGHT_WEIGHTED_PRESSURE_PLATE, 1,
+        column(items, 7, surfacePane, item(Material.LIGHT_WEIGHTED_PRESSURE_PLATE, 1,
                 text(locale, "bettergopaint.menu.surface"), surfaceLore));
 
         // palette
         for (int slot = 37; slot <= 41; slot++) {
-            inventory.setItem(slot, pane(Material.YELLOW_STAINED_GLASS_PANE));
+            items[slot] = pane(Material.YELLOW_STAINED_GLASS_PANE);
         }
         for (int slot = 46; slot <= 50; slot++) {
-            inventory.setItem(slot, Items.create(Material.BARRIER, 1, text(locale, "bettergopaint.menu.slot.empty"),
-                    lore(locale, "bettergopaint.menu.slot.empty.hint")));
+            items[slot] = item(Material.BARRIER, 1, text(locale, "bettergopaint.menu.slot.empty"),
+                    lore(locale, "bettergopaint.menu.slot.empty.hint"));
         }
         int slot = 46;
         int size = playerBrush.blocks().size();
         int chance = size == 0 ? 0 : 100 / size;
         for (Material material : playerBrush.blocks()) {
-            inventory.setItem(slot, Items.create(material, chance > 64 ? 1 : Math.max(1, chance),
+            items[slot] = item(material, chance > 64 ? 1 : Math.max(1, chance),
                     text(locale, "bettergopaint.menu.slot", Component.text(slot - 45), Component.text(chance)),
-                    lore(locale, "bettergopaint.menu.slot.change", "bettergopaint.menu.slot.clear")));
+                    lore(locale, "bettergopaint.menu.slot.change", "bettergopaint.menu.slot.clear"));
             slot++;
         }
 
         // mask block
-        inventory.setItem(43, pane(Material.YELLOW_STAINED_GLASS_PANE));
-        inventory.setItem(52, Items.create(playerBrush.mask(), 1, text(locale, "bettergopaint.menu.mask.current"),
-                lore(locale, "bettergopaint.menu.mask.change")));
+        items[43] = pane(Material.YELLOW_STAINED_GLASS_PANE);
+        items[52] = item(playerBrush.mask(), 1, text(locale, "bettergopaint.menu.mask.current"),
+                lore(locale, "bettergopaint.menu.mask.change"));
+        return items;
+    }
+
+    private List<Component> brushList(List<Brush> brushes, Brush selected, Locale locale) {
+        return brushes.stream()
+                .map(brush -> brush.equals(selected)
+                        ? text(locale, "bettergopaint.menu.type.entry.selected", Component.text(brush.getName()))
+                        : text(locale, "bettergopaint.menu.type.entry", Component.text(brush.getName())))
+                .toList();
+    }
+
+    private static List<Component> description(Brush brush) {
+        return Arrays.stream(brush.getDescription().split("\n"))
+                .<Component>map(line -> LegacyComponentSerializer.legacySection().deserialize(line)
+                        .colorIfAbsent(NamedTextColor.DARK_GRAY))
+                .toList();
+    }
+
+    /**
+     * A label without arguments, rendered once per locale.
+     */
+    private Component text(Locale locale, String key) {
+        return cache.label(locale, key);
+    }
+
+    /**
+     * A text with arguments, rendered on every call.
+     */
+    private Component text(Locale locale, String key, ComponentLike... arguments) {
+        return cache.render(locale, key, arguments);
+    }
+
+    private List<Component> lore(Locale locale, String... keys) {
+        List<Component> lines = new ArrayList<>();
+        lines.add(Component.empty());
+        for (String key : keys) {
+            lines.add(text(locale, key));
+        }
+        return lines;
+    }
+
+    private static MenuItem pane(Material material) {
+        return item(material, 1, SPACER, List.of());
+    }
+
+    private static MenuItem item(Material material, int amount, Component name, List<Component> lore) {
+        return new MenuItem(material, amount, null, name, List.copyOf(lore));
+    }
+
+    private static MenuItem head(String texture, Component name, List<Component> lore) {
+        return new MenuItem(Material.PLAYER_HEAD, 1, texture, name, List.copyOf(lore));
+    }
+
+    /**
+     * Every slot starts with the same gray filler; the filler is one shared description.
+     */
+    private static MenuItem[] filled(int size) {
+        MenuItem filler = pane(Material.GRAY_STAINED_GLASS_PANE);
+        MenuItem[] items = new MenuItem[size];
+        Arrays.fill(items, filler);
+        return items;
+    }
+
+    private static void column(MenuItem[] items, int top, Material frame, MenuItem item) {
+        items[top] = pane(frame);
+        items[top + 9] = item;
+        items[top + 18] = pane(frame);
     }
 }
