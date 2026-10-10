@@ -256,6 +256,16 @@ val baseChannel = with(baseVersion) {
 }
 val changelogContent = "See [GitHub](https://github.com/OneLiteFeatherNET/BetterGoPaint/releases/tag/v$baseVersion) for release notes."
 
+// docs/store-page.md is the single source for both store pages (Hangar resource page and Modrinth body).
+// It is read when a sync task runs, never at configuration time, so ./gradlew build works without it.
+val storePage = providers.provider {
+    val storePageFile = file("docs/store-page.md")
+    if (!storePageFile.isFile) {
+        throw GradleException("docs/store-page.md is missing. Both store pages are synced from it.")
+    }
+    storePageFile.readText()
+}
+
 hangarPublish {
     publications.register("BetterGoPaint") {
         version.set(baseVersion)
@@ -268,6 +278,9 @@ hangarPublish {
                 jar.set(tasks.shadowJar.flatMap { it.archiveFile })
                 platformVersions.set(supportedMinecraftVersions)
             }
+        }
+        pages {
+            resourcePage(storePage)
         }
     }
 }
@@ -282,4 +295,5 @@ modrinth {
     uploadFile.set(tasks.shadowJar.flatMap { it.archiveFile })
     gameVersions.addAll(supportedMinecraftVersions)
     loaders.add("paper")
+    syncBodyFrom.set(storePage)
 }
