@@ -1,0 +1,264 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1184" height="696" viewBox="0 0 1184 696">
+  <rect x="0" y="0" width="1184" height="696" fill="#f8fafc" stroke="none" stroke-width="0"/>
+  <text x="16" y="36" font-family="sans-serif" font-size="18" font-weight="bold" fill="#111827">Brush menu: Spray Brush, disabled, two palette blocks, dirt mask</text>
+  <rect x="18" y="58" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="26" y="76" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 0</text>
+  <text x="26" y="90" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">gray stained glass</text>
+  <text x="26" y="104" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">pane</text>
+  <text x="26" y="118" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="146" y="58" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="154" y="76" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 1</text>
+  <text x="154" y="90" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">red stained glass</text>
+  <text x="154" y="104" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">pane</text>
+  <text x="154" y="118" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="274" y="58" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="282" y="76" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 2</text>
+  <text x="282" y="90" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">orange stained</text>
+  <text x="282" y="104" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">glass pane</text>
+  <text x="282" y="118" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="402" y="58" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="410" y="76" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 3</text>
+  <text x="410" y="90" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">white stained</text>
+  <text x="410" y="104" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">glass pane</text>
+  <text x="410" y="118" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="530" y="58" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="538" y="76" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 4</text>
+  <text x="538" y="90" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">gray stained glass</text>
+  <text x="538" y="104" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">pane</text>
+  <text x="538" y="118" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="658" y="58" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="666" y="76" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 5</text>
+  <text x="666" y="90" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">white stained</text>
+  <text x="666" y="104" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">glass pane</text>
+  <text x="666" y="118" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="786" y="58" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="794" y="76" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 6</text>
+  <text x="794" y="90" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">red stained glass</text>
+  <text x="794" y="104" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">pane</text>
+  <text x="794" y="118" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="914" y="58" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="922" y="76" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 7</text>
+  <text x="922" y="90" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">orange stained</text>
+  <text x="922" y="104" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">glass pane</text>
+  <text x="922" y="118" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="1042" y="58" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="1050" y="76" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 8</text>
+  <text x="1050" y="90" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">gray stained glass</text>
+  <text x="1050" y="104" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">pane</text>
+  <text x="1050" y="118" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="18" y="162" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="26" y="180" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 9</text>
+  <text x="26" y="194" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">gray stained glass</text>
+  <text x="26" y="208" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">pane</text>
+  <text x="26" y="222" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="146" y="162" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="154" y="180" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 10</text>
+  <text x="154" y="194" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">feather</text>
+  <text x="154" y="208" font-family="sans-serif" font-size="11" font-weight="bold" fill="#111827">goPaint Brush</text>
+  <rect x="274" y="162" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="282" y="180" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 11</text>
+  <text x="282" y="194" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">player head</text>
+  <text x="282" y="208" font-family="sans-serif" font-size="11" font-weight="bold" fill="#111827">Selected Brush</text>
+  <text x="282" y="222" font-family="sans-serif" font-size="11" font-weight="bold" fill="#111827">type</text>
+  <rect x="402" y="162" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="410" y="180" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 12</text>
+  <text x="410" y="194" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">gold nugget</text>
+  <text x="410" y="208" font-family="sans-serif" font-size="11" font-weight="bold" fill="#111827">Place chance: 50%</text>
+  <rect x="530" y="162" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="538" y="180" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 13</text>
+  <text x="538" y="194" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">gray stained glass</text>
+  <text x="538" y="208" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">pane</text>
+  <text x="538" y="222" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="658" y="162" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="666" y="180" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 14</text>
+  <text x="666" y="194" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">brown mushroom</text>
+  <text x="666" y="208" font-family="sans-serif" font-size="11" font-weight="bold" fill="#111827">Brush Size: 10</text>
+  <rect x="786" y="162" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="794" y="180" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 15</text>
+  <text x="794" y="194" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">carved pumpkin</text>
+  <text x="794" y="208" font-family="sans-serif" font-size="11" font-weight="bold" fill="#111827">Mask</text>
+  <rect x="914" y="162" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="922" y="180" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 16</text>
+  <text x="922" y="194" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">light weighted</text>
+  <text x="922" y="208" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">pressure plate</text>
+  <text x="922" y="222" font-family="sans-serif" font-size="11" font-weight="bold" fill="#111827">Surface Mode</text>
+  <rect x="1042" y="162" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="1050" y="180" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 17</text>
+  <text x="1050" y="194" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">gray stained glass</text>
+  <text x="1050" y="208" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">pane</text>
+  <text x="1050" y="222" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="18" y="266" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="26" y="284" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 18</text>
+  <text x="26" y="298" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">gray stained glass</text>
+  <text x="26" y="312" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">pane</text>
+  <text x="26" y="326" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="146" y="266" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="154" y="284" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 19</text>
+  <text x="154" y="298" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">red stained glass</text>
+  <text x="154" y="312" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">pane</text>
+  <text x="154" y="326" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="274" y="266" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="282" y="284" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 20</text>
+  <text x="282" y="298" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">orange stained</text>
+  <text x="282" y="312" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">glass pane</text>
+  <text x="282" y="326" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="402" y="266" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="410" y="284" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 21</text>
+  <text x="410" y="298" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">white stained</text>
+  <text x="410" y="312" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">glass pane</text>
+  <text x="410" y="326" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="530" y="266" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="538" y="284" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 22</text>
+  <text x="538" y="298" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">gray stained glass</text>
+  <text x="538" y="312" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">pane</text>
+  <text x="538" y="326" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="658" y="266" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="666" y="284" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 23</text>
+  <text x="666" y="298" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">white stained</text>
+  <text x="666" y="312" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">glass pane</text>
+  <text x="666" y="326" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="786" y="266" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="794" y="284" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 24</text>
+  <text x="794" y="298" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">red stained glass</text>
+  <text x="794" y="312" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">pane</text>
+  <text x="794" y="326" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="914" y="266" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="922" y="284" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 25</text>
+  <text x="922" y="298" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">orange stained</text>
+  <text x="922" y="312" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">glass pane</text>
+  <text x="922" y="326" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="1042" y="266" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="1050" y="284" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 26</text>
+  <text x="1050" y="298" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">gray stained glass</text>
+  <text x="1050" y="312" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">pane</text>
+  <text x="1050" y="326" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="18" y="370" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="26" y="388" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 27</text>
+  <text x="26" y="402" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">gray stained glass</text>
+  <text x="26" y="416" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">pane</text>
+  <text x="26" y="430" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="146" y="370" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="154" y="388" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 28</text>
+  <text x="154" y="402" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">gray stained glass</text>
+  <text x="154" y="416" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">pane</text>
+  <text x="154" y="430" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="274" y="370" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="282" y="388" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 29</text>
+  <text x="282" y="402" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">gray stained glass</text>
+  <text x="282" y="416" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">pane</text>
+  <text x="282" y="430" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="402" y="370" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="410" y="388" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 30</text>
+  <text x="410" y="402" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">gray stained glass</text>
+  <text x="410" y="416" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">pane</text>
+  <text x="410" y="430" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="530" y="370" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="538" y="388" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 31</text>
+  <text x="538" y="402" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">gray stained glass</text>
+  <text x="538" y="416" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">pane</text>
+  <text x="538" y="430" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="658" y="370" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="666" y="388" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 32</text>
+  <text x="666" y="402" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">gray stained glass</text>
+  <text x="666" y="416" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">pane</text>
+  <text x="666" y="430" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="786" y="370" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="794" y="388" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 33</text>
+  <text x="794" y="402" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">gray stained glass</text>
+  <text x="794" y="416" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">pane</text>
+  <text x="794" y="430" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="914" y="370" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="922" y="388" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 34</text>
+  <text x="922" y="402" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">gray stained glass</text>
+  <text x="922" y="416" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">pane</text>
+  <text x="922" y="430" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="1042" y="370" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="1050" y="388" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 35</text>
+  <text x="1050" y="402" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">gray stained glass</text>
+  <text x="1050" y="416" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">pane</text>
+  <text x="1050" y="430" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="18" y="474" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="26" y="492" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 36</text>
+  <text x="26" y="506" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">gray stained glass</text>
+  <text x="26" y="520" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">pane</text>
+  <text x="26" y="534" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="146" y="474" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="154" y="492" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 37</text>
+  <text x="154" y="506" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">yellow stained</text>
+  <text x="154" y="520" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">glass pane</text>
+  <text x="154" y="534" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="274" y="474" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="282" y="492" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 38</text>
+  <text x="282" y="506" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">yellow stained</text>
+  <text x="282" y="520" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">glass pane</text>
+  <text x="282" y="534" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="402" y="474" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="410" y="492" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 39</text>
+  <text x="410" y="506" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">yellow stained</text>
+  <text x="410" y="520" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">glass pane</text>
+  <text x="410" y="534" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="530" y="474" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="538" y="492" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 40</text>
+  <text x="538" y="506" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">yellow stained</text>
+  <text x="538" y="520" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">glass pane</text>
+  <text x="538" y="534" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="658" y="474" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="666" y="492" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 41</text>
+  <text x="666" y="506" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">yellow stained</text>
+  <text x="666" y="520" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">glass pane</text>
+  <text x="666" y="534" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="786" y="474" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="794" y="492" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 42</text>
+  <text x="794" y="506" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">gray stained glass</text>
+  <text x="794" y="520" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">pane</text>
+  <text x="794" y="534" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="914" y="474" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="922" y="492" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 43</text>
+  <text x="922" y="506" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">yellow stained</text>
+  <text x="922" y="520" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">glass pane</text>
+  <text x="922" y="534" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="1042" y="474" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="1050" y="492" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 44</text>
+  <text x="1050" y="506" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">gray stained glass</text>
+  <text x="1050" y="520" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">pane</text>
+  <text x="1050" y="534" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="18" y="578" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="26" y="596" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 45</text>
+  <text x="26" y="610" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">gray stained glass</text>
+  <text x="26" y="624" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">pane</text>
+  <text x="26" y="638" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="146" y="578" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="154" y="596" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 46</text>
+  <text x="154" y="610" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">stone</text>
+  <text x="154" y="624" font-family="sans-serif" font-size="11" font-weight="bold" fill="#111827">Slot 1 50%</text>
+  <rect x="274" y="578" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="282" y="596" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 47</text>
+  <text x="282" y="610" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">grass block</text>
+  <text x="282" y="624" font-family="sans-serif" font-size="11" font-weight="bold" fill="#111827">Slot 2 50%</text>
+  <rect x="402" y="578" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="410" y="596" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 48</text>
+  <text x="410" y="610" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">barrier</text>
+  <text x="410" y="624" font-family="sans-serif" font-size="11" font-weight="bold" fill="#111827">Empty Slot</text>
+  <rect x="530" y="578" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="538" y="596" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 49</text>
+  <text x="538" y="610" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">barrier</text>
+  <text x="538" y="624" font-family="sans-serif" font-size="11" font-weight="bold" fill="#111827">Empty Slot</text>
+  <rect x="658" y="578" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="666" y="596" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 50</text>
+  <text x="666" y="610" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">barrier</text>
+  <text x="666" y="624" font-family="sans-serif" font-size="11" font-weight="bold" fill="#111827">Empty Slot</text>
+  <rect x="786" y="578" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="794" y="596" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 51</text>
+  <text x="794" y="610" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">gray stained glass</text>
+  <text x="794" y="624" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">pane</text>
+  <text x="794" y="638" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+  <rect x="914" y="578" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="922" y="596" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 52</text>
+  <text x="922" y="610" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">dirt</text>
+  <text x="922" y="624" font-family="sans-serif" font-size="11" font-weight="bold" fill="#111827">Current Mask</text>
+  <rect x="1042" y="578" width="124" height="100" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="1050" y="596" font-family="sans-serif" font-size="11" font-weight="bold" fill="#4b5563">Slot 53</text>
+  <text x="1050" y="610" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">gray stained glass</text>
+  <text x="1050" y="624" font-family="sans-serif" font-size="11" font-weight="normal" fill="#4b5563">pane</text>
+  <text x="1050" y="638" font-family="sans-serif" font-size="11" font-weight="normal" fill="#111827">filler</text>
+</svg>
