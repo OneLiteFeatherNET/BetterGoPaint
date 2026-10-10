@@ -40,11 +40,11 @@ public class AngleBrush extends Brush {
     public void apply(@NotNull Extent extent, @NotNull StrokeContext context) {
         Extent reads = new BlockReadCache(extent);
         HeightCache heights = new HeightCache(reads);
+        double tangent = Math.tan(Math.toRadians(context.angleHeightDifference()));
         placeAll(extent, context, Sphere.getBlocksInRadius(reads, context.target(), context.size(), null, false)
                 .filter(position -> passesDefaultChecks(reads, context, position))
                 .filter(position -> heights.averageHeightDiffAngle(position, 1) >= 0.1
-                        && heights.averageHeightDiffAngle(position, context.angleDistance())
-                        >= Math.tan(Math.toRadians(context.angleHeightDifference())))
+                        && heights.averageHeightDiffAngle(position, context.angleDistance()) >= tangent)
                 .toList());
     }
 }

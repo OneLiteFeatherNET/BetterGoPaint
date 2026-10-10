@@ -113,18 +113,19 @@ public class PaintBrush extends Brush {
         List<Vector3> offsets = sampleOffsets(points, first);
         Extent reads = new BlockReadCache(extent);
         HeightCache heights = new HeightCache(reads);
+        double tangent = Math.tan(Math.toRadians(context.angleHeightDifference()));
+        double halfSize = context.size() / 2.0;
+        double falloffFactor = (100.0 - context.falloffStrength()) / 100.0;
         List<BlockVector3> positions = new ArrayList<>();
 
         Sphere.getBlocksInRadius(reads, first, context.size(), null, false).forEach(block -> {
             if (heights.averageHeightDiffAngle(block, 1) >= 0.1
-                    && heights.averageHeightDiffAngle(block, context.angleDistance())
-                    >= Math.tan(Math.toRadians(context.angleHeightDifference()))) {
+                    && heights.averageHeightDiffAngle(block, context.angleDistance()) >= tangent) {
                 return;
             }
 
-            double rate = (block.distance(first) - (context.size() / 2.0)
-                    * ((100.0 - context.falloffStrength()) / 100.0)) / ((context.size() / 2.0)
-                    - (context.size() / 2.0) * ((100.0 - context.falloffStrength()) / 100.0));
+            double rate = (block.distance(first) - halfSize * falloffFactor)
+                    / (halfSize - halfSize * falloffFactor);
 
             if (context.random().nextDouble() <= rate) {
                 return;

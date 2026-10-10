@@ -38,12 +38,13 @@ public class SplatterBrush extends Brush {
     @Override
     public void apply(@NotNull Extent extent, @NotNull StrokeContext context) {
         Extent reads = new BlockReadCache(extent);
-        placeAll(extent, context, Sphere.getBlocksInRadius(reads, context.target(), context.size(), null, false)
+        BlockVector3 target = context.target();
+        double halfSize = context.size() / 2.0;
+        double falloffFactor = (100.0 - context.falloffStrength()) / 100.0;
+        placeAll(extent, context, Sphere.getBlocksInRadius(reads, target, context.size(), null, false)
                 .filter(position -> {
-                    double rate = (position.distance(context.target()) - ((double) context.size() / 2.0)
-                            * ((100.0 - (double) context.falloffStrength()) / 100.0))
-                            / (((double) context.size() / 2.0) - ((double) context.size() / 2.0)
-                            * ((100.0 - (double) context.falloffStrength()) / 100.0));
+                    double rate = (position.distance(target) - halfSize * falloffFactor)
+                            / (halfSize - halfSize * falloffFactor);
 
                     return !(context.random().nextDouble() <= rate);
                 })
