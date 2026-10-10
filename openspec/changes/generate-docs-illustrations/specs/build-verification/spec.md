@@ -11,7 +11,6 @@ file, or is not produced by the generator.
 #### Scenario: Extra file in the images folder
 - **WHEN** a screenshot is added to `docs/images/` without being generated
 - **THEN** `./gradlew check` fails in `checkDocsImages` and names the extra file
-
 ### Requirement: Documentation links resolve
 `./gradlew check` SHALL fail when a relative link or image target in `docs/` does not resolve to a file.
 

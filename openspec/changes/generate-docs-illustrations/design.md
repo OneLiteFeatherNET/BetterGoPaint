@@ -110,6 +110,11 @@ checks:
    link to `development/screenshot-shotlist.md`;
 3. every file name inside a `{% hint %}` block that starts with `images/` is listed in the shotlist.
 
+An orphan rule (every file in `docs/images/` linked from a page) is deliberately not part of this change:
+it would fail this change's own build, because the images ship before any page embeds them. Change
+`builder-guides-with-images` embeds them and records the embedding in its pull request; an automated
+orphan rule is a follow-up that can land once every generated image is embedded.
+
 The builder rule reads the section heading of `SUMMARY.md`, so no page list is hard-coded. Planned
 screenshots appear only in hints, never as image links, so rule 1 does not fail on them.
 
