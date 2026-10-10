@@ -196,6 +196,17 @@ jobs:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_KEY }}
         run: ./gradlew publishAllPublicationsToHangar modrinth
 
+      # The store page (docs/store-page.md) is a description, not the release itself. The jar is already
+      # live at this point, so a rejected description must not fail the run: continue-on-error keeps the
+      # job green, and --continue lets the Modrinth sync run even if the Hangar sync failed. The step only
+      # runs after a successful publish (the default if:), so it never runs against a half-published release.
+      - name: Sync store page to Hangar and Modrinth
+        continue-on-error: true
+        env:
+          HANGAR_SECRET: ${{ secrets.HANGAR_KEY }}
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_KEY }}
+        run: ./gradlew --continue syncAllPagesToHangar modrinthSyncBody
+
   # Separate job so Dependency-Track being down, or rejecting the API key,
   # cannot take the release with it. With the SBOM upload inside the publish
   # job, one rejected platform version would cost the JAR, both
