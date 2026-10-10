@@ -23,6 +23,11 @@
 
 ### For builders
 
+* [Paint a path with the Paint brush](how-to/paint-a-path-with-the-paint-brush.md)
+* [Shape cliffs with the Angle brush](how-to/shape-cliffs-with-the-angle-brush.md)
+* [Paint only on one block with a mask](how-to/paint-only-on-one-block-with-a-mask.md)
+* [Mix a block palette](how-to/mix-a-block-palette.md)
+* [Blend a gradient](how-to/blend-a-gradient.md)
 * [Share a brush as an item](how-to/share-a-brush-as-an-item.md)
 
 ## Reference
@@ -34,6 +39,7 @@
 * [Files and folders](reference/files-and-folders.md)
 * [Supported versions](reference/supported-versions.md)
 * [Brushes](reference/brushes.md)
+* [Brush menu](reference/brush-menu.md)
 
 ## Background
 

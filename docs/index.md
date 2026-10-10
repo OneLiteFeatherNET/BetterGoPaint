@@ -1,7 +1,7 @@
 # BetterGoPaint
 
 BetterGoPaint paints terrain in Minecraft. You hold a feather, pick a brush and a palette of up to
-ten blocks, and right-click the ground. Every stroke runs through
+five blocks, and right-click the ground. Every stroke runs through
 [FastAsyncWorldEdit](https://modrinth.com/plugin/fastasyncworldedit), so it can be undone with
 `//undo` like any other edit.
 
@@ -20,7 +20,15 @@ by Arcaniax.
 ## Paint with it
 
 - First time: [Paint your first terrain](tutorial/paint-your-first-terrain.md).
-- Look up what a brush does: [Brushes](reference/brushes.md).
+- Look up what a brush does: [Brushes](reference/brushes.md), and where each setting sits in the menu:
+  [Brush menu](reference/brush-menu.md).
+- Guides for each task:
+  - [Paint a path with the Paint brush](how-to/paint-a-path-with-the-paint-brush.md)
+  - [Shape cliffs with the Angle brush](how-to/shape-cliffs-with-the-angle-brush.md)
+  - [Paint only on one block with a mask](how-to/paint-only-on-one-block-with-a-mask.md)
+  - [Mix a block palette](how-to/mix-a-block-palette.md)
+  - [Blend a gradient](how-to/blend-a-gradient.md)
+  - [Share a brush as an item](how-to/share-a-brush-as-an-item.md)
 
 ## Requirements
 
