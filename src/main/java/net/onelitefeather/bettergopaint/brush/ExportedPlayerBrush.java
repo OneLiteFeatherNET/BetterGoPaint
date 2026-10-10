@@ -26,10 +26,10 @@ import org.bukkit.Material;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.security.SecureRandom;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public record ExportedPlayerBrush(
         @NotNull Brush brush,
@@ -46,8 +46,6 @@ public record ExportedPlayerBrush(
         int mixingStrength,
         double angleHeightDifference
 ) implements BrushSettings {
-
-    private static final Random RANDOM = new SecureRandom();
 
     public ExportedPlayerBrush(@NotNull Builder builder) {
         this(
@@ -84,7 +82,7 @@ public record ExportedPlayerBrush(
 
     @Override
     public @NotNull Random random() {
-        return RANDOM;
+        return ThreadLocalRandom.current();
     }
 
     public static Builder builder(@NotNull Brush brush, @NotNull Settings settings) {
