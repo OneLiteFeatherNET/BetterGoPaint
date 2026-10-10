@@ -19,7 +19,7 @@
 
 - [x] 3.1 Write failing tests: Spray chance 0 performs no mask or surface read; chance 100 selects all passing candidates; selected positions satisfy mask and sphere invariants
 - [x] 3.2 Reorder filters in `SprayBrush`, `SplatterBrush`, `GradientBrush`; update or replace tests that pin exact seeded output with invariant tests or new golden values; verify `ShapeBrushesTest` and `StrokeRulesTest` pass
-- [ ] 3.3 Note the changed seeded output in the PR description
+- [x] 3.3 Note the changed seeded output in the PR description
 
 ## 4. C4 Allocation-free sphere
 
@@ -35,9 +35,9 @@
 
 - [x] 6.1 Write a test: a context built with an injected seeded random yields identical selections across two runs
 - [x] 6.2 Hoist `tan`, `size / 2` and the falloff factor in Angle, Paint, Splatter, Gradient; verify existing brush tests pass
-- [ ] 6.3 Replace `SecureRandom` in `PlayerBrush` and the per-click `new Random` in `InteractListener` with a cheap per-stroke generator; keep the `StrokeContext` injection point; verify `InteractListenerTest` and `StrokeContextFactoryTest` pass
+- [x] 6.3 Replace `SecureRandom` in `PlayerBrush` and the per-click `new Random` in `InteractListener` with a cheap per-stroke generator; keep the `StrokeContext` injection point; verify `InteractListenerTest` and `StrokeContextFactoryTest` pass (the per-click `new Random(seed)` in `InteractListener` already is a cheap per-stroke generator and stays; only its `SecureRandom` seed source was the cost and is gone)
 
 ## 7. Wrap up
 
 - [x] 7.1 Run `./gradlew build` and confirm no hot-path test uses `Thread.sleep`, `System.nanoTime` or `Instant.now`
-- [ ] 7.2 Open the pull request under the title `perf(brush): cut per-block work in the paint hot path` (opened as a draft with this proposal, marked ready when tasks 0.1 to 7.1 are done)
+- [x] 7.2 Open the pull request under the title `perf(brush): cut per-block work in the paint hot path` (opened as a draft with this proposal, marked ready when tasks 0.1 to 7.1 are done)
