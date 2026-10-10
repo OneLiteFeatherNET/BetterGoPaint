@@ -43,8 +43,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Pins the paint brush to the result of the original algorithm, which built one spline per candidate block.
- * The reference below is that algorithm, copied as it was, so the optimised brush must select the same
- * positions and write the same blocks for a fixed seed.
+ * The reference below is that algorithm with the curve corrected to one control point per clicked point (see the
+ * comment in {@code perBlockCurves}), so the optimised brush must select the same positions and write the same
+ * blocks for a fixed seed.
  */
 class PaintBrushEquivalenceTest {
 
@@ -74,9 +75,13 @@ class PaintBrushEquivalenceTest {
                 return;
             }
 
+            // One control point per clicked point. The first one is the candidate block itself; adding the first
+            // clicked point again as a control point would make the curve one segment too long, and the parameter
+            // range below would then stop one segment short of the last clicked point. This reference was corrected
+            // for that bug together with the brush. The original per-block algorithm had the same duplicate.
             LinkedList<Vector3> newCurve = new LinkedList<>();
             newCurve.add(block.toVector3());
-            for (BlockVector3 point : points) {
+            for (BlockVector3 point : points.subList(1, points.size())) {
                 newCurve.add(block.add(point.subtract(first)).toVector3());
             }
             BezierSpline spline = new BezierSpline(newCurve);
