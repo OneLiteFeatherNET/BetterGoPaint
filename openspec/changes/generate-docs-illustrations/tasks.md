@@ -15,8 +15,8 @@
 
 ## 4. Menu map (build(docs))
 
-- [ ] 4.1 Red: tests that the menu map has 54 cells, that slot 52 shows the mask block, that the mask toggle label resolves to its English text, and that an unknown key fails with its name
-- [ ] 4.2 Green: implement `MenuMap` over `GUI.layout()` for the three states of the design and the English resolution from `bettergopaint.properties`; write `docs/images/menu/*.svg`; commit the three files
+- [x] 4.1 Red: tests that the menu map has 54 cells, that slot 52 shows the mask block, that the mask toggle label resolves to its English text, and that an unknown key fails with its name
+- [x] 4.2 Green: implement `MenuMap` over `GUI.layout()` for the three states of the design and the English resolution from `bettergopaint.properties`; write `docs/images/menu/*.svg`; commit the three files
 
 ## 5. Stale check (build(docs))
 
