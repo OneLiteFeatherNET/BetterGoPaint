@@ -17,6 +17,9 @@ Settings that a brush does not use are hidden in the menu.
 | Gradient Brush | A gradient that blends the palette blocks into each other. | Mixing, falloff |
 | Paint Brush | Strokes along a curve through every point you click; sneak to finish the stroke. | Falloff |
 
+The Paint Brush keeps at most 256 points of one stroke. A click past that limit is refused with a message;
+sneak and click to paint the stroke with the 256 points it already holds.
+
 Settings shared by all brushes: size, mask (only replace the mask block) and surface mode
 (`DIRECT`, `RELATIVE`, `DISABLED`). Strokes also respect the global mask of the builder's
 WorldEdit session (`//gmask`). Defaults and limits are in [Configuration](configuration.md).

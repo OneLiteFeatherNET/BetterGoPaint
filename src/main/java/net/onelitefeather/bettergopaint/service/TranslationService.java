@@ -36,6 +36,7 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Registers the bundled English messages and every extra language from {@code lang/} with
@@ -50,6 +51,7 @@ public final class TranslationService {
     private final Path langFolder;
     private final SettingsHolder settings;
     private final ClassLoader pluginClassLoader;
+    private final AtomicInteger generation = new AtomicInteger();
 
     @Inject
     public TranslationService(@Named(LANG_FOLDER) @NotNull Path langFolder, @NotNull SettingsHolder settings) {
@@ -75,5 +77,13 @@ public final class TranslationService {
                     store.registerAll(locale, ResourceBundle.getBundle(BUNDLE, locale, pluginClassLoader), false));
         }
         GlobalTranslator.translator().addSource(store);
+        generation.incrementAndGet();
+    }
+
+    /**
+     * @return a number that changes every time the bundles are registered, so caches of rendered text can detect a reload
+     */
+    public int generation() {
+        return generation.get();
     }
 }

@@ -20,17 +20,22 @@ package net.onelitefeather.bettergopaint.objects.brush;
 
 import com.sk89q.worldedit.math.BlockVector3;
 import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TranslatableComponent;
 import net.onelitefeather.bettergopaint.brush.StrokeContext;
 import net.onelitefeather.bettergopaint.settings.Settings;
 import net.onelitefeather.bettergopaint.settings.SettingsHolder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.util.UUID;
 
 import static net.onelitefeather.bettergopaint.support.StrokeBuilder.stroke;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 class PaintBrushTest {
 
@@ -64,5 +69,40 @@ class PaintBrushTest {
 
         StrokeContext otherStroke = brush.prepare(other, true, feedback, stroke().target(BlockVector3.at(6, 64, 6)).build());
         assertThat(otherStroke.points()).hasSize(2);
+    }
+
+    private void clickNonSneaking(int times) {
+        for (int i = 0; i < times; i++) {
+            brush.prepare(player, false, feedback, stroke().target(BlockVector3.at(i, 64, 0)).build());
+        }
+    }
+
+    @Test
+    @DisplayName("the point past the stroke limit is refused and the player gets the limit message")
+    void pointPastTheLimitIsRefusedWithMessage() {
+        clickNonSneaking(256);
+        clearInvocations(feedback);
+
+        StrokeContext refused = brush.prepare(player, false, feedback, stroke().target(BlockVector3.at(999, 64, 999)).build());
+
+        assertThat(refused).as("a refused click does not finish the stroke").isNull();
+        ArgumentCaptor<Component> sent = ArgumentCaptor.forClass(Component.class);
+        verify(feedback).sendMessage(sent.capture());
+        assertThat(sent.getValue()).as("the message of a refused point").isInstanceOf(TranslatableComponent.class);
+        assertThat(((TranslatableComponent) sent.getValue()).key())
+                .as("the key of the limit message")
+                .isEqualTo("bettergopaint.brush.paint.limit");
+    }
+
+    @Test
+    @DisplayName("sneaking at the stroke limit paints the 256 stored points and not the refused one")
+    void sneakingAtTheLimitPaintsTheStoredPoints() {
+        clickNonSneaking(256);
+
+        StrokeContext finished = brush.prepare(player, true, feedback, stroke().target(BlockVector3.at(999, 64, 999)).build());
+
+        assertThat(finished).isNotNull();
+        assertThat(finished.points()).as("points of the finished stroke").hasSize(256);
+        assertThat(finished.points()).as("the refused point").doesNotContain(BlockVector3.at(999, 64, 999));
     }
 }

@@ -21,6 +21,8 @@ package net.onelitefeather.bettergopaint.brush;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.translation.GlobalTranslator;
+import net.onelitefeather.bettergopaint.menu.BrushMenu;
+import net.onelitefeather.bettergopaint.menu.BrushMenuFactory;
 import net.onelitefeather.bettergopaint.objects.brush.AngleBrush;
 import net.onelitefeather.bettergopaint.objects.brush.Brush;
 import net.onelitefeather.bettergopaint.objects.brush.DiscBrush;
@@ -33,15 +35,16 @@ import net.onelitefeather.bettergopaint.objects.brush.UnderlayBrush;
 import net.onelitefeather.bettergopaint.settings.Settings;
 import net.onelitefeather.bettergopaint.settings.SettingsHolder;
 import net.onelitefeather.bettergopaint.objects.other.SurfaceMode;
-import net.onelitefeather.bettergopaint.utils.GUI;
 import org.bukkit.Axis;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.inventory.Inventory;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -80,12 +83,20 @@ public final class PlayerBrush implements BrushSettings {
     private final List<Material> blocks = new ArrayList<>();
 
     private final Locale locale;
-    private final Inventory gui;
+    private final BrushMenuFactory menuFactory;
+    private @Nullable BrushMenu menu;
+    private @Nullable Player viewer;
 
-    public PlayerBrush(@NotNull PlayerBrushManager brushManager, @NotNull SettingsHolder settings, @NotNull Locale locale) {
+    public PlayerBrush(
+            @NotNull PlayerBrushManager brushManager,
+            @NotNull SettingsHolder settings,
+            @NotNull Locale locale,
+            @NotNull BrushMenuFactory menuFactory
+    ) {
         this.brushManager = brushManager;
         this.settings = settings;
         this.locale = locale;
+        this.menuFactory = menuFactory;
 
         surfaceMode = settings.get().generic().surfaceMode();
         maskEnabled = settings.get().generic().maskEnabled();
@@ -102,7 +113,6 @@ public final class PlayerBrush implements BrushSettings {
         mask = settings.get().generic().defaultMask();
         brush = brushManager.cycleForward(null);
         blocks.add(Material.STONE);
-        gui = GUI.create(this);
     }
 
     public @NotNull Material randomBlock() {
@@ -213,8 +223,42 @@ public final class PlayerBrush implements BrushSettings {
         return brushManager.getBrushes();
     }
 
+    /**
+     * Shows a changed setting. While the owner views the menu only the changed slots are written; otherwise the
+     * menu is marked dirty and the next open renders it.
+     */
     public void updateInventory() {
-        GUI.update(gui, this);
+        if (menu == null) {
+            return;
+        }
+        if (isViewing()) {
+            menu.render(this);
+        } else {
+            menu.markDirty();
+        }
+    }
+
+    /**
+     * Shows the brush menu to the player. The menu is created on the first call only, and rendered only if it
+     * changed since it was last shown.
+     *
+     * @param player the player who opens the menu
+     */
+    public void openMenu(@NotNull Player player) {
+        if (menu == null) {
+            menu = menuFactory.create(locale);
+        }
+        menu.refresh(this);
+        viewer = player;
+        player.openInventory(menu.inventory());
+    }
+
+    private boolean isViewing() {
+        if (menu == null || viewer == null) {
+            return false;
+        }
+        InventoryView view = viewer.getOpenInventory();
+        return view != null && view.getTopInventory() == menu.inventory();
     }
 
     public void increaseFalloffStrength() {
@@ -285,10 +329,6 @@ public final class PlayerBrush implements BrushSettings {
             this.size = 1;
         }
         updateInventory();
-    }
-
-    public Inventory getInventory() {
-        return gui;
     }
 
     public void increaseBrushSize(boolean x10) {

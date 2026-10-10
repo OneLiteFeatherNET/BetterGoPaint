@@ -20,18 +20,25 @@ package net.onelitefeather.bettergopaint.listeners;
 
 import net.kyori.adventure.text.Component;
 import net.onelitefeather.bettergopaint.brush.PlayerBrushManager;
+import net.onelitefeather.bettergopaint.menu.BrushMenuFactory;
+import net.onelitefeather.bettergopaint.menu.BrushMenuHolder;
 import net.onelitefeather.bettergopaint.settings.Settings;
 import net.onelitefeather.bettergopaint.settings.SettingsHolder;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.InventoryView;
+import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -40,7 +47,8 @@ import static org.mockito.Mockito.when;
 class InventoryListenerTest {
 
     private final PlayerBrushManager brushManager = mock(PlayerBrushManager.class);
-    private final InventoryListener listener = new InventoryListener(brushManager, SettingsHolder.of(Settings.defaults()));
+    private final InventoryListener listener = new InventoryListener(
+            brushManager, SettingsHolder.of(Settings.defaults()), mock(BrushMenuFactory.class));
 
     private InventoryClickEvent clickInForeignMenuTitled(String title) {
         Inventory top = mock(Inventory.class);
@@ -71,5 +79,36 @@ class InventoryListenerTest {
         listener.menuBrushClick(event);
 
         assertThat(event.isCancelled()).isFalse();
+    }
+
+    private InventoryDragEvent dragIntoMenu(int rawSlot) {
+        Inventory top = mock(Inventory.class);
+        when(top.getHolder(false)).thenReturn(mock(BrushMenuHolder.class));
+        when(top.getSize()).thenReturn(BrushMenuHolder.SIZE);
+        InventoryView view = mock(InventoryView.class);
+        when(view.getTopInventory()).thenReturn(top);
+        Map<Integer, ItemStack> newItems = new HashMap<>();
+        newItems.put(rawSlot, null);
+        return new InventoryDragEvent(view, null, null, false, newItems);
+    }
+
+    @Test
+    @DisplayName("dragging an item into the brush menu is cancelled, so no slot changes outside the plugin")
+    void dragIntoMenuIsCancelled() {
+        InventoryDragEvent event = dragIntoMenu(10);
+
+        listener.menuDrag(event);
+
+        assertThat(event.isCancelled()).as("dragging into a menu slot").isTrue();
+    }
+
+    @Test
+    @DisplayName("dragging inside the player's own inventory next to the menu is still allowed")
+    void dragInsideOwnInventoryIsAllowed() {
+        InventoryDragEvent event = dragIntoMenu(BrushMenuHolder.SIZE + 5);
+
+        listener.menuDrag(event);
+
+        assertThat(event.isCancelled()).as("dragging in the player's own inventory").isFalse();
     }
 }

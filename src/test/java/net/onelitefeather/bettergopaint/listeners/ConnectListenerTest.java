@@ -26,6 +26,7 @@ import net.onelitefeather.bettergopaint.settings.SettingsHolder;
 import net.onelitefeather.bettergopaint.utils.Constants;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,13 +39,14 @@ import static org.mockito.Mockito.when;
 
 class ConnectListenerTest {
 
+    private final PlayerBrushManager brushManager = mock(PlayerBrushManager.class);
     private final UpdateService updateService = mock(UpdateService.class);
     private final Player player = mock(Player.class);
     private ConnectListener listener;
 
     @BeforeEach
     void setUp() {
-        listener = new ConnectListener(mock(PlayerBrushManager.class), updateService, SettingsHolder.of(Settings.defaults()));
+        listener = new ConnectListener(brushManager, updateService, SettingsHolder.of(Settings.defaults()));
     }
 
     private PlayerJoinEvent join() {
@@ -59,6 +61,14 @@ class ConnectListenerTest {
         listener.onJoin(join());
 
         verify(updateService).notifyPlayer(player);
+    }
+
+    @Test
+    @DisplayName("quitting releases the brush state of the player")
+    void quitReleasesBrushState() {
+        listener.onQuit(new PlayerQuitEvent(player, Component.empty()));
+
+        verify(brushManager).removeBrush(player);
     }
 
     @Test

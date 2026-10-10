@@ -27,6 +27,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.jetbrains.annotations.NotNull;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
@@ -60,11 +61,22 @@ public final class Items {
     ) {
         ItemStack head = create(Material.PLAYER_HEAD, 1, name, lore);
         head.editMeta(SkullMeta.class, skullMeta -> {
-            var profile = Bukkit.createProfile(UUID.randomUUID());
+            var profile = Bukkit.createProfile(profileId(texture));
             profile.setProperty(new ProfileProperty("textures", texture));
             skullMeta.setPlayerProfile(profile);
         });
         return head;
+    }
+
+    /**
+     * The profile of a head is derived from its texture, so two heads with the same texture have the same profile
+     * and the server does not see a new profile for every head that is built.
+     *
+     * @param texture the base64 skin texture of the head
+     * @return the name based UUID of the texture
+     */
+    public static @NotNull UUID profileId(@NotNull String texture) {
+        return UUID.nameUUIDFromBytes(texture.getBytes(StandardCharsets.UTF_8));
     }
 
     private static @NotNull Component plain(@NotNull Component component) {
