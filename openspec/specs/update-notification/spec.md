@@ -34,3 +34,14 @@ A failed or unparsable update check SHALL NOT log a stack trace at WARN or ERROR
 #### Scenario: Invalid response
 - **WHEN** Hangar answers with a body that is not a version
 - **THEN** the plugin logs one debug line and keeps running
+
+### Requirement: No HTTP client while checks are disabled
+The plugin SHALL NOT create an HTTP client when `generic.check-for-updates` is `false`.
+
+#### Scenario: Disabled
+- **WHEN** `generic.check-for-updates` is `false` and the plugin enables
+- **THEN** no HTTP client has been created
+
+#### Scenario: Enabled
+- **WHEN** `generic.check-for-updates` is `true` and the first check runs
+- **THEN** one HTTP client is created and closed on shutdown
