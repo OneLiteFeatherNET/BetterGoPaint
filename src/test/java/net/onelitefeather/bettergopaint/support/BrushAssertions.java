@@ -21,7 +21,6 @@ package net.onelitefeather.bettergopaint.support;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.world.block.BlockType;
 
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -36,18 +35,7 @@ public final class BrushAssertions {
      * Every position in the box around the middle whose distance to the middle is below half the size.
      */
     public static Set<BlockVector3> sphere(BlockVector3 middle, int size) {
-        Set<BlockVector3> result = new LinkedHashSet<>();
-        int reach = size / 2 + 1;
-        for (int x = -reach; x <= reach; x++) {
-            for (int y = -reach; y <= reach; y++) {
-                for (int z = -reach; z <= reach; z++) {
-                    if (Math.sqrt(x * x + y * y + z * z) < size / 2d) {
-                        result.add(middle.add(x, y, z));
-                    }
-                }
-            }
-        }
-        return result;
+        return ReferenceSphere.members(middle, size);
     }
 
     /**
