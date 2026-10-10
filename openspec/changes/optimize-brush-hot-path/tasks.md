@@ -7,8 +7,8 @@
 
 ## 1. C1 Paint curve once per stroke
 
-- [ ] 1.1 Write failing tests: curve constructed once per stroke, and curve positions equal the per-block construction for a fixed seed, including negative offsets
-- [ ] 1.2 Compute the relative spline and sample offsets once per stroke, translate per block, dedupe positions; verify `PaintBrushTest` and the new tests pass
+- [x] 1.1 Write failing tests: curve constructed once per stroke, and curve positions equal the per-block construction for a fixed seed, including negative offsets
+- [x] 1.2 Compute the relative spline and sample offsets once per stroke, translate per block, dedupe positions; verify `PaintBrushTest` and the new tests pass
 
 ## 2. C2 Height memo
 
