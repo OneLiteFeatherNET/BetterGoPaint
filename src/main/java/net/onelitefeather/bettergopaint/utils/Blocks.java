@@ -80,9 +80,22 @@ public final class Blocks {
      * @return true if the block is solid
      */
     public static boolean isSolid(@NotNull Extent extent, @NotNull BlockVector3 position) {
-        if (!isInBounds(extent, position.y())) {
+        return isSolid(extent, position.x(), position.y(), position.z());
+    }
+
+    /**
+     * Checks if the block at the given coordinates is solid. Positions outside the build limits are not solid.
+     *
+     * @param extent the extent to read from
+     * @param x      the x coordinate
+     * @param y      the y coordinate
+     * @param z      the z coordinate
+     * @return true if the block is solid
+     */
+    public static boolean isSolid(@NotNull Extent extent, int x, int y, int z) {
+        if (!isInBounds(extent, y)) {
             return false;
         }
-        return extent.getBlock(position).getBlockType().getMaterial().isSolid();
+        return extent.getBlock(x, y, z).getBlockType().getMaterial().isSolid();
     }
 }

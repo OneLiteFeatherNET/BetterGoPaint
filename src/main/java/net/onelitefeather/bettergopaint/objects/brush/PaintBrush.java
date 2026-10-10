@@ -21,12 +21,14 @@ package net.onelitefeather.bettergopaint.objects.brush;
 import com.sk89q.worldedit.extent.Extent;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.math.Vector3;
+import com.sk89q.worldedit.world.block.BaseBlock;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.onelitefeather.bettergopaint.brush.StrokeContext;
 import net.onelitefeather.bettergopaint.settings.SettingsHolder;
+import net.onelitefeather.bettergopaint.utils.BlockReadCache;
 import net.onelitefeather.bettergopaint.utils.Blocks;
-import net.onelitefeather.bettergopaint.utils.Height;
+import net.onelitefeather.bettergopaint.utils.HeightCache;
 import net.onelitefeather.bettergopaint.utils.Messages;
 import net.onelitefeather.bettergopaint.utils.Sphere;
 import net.onelitefeather.bettergopaint.utils.curve.BezierSpline;
@@ -34,11 +36,13 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 public class PaintBrush extends Brush {
 
@@ -58,9 +62,20 @@ public class PaintBrush extends Brush {
 
     private final SettingsHolder settings;
 
+    /**
+     * Builds the spline of a curve from its control points. The production brush uses the constructor of
+     * {@link BezierSpline}; tests inject a counting function to observe how often a curve is built.
+     */
+    private final Function<LinkedList<Vector3>, BezierSpline> splines;
+
     public PaintBrush(@NotNull SettingsHolder settings) {
+        this(settings, BezierSpline::new);
+    }
+
+    PaintBrush(@NotNull SettingsHolder settings, @NotNull Function<LinkedList<Vector3>, BezierSpline> splines) {
         super(NAME, DESCRIPTION, HEAD);
         this.settings = settings;
+        this.splines = splines;
     }
 
     /**
@@ -108,35 +123,39 @@ public class PaintBrush extends Brush {
     public void apply(@NotNull Extent extent, @NotNull StrokeContext context) {
         List<BlockVector3> points = context.points();
         BlockVector3 first = points.getFirst();
+        List<Vector3> offsets = sampleOffsets(points, first);
+        Extent reads = new BlockReadCache(extent);
+        HeightCache heights = new HeightCache(reads);
+        double tangent = Math.tan(Math.toRadians(context.angleHeightDifference()));
+        double halfSize = context.size() / 2.0;
+        double falloffFactor = (100.0 - context.falloffStrength()) / 100.0;
         List<BlockVector3> positions = new ArrayList<>();
 
-        Sphere.getBlocksInRadius(extent, first, context.size(), null, false).forEach(block -> {
-            if (Height.getAverageHeightDiffAngle(extent, block, 1) >= 0.1
-                    && Height.getAverageHeightDiffAngle(extent, block, context.angleDistance())
-                    >= Math.tan(Math.toRadians(context.angleHeightDifference()))) {
+        Sphere.getBlocksInRadius(reads, first, context.size(), null, false).forEach(block -> {
+            if (heights.averageHeightDiffAngle(block, 1) >= 0.1
+                    && heights.averageHeightDiffAngle(block, context.angleDistance()) >= tangent) {
                 return;
             }
 
-            double rate = (block.distance(first) - (context.size() / 2.0)
-                    * ((100.0 - context.falloffStrength()) / 100.0)) / ((context.size() / 2.0)
-                    - (context.size() / 2.0) * ((100.0 - context.falloffStrength()) / 100.0));
+            double rate = (block.distance(first) - halfSize * falloffFactor)
+                    / (halfSize - halfSize * falloffFactor);
 
             if (context.random().nextDouble() <= rate) {
                 return;
             }
 
-            LinkedList<Vector3> newCurve = new LinkedList<>();
-            newCurve.add(block.toVector3());
-            for (BlockVector3 point : points) {
-                newCurve.add(block.add(point.subtract(first)).toVector3());
-            }
-            BezierSpline spline = new BezierSpline(newCurve);
-            double maxCount = (spline.getCurveLength() * 2.5) + 1;
-            for (int y = 0; y <= maxCount; y++) {
-                Vector3 curvePoint = spline.getPoint((y / maxCount) * (points.size() - 1));
-                BlockVector3 point = BlockVector3.at(curvePoint.x(), curvePoint.y(), curvePoint.z());
+            // Translate in double space first and convert to a block position second, as the per-block curve did.
+            double blockX = block.x();
+            double blockY = block.y();
+            double blockZ = block.z();
+            for (Vector3 offset : offsets) {
+                BlockVector3 point = BlockVector3.at(
+                        blockX + offset.x(),
+                        blockY + offset.y(),
+                        blockZ + offset.z()
+                );
 
-                if (Blocks.isAir(extent, point) || !passesDefaultChecks(extent, context, point)) {
+                if (Blocks.isAir(reads, point) || !passesDefaultChecks(reads, context, point)) {
                     continue;
                 }
 
@@ -144,7 +163,50 @@ public class PaintBrush extends Brush {
             }
         });
 
-        placeAll(extent, context, positions);
+        placeOnce(extent, context, positions);
+    }
+
+    /**
+     * Samples the curve through the points once per stroke. The curve is the same for every candidate block,
+     * only translated by the block position, so the samples are kept as offsets from the first point.
+     *
+     * @param points the points of the stroke in click order
+     * @param first  the first point, the origin of the relative curve
+     * @return the sample offsets from the first point, in curve order
+     */
+    private List<Vector3> sampleOffsets(@NotNull List<BlockVector3> points, @NotNull BlockVector3 first) {
+        LinkedList<Vector3> relativeCurve = new LinkedList<>();
+        relativeCurve.add(Vector3.ZERO);
+        for (BlockVector3 point : points) {
+            relativeCurve.add(point.subtract(first).toVector3());
+        }
+        BezierSpline spline = splines.apply(relativeCurve);
+        double maxCount = (spline.getCurveLength() * 2.5) + 1;
+        List<Vector3> offsets = new ArrayList<>();
+        for (int y = 0; y <= maxCount; y++) {
+            offsets.add(spline.getPoint((y / maxCount) * (points.size() - 1)));
+        }
+        return offsets;
+    }
+
+    /**
+     * Writes every position once. The palette is drawn for every occurrence in order, as it always was, so the
+     * random sequence does not change, and each position gets the block of its last occurrence, which is the one
+     * that stayed in the world before.
+     *
+     * @param extent      the extent to write to
+     * @param context     the context of the stroke
+     * @param occurrences the positions in the order they were found, with repeats
+     */
+    private void placeOnce(@NotNull Extent extent, @NotNull StrokeContext context,
+                           @NotNull List<BlockVector3> occurrences) {
+        Map<BlockVector3, BaseBlock> blocks = new LinkedHashMap<>();
+        for (BlockVector3 position : occurrences) {
+            blocks.put(position, context.palette().applyBlock(position));
+        }
+        for (Map.Entry<BlockVector3, BaseBlock> entry : blocks.entrySet()) {
+            extent.setBlock(entry.getKey(), entry.getValue());
+        }
     }
 
 }

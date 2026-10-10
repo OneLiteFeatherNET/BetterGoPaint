@@ -24,23 +24,20 @@ import com.sk89q.worldedit.world.block.BlockType;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
-import java.util.Set;
 import java.util.stream.Stream;
 
 public final class ConnectedBlocks {
 
-    private static final BlockVector3[] FACES = new BlockVector3[]{
-            BlockVector3.at(0, 0, -1),
-            BlockVector3.at(1, 0, 0),
-            BlockVector3.at(0, 0, 1),
-            BlockVector3.at(-1, 0, 0),
-            BlockVector3.at(0, 1, 0),
-            BlockVector3.at(0, -1, 0),
+    private static final int[][] FACES = new int[][]{
+            {0, 0, -1},
+            {1, 0, 0},
+            {0, 0, 1},
+            {-1, 0, 0},
+            {0, 1, 0},
+            {0, -1, 0},
     };
 
     private ConnectedBlocks() {
@@ -49,7 +46,8 @@ public final class ConnectedBlocks {
 
     /**
      * Returns a stream of connected positions starting from a given position, based on a list of positions.
-     * Only blocks of the same type as the start block are considered.
+     * Only blocks of the same type as the start block are considered. The positions come in the order a
+     * breadth-first flood from the start discovers them, which the palette draws of a stroke depend on.
      *
      * @param extent the extent to read from
      * @param start  the starting position
@@ -61,26 +59,108 @@ public final class ConnectedBlocks {
                                                                    @NotNull List<BlockVector3> blocks) {
         if (blocks.isEmpty()) return Stream.empty();
         BlockType startType = extent.getBlock(start).getBlockType();
-        Set<BlockVector3> candidates = new HashSet<>(blocks);
-        Set<BlockVector3> connected = new LinkedHashSet<>();
-        Queue<BlockVector3> toCheck = new LinkedList<>();
+        Grid grid = new Grid(start, blocks);
+        List<BlockVector3> connected = new ArrayList<>();
+        ArrayDeque<Integer> toCheck = new ArrayDeque<>();
 
-        toCheck.add(start);
+        int startIndex = grid.index(start.x(), start.y(), start.z());
+        grid.visited[startIndex] = true;
         connected.add(start);
+        toCheck.add(startIndex);
 
         while (!toCheck.isEmpty() && connected.size() < blocks.size()) {
-            BlockVector3 current = toCheck.poll();
-            for (BlockVector3 face : FACES) {
-                BlockVector3 relative = current.add(face);
-                if (candidates.contains(relative)
-                        && !connected.contains(relative)
-                        && extent.getBlock(relative).getBlockType().equals(startType)) {
-                    connected.add(relative);
-                    toCheck.add(relative);
+            int current = toCheck.poll();
+            int x = grid.x(current);
+            int y = grid.y(current);
+            int z = grid.z(current);
+            for (int[] face : FACES) {
+                int relativeX = x + face[0];
+                int relativeY = y + face[1];
+                int relativeZ = z + face[2];
+                if (!grid.isCandidate(relativeX, relativeY, relativeZ)) {
+                    continue;
                 }
+                int next = grid.index(relativeX, relativeY, relativeZ);
+                if (grid.visited[next]
+                        || !extent.getBlock(relativeX, relativeY, relativeZ).getBlockType().equals(startType)) {
+                    continue;
+                }
+                grid.visited[next] = true;
+                connected.add(BlockVector3.at(relativeX, relativeY, relativeZ));
+                toCheck.add(next);
             }
         }
 
         return connected.stream();
+    }
+
+    /**
+     * A dense grid over the box that holds the start and every candidate. It records which positions are candidates
+     * and which were already reached, so the flood never allocates a position to look one up.
+     */
+    private static final class Grid {
+
+        private final int minX;
+        private final int minY;
+        private final int minZ;
+        private final int sizeX;
+        private final int sizeY;
+        private final int sizeZ;
+        private final boolean[] candidate;
+        private final boolean[] visited;
+
+        private Grid(BlockVector3 start, List<BlockVector3> blocks) {
+            int lowX = start.x();
+            int lowY = start.y();
+            int lowZ = start.z();
+            int highX = lowX;
+            int highY = lowY;
+            int highZ = lowZ;
+            for (BlockVector3 block : blocks) {
+                lowX = Math.min(lowX, block.x());
+                lowY = Math.min(lowY, block.y());
+                lowZ = Math.min(lowZ, block.z());
+                highX = Math.max(highX, block.x());
+                highY = Math.max(highY, block.y());
+                highZ = Math.max(highZ, block.z());
+            }
+            this.minX = lowX;
+            this.minY = lowY;
+            this.minZ = lowZ;
+            this.sizeX = highX - lowX + 1;
+            this.sizeY = highY - lowY + 1;
+            this.sizeZ = highZ - lowZ + 1;
+            this.candidate = new boolean[sizeX * sizeY * sizeZ];
+            this.visited = new boolean[sizeX * sizeY * sizeZ];
+            for (BlockVector3 block : blocks) {
+                candidate[index(block.x(), block.y(), block.z())] = true;
+            }
+        }
+
+        private int index(int x, int y, int z) {
+            return ((x - minX) * sizeY + (y - minY)) * sizeZ + (z - minZ);
+        }
+
+        private boolean isCandidate(int x, int y, int z) {
+            int dx = x - minX;
+            int dy = y - minY;
+            int dz = z - minZ;
+            if (dx < 0 || dy < 0 || dz < 0 || dx >= sizeX || dy >= sizeY || dz >= sizeZ) {
+                return false;
+            }
+            return candidate[index(x, y, z)];
+        }
+
+        private int x(int index) {
+            return minX + index / (sizeY * sizeZ);
+        }
+
+        private int y(int index) {
+            return minY + (index / sizeZ) % sizeY;
+        }
+
+        private int z(int index) {
+            return minZ + index % sizeZ;
+        }
     }
 }

@@ -21,7 +21,8 @@ package net.onelitefeather.bettergopaint.objects.brush;
 import com.sk89q.worldedit.extent.Extent;
 import com.sk89q.worldedit.math.BlockVector3;
 import net.onelitefeather.bettergopaint.brush.StrokeContext;
-import net.onelitefeather.bettergopaint.utils.Height;
+import net.onelitefeather.bettergopaint.utils.BlockReadCache;
+import net.onelitefeather.bettergopaint.utils.HeightCache;
 import net.onelitefeather.bettergopaint.utils.Sphere;
 import org.jetbrains.annotations.NotNull;
 
@@ -37,11 +38,13 @@ public class AngleBrush extends Brush {
 
     @Override
     public void apply(@NotNull Extent extent, @NotNull StrokeContext context) {
-        placeAll(extent, context, Sphere.getBlocksInRadius(extent, context.target(), context.size(), null, false)
-                .filter(position -> passesDefaultChecks(extent, context, position))
-                .filter(position -> Height.getAverageHeightDiffAngle(extent, position, 1) >= 0.1
-                        && Height.getAverageHeightDiffAngle(extent, position, context.angleDistance())
-                        >= Math.tan(Math.toRadians(context.angleHeightDifference())))
+        Extent reads = new BlockReadCache(extent);
+        HeightCache heights = new HeightCache(reads);
+        double tangent = Math.tan(Math.toRadians(context.angleHeightDifference()));
+        placeAll(extent, context, Sphere.getBlocksInRadius(reads, context.target(), context.size(), null, false)
+                .filter(position -> passesDefaultChecks(reads, context, position))
+                .filter(position -> heights.averageHeightDiffAngle(position, 1) >= 0.1
+                        && heights.averageHeightDiffAngle(position, context.angleDistance()) >= tangent)
                 .toList());
     }
 }

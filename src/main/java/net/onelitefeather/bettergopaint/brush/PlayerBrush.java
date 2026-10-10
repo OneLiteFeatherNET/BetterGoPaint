@@ -46,7 +46,6 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -60,7 +59,11 @@ public final class PlayerBrush implements BrushSettings {
 
     private final PlayerBrushManager brushManager;
     private final SettingsHolder settings;
-    private final Random random = new SecureRandom();
+    /**
+     * The source of the brush jitter of this player. Jitter needs no cryptographic strength, and every click draws
+     * a seed from here, so the generator must be cheap.
+     */
+    private final Random random = new Random();
 
     private boolean maskEnabled;
     private boolean enabled;

@@ -52,6 +52,7 @@ public final class StrokeBuilder {
     private int angleDistance = 1;
     private double angleHeightDifference = 45;
     private long seed = 1;
+    private Random injectedRandom;
 
     public static StrokeBuilder stroke() {
         return new StrokeBuilder();
@@ -133,8 +134,17 @@ public final class StrokeBuilder {
         return this;
     }
 
+    /**
+     * Uses the given source of randomness instead of a new one seeded with {@link #seed(long)}. The palette and the
+     * stroke share it, as they do in production.
+     */
+    public StrokeBuilder random(Random random) {
+        this.injectedRandom = random;
+        return this;
+    }
+
     public StrokeContext build() {
-        Random random = new Random(seed);
+        Random random = injectedRandom == null ? new Random(seed) : injectedRandom;
         SimpleRandom simpleRandom = (x, y, z) -> random.nextDouble();
         RandomPattern palette = new RandomPattern(simpleRandom);
         blocks.forEach(block -> palette.add(TestBlocks.pattern(block), 1));

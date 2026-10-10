@@ -22,6 +22,7 @@ import com.sk89q.worldedit.extent.Extent;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.world.block.BlockType;
 import net.onelitefeather.bettergopaint.brush.StrokeContext;
+import net.onelitefeather.bettergopaint.utils.BlockReadCache;
 import net.onelitefeather.bettergopaint.utils.Sphere;
 import org.jetbrains.annotations.NotNull;
 
@@ -40,24 +41,27 @@ public class GradientBrush extends Brush {
 
     @Override
     public void apply(@NotNull Extent extent, @NotNull StrokeContext context) {
-        double y = context.target().y() - (context.size() / 2d);
+        BlockVector3 target = context.target();
+        double y = target.y() - (context.size() / 2d);
+        double halfSize = context.size() / 2d;
+        double falloffFactor = (100d - context.falloffStrength()) / 100d;
+        double mixing = context.mixingStrength() / 100d;
         List<BlockType> blocks = context.blocks();
-        List<BlockVector3> positions = Sphere.getBlocksInRadius(extent, context.target(), context.size(), null, false)
-                .filter(position -> passesDefaultChecks(extent, context, position))
+        Extent reads = new BlockReadCache(extent);
+        List<BlockVector3> positions = Sphere.getBlocksInRadius(reads, target, context.size(), null, false)
                 .filter(position -> {
-                    double rate = (position.distance(context.target()) - (context.size() / 2d)
-                            * ((100d - context.falloffStrength()) / 100d))
-                            / ((context.size() / 2d) - (context.size() / 2d)
-                            * ((100d - context.falloffStrength()) / 100d));
+                    double rate = (position.distance(target) - halfSize * falloffFactor)
+                            / (halfSize - halfSize * falloffFactor);
 
                     return context.random().nextDouble() > rate;
                 })
+                .filter(position -> passesDefaultChecks(reads, context, position))
                 .toList();
         List<BlockType> types = new ArrayList<>(positions.size());
         for (BlockVector3 position : positions) {
             int random = (int) (((position.y() - y) / context.size()
                     * blocks.size()) + (context.random().nextDouble() * 2 - 1)
-                    * (context.mixingStrength() / 100d));
+                    * mixing);
 
             types.add(blocks.get(Math.clamp(random, 0, blocks.size() - 1)));
         }
