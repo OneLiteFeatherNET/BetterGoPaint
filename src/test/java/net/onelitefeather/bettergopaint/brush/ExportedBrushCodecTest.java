@@ -60,13 +60,7 @@ class ExportedBrushCodecTest {
         String encoded = ExportedBrushCodec.encode(original);
 
         assertThat(encoded).startsWith("version=" + ExportedBrushCodec.FORMAT_VERSION + ";");
-        assertThat(ExportedBrushCodec.decode(encoded, manager::getBrushByName, settings))
-                .as("the decoded brush carries the same settings, its own jitter source is not part of the item")
-                .isPresent()
-                .get()
-                .usingRecursiveComparison()
-                .ignoringFields("random")
-                .isEqualTo(original);
+        assertThat(ExportedBrushCodec.decode(encoded, manager::getBrushByName, settings)).contains(original);
     }
 
     @Test

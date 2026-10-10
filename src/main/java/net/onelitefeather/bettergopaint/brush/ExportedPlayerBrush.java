@@ -29,6 +29,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public record ExportedPlayerBrush(
         @NotNull Brush brush,
@@ -43,8 +44,7 @@ public record ExportedPlayerBrush(
         int fractureDistance,
         int falloffStrength,
         int mixingStrength,
-        double angleHeightDifference,
-        @NotNull Random random
+        double angleHeightDifference
 ) implements BrushSettings {
 
     public ExportedPlayerBrush(@NotNull Builder builder) {
@@ -61,8 +61,7 @@ public record ExportedPlayerBrush(
                 builder.fractureDistance,
                 builder.falloffStrength,
                 builder.mixingStrength,
-                builder.angleHeightDifference,
-                new Random()
+                builder.angleHeightDifference
         );
     }
 
@@ -83,7 +82,7 @@ public record ExportedPlayerBrush(
 
     @Override
     public @NotNull Random random() {
-        return random;
+        return ThreadLocalRandom.current();
     }
 
     public static Builder builder(@NotNull Brush brush, @NotNull Settings settings) {

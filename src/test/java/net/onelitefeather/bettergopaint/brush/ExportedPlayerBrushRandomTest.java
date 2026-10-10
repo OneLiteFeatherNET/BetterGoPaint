@@ -47,13 +47,13 @@ class ExportedPlayerBrushRandomTest {
     }
 
     @Test
-    @DisplayName("two exported brushes do not share one jitter source")
-    void exportedBrushesDoNotShareOneRandom() {
-        ExportedPlayerBrush first = ExportedPlayerBrush.builder(disc, settings).build();
-        ExportedPlayerBrush second = ExportedPlayerBrush.builder(disc, settings).build();
+    @DisplayName("exported brushes built from the same values are equal")
+    void exportedBrushesBuiltFromSameValuesAreEqual() {
+        ExportedPlayerBrush first = ExportedPlayerBrush.builder(disc, settings).size(3).chance(50).build();
+        ExportedPlayerBrush second = ExportedPlayerBrush.builder(disc, settings).size(3).chance(50).build();
 
-        assertThat(first.random())
-                .as("each exported brush owns its generator instead of a shared static one")
-                .isNotSameAs(second.random());
+        assertThat(first)
+                .as("record equality must depend only on the brush values, not on a randomness source")
+                .isEqualTo(second);
     }
 }
