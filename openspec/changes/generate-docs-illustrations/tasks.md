@@ -40,5 +40,5 @@
 
 ## 9. Delivery
 
-- [ ] 9.1 Run `./gradlew check` and confirm no sleeps, clock reads or shared static state in the new tests, and that the spotless header check passes for the new sources
+- [x] 9.1 Run `./gradlew check` and confirm no sleeps, clock reads or shared static state in the new tests, and that the spotless header check passes for the new sources
 - [ ] 9.2 Mark the draft pull request titled `build(docs): generate brush and menu illustrations` ready for review, with the body ending in the session link
