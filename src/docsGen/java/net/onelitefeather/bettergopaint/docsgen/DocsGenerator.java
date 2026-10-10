@@ -34,8 +34,9 @@ import java.util.TreeMap;
  * Command line entry point of the documentation tooling. The generator is run by Gradle, see the tasks
  * {@code generateDocsImages}, {@code checkDocsImages} and {@code checkDocsLinks} in {@code build.gradle.kts}.
  * <p>
- * Usage: {@code DocsGenerator generate|check <docs directory>}. {@code generate} writes the images into
- * {@code docs/images}; {@code check} exits with status 1 and names every file that is missing, differs or is extra.
+ * Usage: {@code DocsGenerator generate|check|links <docs directory>}. {@code generate} writes the images into
+ * {@code docs/images}; {@code check} compares them with the generator; {@code links} checks the pages. Both checks exit
+ * with status 1 and name every problem.
  */
 public final class DocsGenerator {
 
@@ -45,26 +46,36 @@ public final class DocsGenerator {
     }
 
     public static void main(String[] args) throws IOException {
-        if (args.length != 2 || !("generate".equals(args[0]) || "check".equals(args[0]))) {
-            System.err.println("usage: DocsGenerator generate|check <docs directory>");
+        if (args.length != 2 || !List.of("generate", "check", "links").contains(args[0])) {
+            System.err.println("usage: DocsGenerator generate|check|links <docs directory>");
             System.exit(2);
             return;
         }
         Path docs = Path.of(args[1]).toAbsolutePath().normalize();
         Path images = docs.resolve(IMAGES);
-        Map<String, byte[]> expected = expectedImages();
-        if ("generate".equals(args[0])) {
-            DocsImages.write(images, expected);
-            System.out.println("wrote " + expected.size() + " generated images to " + images);
+        switch (args[0]) {
+            case "generate" -> {
+                Map<String, byte[]> expected = expectedImages();
+                DocsImages.write(images, expected);
+                System.out.println("wrote " + expected.size() + " generated images to " + images);
+            }
+            case "check" -> {
+                Map<String, byte[]> expected = expectedImages();
+                report(DocsImages.problems(images, expected), expected.size() + " generated images match " + images);
+            }
+            default -> report(new DocsLinkChecker(docs, DocsLinkChecker.BUILDER_PAGES_AWAITING_ILLUSTRATIONS).problems(),
+                    "all links and illustrations in " + docs + " resolve");
+        }
+    }
+
+    private static void report(List<String> problems, String success) {
+        if (problems.isEmpty()) {
+            System.out.println(success);
             return;
         }
-        List<String> problems = DocsImages.problems(images, expected);
-        if (!problems.isEmpty()) {
-            problems.forEach(System.err::println);
-            System.err.println(problems.size() + " image problem(s) in " + images);
-            System.exit(1);
-        }
-        System.out.println(expected.size() + " generated images match " + images);
+        problems.forEach(System.err::println);
+        System.err.println(problems.size() + " problem(s)");
+        System.exit(1);
     }
 
     /**

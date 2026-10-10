@@ -95,6 +95,16 @@ class DocsLinkCheckerTest {
     }
 
     @Test
+    @DisplayName("a builder page on the allow-list passes without an illustration")
+    void builderPageOnAllowListPasses() throws IOException {
+        page("SUMMARY.md", "### For builders\n\n* [Share a brush](how-to/share.md)\n");
+        page("how-to/share.md", "Text without a picture.");
+
+        assertThat(new DocsLinkChecker(folder.resolve("docs"), Set.of("how-to/share.md")).problems())
+                .as("the problems of a builder page on the allow-list").isEmpty();
+    }
+
+    @Test
     @DisplayName("a builder page with an image passes")
     void builderPageWithImagePasses() throws IOException {
         page("SUMMARY.md", "### For builders\n\n* [Share a brush](how-to/share.md)\n");
