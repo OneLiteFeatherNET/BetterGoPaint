@@ -1,7 +1,7 @@
 # docs-illustrations Specification
 
 ## Purpose
-TBD - created by archiving change generate-docs-illustrations. Update Purpose after archive.
+The SVG illustrations under `docs/images` (brushes and brush menu): how the generator renders them without a clock or network, and how the check fails when a committed file drifts from the generator.
 
 ## Requirements
 

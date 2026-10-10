@@ -1,7 +1,7 @@
 # builder-guides Specification
 
 ## Purpose
-TBD - created by archiving change builder-guides-with-images. Update Purpose after archive.
+Which how-to guides builders get for the brush menu under "For builders" in `docs/SUMMARY.md`, what each guide covers, and which generated images and screenshot hints each guide embeds.
 
 ## Requirements
 
