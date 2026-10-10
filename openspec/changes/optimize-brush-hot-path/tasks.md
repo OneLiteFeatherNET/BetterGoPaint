@@ -33,8 +33,8 @@
 
 ## 6. C6 Invariants and cheap RNG
 
-- [ ] 6.1 Write a test: a context built with an injected seeded random yields identical selections across two runs
-- [ ] 6.2 Hoist `tan`, `size / 2` and the falloff factor in Angle, Paint, Splatter, Gradient; verify existing brush tests pass
+- [x] 6.1 Write a test: a context built with an injected seeded random yields identical selections across two runs
+- [x] 6.2 Hoist `tan`, `size / 2` and the falloff factor in Angle, Paint, Splatter, Gradient; verify existing brush tests pass
 - [ ] 6.3 Replace `SecureRandom` in `PlayerBrush` and the per-click `new Random` in `InteractListener` with a cheap per-stroke generator; keep the `StrokeContext` injection point; verify `InteractListenerTest` and `StrokeContextFactoryTest` pass
 
 ## 7. Wrap up
