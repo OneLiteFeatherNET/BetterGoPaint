@@ -10,8 +10,8 @@
 
 ## 3. Bounded stroke (M3)
 
-- [ ] 3.1 Red: test that point 257 is refused with a message and that sneaking at the limit paints 256 points
-- [ ] 3.2 Green: add `MAX_STROKE_POINTS` and the refusal message to `PaintBrush` and the bundles; update `docs/reference/brushes.md`
+- [x] 3.1 Red: test that point 257 is refused with a message and that sneaking at the limit paints 256 points
+- [x] 3.2 Green: add `MAX_STROKE_POINTS` and the refusal message to `PaintBrush` and the bundles; update `docs/reference/brushes.md`
 
 ## 4. Picker and heads (M4)
 
