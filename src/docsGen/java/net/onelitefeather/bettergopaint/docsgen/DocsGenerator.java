@@ -63,7 +63,7 @@ public final class DocsGenerator {
                 Map<String, byte[]> expected = expectedImages();
                 report(DocsImages.problems(images, expected), expected.size() + " generated images match " + images);
             }
-            default -> report(new DocsLinkChecker(docs, DocsLinkChecker.BUILDER_PAGES_AWAITING_ILLUSTRATIONS).problems(),
+            default -> report(new DocsLinkChecker(docs).problems(),
                     "all links and illustrations in " + docs + " resolve");
         }
     }
