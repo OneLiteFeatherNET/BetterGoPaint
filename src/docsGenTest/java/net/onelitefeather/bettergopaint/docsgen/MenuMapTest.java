@@ -53,9 +53,10 @@ class MenuMapTest {
     @Test
     @DisplayName("the mask toggle label resolves to its English text")
     void maskToggleLabelResolves() {
-        MenuMap.MenuCell cell = MenuMap.cells(MenuStates.sphereDefault(), EnglishText.fromClasspath()).get(6);
+        // GUI puts the frame of column 6 in slot 6 and the mask toggle one row below it, in slot 15.
+        MenuMap.MenuCell cell = MenuMap.cells(MenuStates.sphereDefault(), EnglishText.fromClasspath()).get(15);
 
-        assertThat(cell.purpose()).as("the purpose of the mask toggle in slot 6").isEqualTo("Mask");
+        assertThat(cell.purpose()).as("the purpose of the mask toggle in slot 15").isEqualTo("Mask");
     }
 
     @Test

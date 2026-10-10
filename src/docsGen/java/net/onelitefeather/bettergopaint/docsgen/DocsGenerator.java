@@ -70,6 +70,11 @@ public final class DocsGenerator {
         for (BrushScene scene : BrushScenes.all(manager.getBrushes(), terrain)) {
             images.put("brushes/" + fileName(scene.brush()) + ".svg", SvgWriter.bytes(BrushIllustration.render(scene, palette)));
         }
+        EnglishText english = EnglishText.fromClasspath();
+        for (MenuStates.State state : MenuStates.all()) {
+            images.put("menu/" + state.fileName(),
+                    SvgWriter.bytes(MenuMap.render(state.title(), MenuMap.cells(state.layout(), english))));
+        }
         return images;
     }
 
