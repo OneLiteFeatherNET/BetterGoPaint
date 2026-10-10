@@ -18,6 +18,7 @@
  */
 package net.onelitefeather.bettergopaint.brush;
 
+import net.onelitefeather.bettergopaint.menu.BrushMenuFactory;
 import net.onelitefeather.bettergopaint.objects.brush.Brush;
 import net.onelitefeather.bettergopaint.settings.Settings;
 import net.onelitefeather.bettergopaint.settings.SettingsHolder;
@@ -30,11 +31,12 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 class ExportedBrushCodecTest {
 
     private final Settings settings = Settings.defaults();
-    private final PlayerBrushManager manager = new PlayerBrushManager(SettingsHolder.of(settings));
+    private final PlayerBrushManager manager = new PlayerBrushManager(SettingsHolder.of(settings), mock(BrushMenuFactory.class));
     private final Brush disc = manager.getBrushByName("Disc Brush").orElseThrow();
 
     @Test

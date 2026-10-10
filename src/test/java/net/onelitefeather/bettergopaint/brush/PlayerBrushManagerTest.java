@@ -18,6 +18,8 @@
  */
 package net.onelitefeather.bettergopaint.brush;
 
+import net.onelitefeather.bettergopaint.menu.BrushMenu;
+import net.onelitefeather.bettergopaint.menu.BrushMenuFactory;
 import net.onelitefeather.bettergopaint.objects.brush.Brush;
 import net.onelitefeather.bettergopaint.objects.brush.PaintBrush;
 import net.onelitefeather.bettergopaint.objects.brush.SphereBrush;
@@ -44,7 +46,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class PlayerBrushManagerTest {
@@ -54,7 +60,7 @@ class PlayerBrushManagerTest {
 
     @BeforeEach
     void setUp() {
-        manager = new PlayerBrushManager(SettingsHolder.of(Settings.defaults()));
+        manager = new PlayerBrushManager(SettingsHolder.of(Settings.defaults()), mock(BrushMenuFactory.class));
         brushes = manager.getBrushes();
     }
 
@@ -142,5 +148,38 @@ class PlayerBrushManagerTest {
         } finally {
             pool.shutdownNow();
         }
+    }
+
+    private static Player player() {
+        Player player = mock(Player.class);
+        when(player.getUniqueId()).thenReturn(UUID.randomUUID());
+        when(player.locale()).thenReturn(Locale.ENGLISH);
+        return player;
+    }
+
+    @Test
+    @DisplayName("getting a brush does not create its menu")
+    void gettingBrushCreatesNoMenu() {
+        BrushMenuFactory menus = mock(BrushMenuFactory.class);
+        PlayerBrushManager lazy = new PlayerBrushManager(SettingsHolder.of(Settings.defaults()), menus);
+
+        lazy.getBrush(player());
+
+        verify(menus, never()).create(any());
+    }
+
+    @Test
+    @DisplayName("the menu is created on the first open and reused by later opens")
+    void menuIsCreatedOnFirstOpenOnly() {
+        BrushMenuFactory menus = mock(BrushMenuFactory.class);
+        when(menus.create(any())).thenReturn(mock(BrushMenu.class));
+        PlayerBrushManager lazy = new PlayerBrushManager(SettingsHolder.of(Settings.defaults()), menus);
+        Player player = player();
+        PlayerBrush brush = lazy.getBrush(player);
+
+        brush.openMenu(player);
+        brush.openMenu(player);
+
+        verify(menus, times(1)).create(any());
     }
 }

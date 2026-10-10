@@ -219,7 +219,7 @@ public final class InventoryListener implements Listener {
         PlayerBrush playerBrush = brushManager.getBrush(player);
         playerBrush.setBrush(brushManager.getBrushes().get(slot));
         playerBrush.updateInventory();
-        player.openInventory(playerBrush.getInventory());
+        playerBrush.openMenu(player);
     }
 
 }

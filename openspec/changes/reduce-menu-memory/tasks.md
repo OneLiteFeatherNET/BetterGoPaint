@@ -1,7 +1,7 @@
 ## 1. Lazy menu (M1)
 
-- [ ] 1.1 Red: test that `getBrush` creates no menu inventory (counting menu factory) and that two opens create one
-- [ ] 1.2 Green: create the inventory on first open in `PlayerBrush`, remove `GUI.create(this)` from the constructor
+- [x] 1.1 Red: test that `getBrush` creates no menu inventory (counting menu factory) and that two opens create one
+- [x] 1.2 Green: create the inventory on first open in `PlayerBrush`, remove `GUI.create(this)` from the constructor
 
 ## 2. Cheaper updates (M2)
 

@@ -32,6 +32,7 @@ import net.onelitefeather.bettergopaint.objects.brush.PaintBrush;
 import net.onelitefeather.bettergopaint.objects.brush.SphereBrush;
 import net.onelitefeather.bettergopaint.objects.brush.SplatterBrush;
 import net.onelitefeather.bettergopaint.objects.brush.SprayBrush;
+import net.onelitefeather.bettergopaint.menu.BrushMenuFactory;
 import net.onelitefeather.bettergopaint.objects.brush.UnderlayBrush;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -63,8 +64,8 @@ public class PlayerBrushManager {
     private final SettingsHolder settings;
 
     @Inject
-    public PlayerBrushManager(@NotNull SettingsHolder settings) {
-        this(settings, (manager, locale) -> new PlayerBrush(manager, settings, locale));
+    public PlayerBrushManager(@NotNull SettingsHolder settings, @NotNull BrushMenuFactory menuFactory) {
+        this(settings, (manager, locale) -> new PlayerBrush(manager, settings, locale, menuFactory));
     }
 
     PlayerBrushManager(

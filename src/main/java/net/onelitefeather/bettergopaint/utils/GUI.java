@@ -59,10 +59,8 @@ public final class GUI {
         throw new UnsupportedOperationException("This class cannot be instantiated");
     }
 
-    public static @NotNull Inventory create(@NotNull PlayerBrush playerBrush) {
-        Inventory inventory = new BrushMenuHolder(text(playerBrush.locale(), "bettergopaint.menu.title")).getInventory();
-        update(inventory, playerBrush);
-        return inventory;
+    public static @NotNull Component menuTitle(@NotNull Locale locale) {
+        return text(locale, "bettergopaint.menu.title");
     }
 
     public static @NotNull Inventory generateBrushes(@NotNull List<Brush> brushes, @NotNull Locale locale) {
