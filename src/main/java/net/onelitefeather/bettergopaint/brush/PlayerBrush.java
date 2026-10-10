@@ -40,6 +40,7 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -219,14 +220,24 @@ public final class PlayerBrush implements BrushSettings {
         return brushManager.getBrushes();
     }
 
+    /**
+     * Shows a changed setting. While the owner views the menu only the changed slots are written; otherwise the
+     * menu is marked dirty and the next open renders it.
+     */
     public void updateInventory() {
-        if (menu != null) {
+        if (menu == null) {
+            return;
+        }
+        if (isViewing()) {
             menu.render(this);
+        } else {
+            menu.markDirty();
         }
     }
 
     /**
-     * Shows the brush menu to the player. The menu is created on the first call only.
+     * Shows the brush menu to the player. The menu is created on the first call only, and rendered only if it
+     * changed since it was last shown.
      *
      * @param player the player who opens the menu
      */
@@ -234,9 +245,17 @@ public final class PlayerBrush implements BrushSettings {
         if (menu == null) {
             menu = menuFactory.create(locale);
         }
-        menu.render(this);
+        menu.refresh(this);
         viewer = player;
         player.openInventory(menu.inventory());
+    }
+
+    private boolean isViewing() {
+        if (menu == null || viewer == null) {
+            return false;
+        }
+        InventoryView view = viewer.getOpenInventory();
+        return view != null && view.getTopInventory() == menu.inventory();
     }
 
     public void increaseFalloffStrength() {

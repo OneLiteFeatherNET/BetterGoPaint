@@ -5,8 +5,8 @@
 
 ## 2. Cheaper updates (M2)
 
-- [ ] 2.1 Red: tests that opening twice renders no translation again, a change while closed renders nothing, a change while open writes only the changed slots, and a translation reload re-renders
-- [ ] 2.2 Green: add the per-locale render cache, one filler pane per fill, slot diff and dirty flag behind `updateInventory()`
+- [x] 2.1 Red: tests that opening twice renders no translation again, a change while closed renders nothing, a change while open writes only the changed slots, and a translation reload re-renders
+- [x] 2.2 Green: add the per-locale render cache, one filler pane per fill, slot diff and dirty flag behind `updateInventory()`
 
 ## 3. Bounded stroke (M3)
 
