@@ -14,7 +14,7 @@ It is a maintained [fork](https://github.com/Arcaniax-Development/goPaint_1.14) 
 
 | | |
 |---|---|
-| Server | Paper 26.1.1, 26.1.2, 26.2 ([details](docs/reference/supported-versions.md)) |
+| Server | Paper 26.1.1, 26.1.2, 26.2, 26.3 ([details](docs/reference/supported-versions.md)) |
 | Java | 25 |
 | Required plugin | FastAsyncWorldEdit 2.16 or newer |
 
