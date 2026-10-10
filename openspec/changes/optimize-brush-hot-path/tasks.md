@@ -39,5 +39,5 @@
 
 ## 7. Wrap up
 
-- [ ] 7.1 Run `./gradlew build` and confirm no hot-path test uses `Thread.sleep`, `System.nanoTime` or `Instant.now`
+- [x] 7.1 Run `./gradlew build` and confirm no hot-path test uses `Thread.sleep`, `System.nanoTime` or `Instant.now`
 - [ ] 7.2 Open the pull request under the title `perf(brush): cut per-block work in the paint hot path` (opened as a draft with this proposal, marked ready when tasks 0.1 to 7.1 are done)
