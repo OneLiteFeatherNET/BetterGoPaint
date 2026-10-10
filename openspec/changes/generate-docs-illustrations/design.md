@@ -89,7 +89,9 @@ the tests assert.
 ## Decision 7: the stale check and where it runs
 
 `checkDocsImages` runs the generator in memory and compares every produced file with the file in
-`docs/images/`. It reports missing, differing and extra files and exits with status 1. It is a
+`docs/images/`. It reports missing, differing and extra files in the generated folders and exits with status 1.
+Other folders under `docs/images/`, such as `screenshots/`, are not compared, so hand-captured images do not
+break the build. It is a
 dependency of `check`, and `check` is a dependency of `build`. The existing `build-pr.yml` runs
 `./gradlew clean build test` on Ubuntu, Windows and macOS, so the check runs in CI without a workflow
 change. `.gitattributes` (`docs/images/**/*.svg text eol=lf`) keeps the committed bytes identical after a

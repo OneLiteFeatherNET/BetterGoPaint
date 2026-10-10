@@ -37,7 +37,7 @@ endings and no timestamp, so two runs produce the same bytes on every operating 
 | Command | What it does |
 |---|---|
 | `./gradlew generateDocsImages` | Writes `docs/images/brushes/*.svg` and `docs/images/menu/*.svg` |
-| `./gradlew checkDocsImages` | Fails when a generated image is missing or differs, or when `docs/images` holds a file the generator does not produce; the message names the file |
+| `./gradlew checkDocsImages` | Fails when a generated image is missing or differs, or when a generated folder (`brushes/`, `menu/`) holds a file the generator does not produce; the message names the file |
 | `./gradlew checkDocsLinks` | Fails when a relative link or image in `docs/` does not resolve, when a builder page has neither an image nor a link to `development/screenshot-shotlist.md`, or when a planned image named in a hint is not listed in that shotlist; external links are not fetched |
 | `./gradlew docsGenTest` | Unit tests of the generator and the checker |
 
@@ -46,8 +46,12 @@ fails on stale images and broken links.
 
 Rules for the generated files:
 
-- `docs/images/` holds generated files only. `checkDocsImages` fails on any other file, so a picture
-  that is not generated does not belong there.
+- The generated folders `docs/images/brushes/` and `docs/images/menu/` hold generated files only.
+  `checkDocsImages` fails on any other file in them.
+- Hand-captured images, such as in-game screenshots and GIFs for the builder guides, go in
+  `docs/images/screenshots/`. `checkDocsImages` does not check that folder for staleness, and
+  `checkDocsLinks` still fails when a page links to a missing file there. A planned capture named in a
+  hint block must be listed in `docs/development/screenshot-shotlist.md`.
 - A new brush needs a scene in `BrushScenes`; `docsGenTest` fails and names the brush until it has one.
   Run `./gradlew generateDocsImages`, commit the new SVG and update `reference/brushes.md` in the same
   pull request.

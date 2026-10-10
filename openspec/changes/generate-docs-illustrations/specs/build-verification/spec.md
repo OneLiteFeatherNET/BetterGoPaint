@@ -1,16 +1,21 @@
 ## ADDED Requirements
 
 ### Requirement: Committed illustrations match the generator
-`./gradlew check` SHALL fail when a file in `docs/images/` is missing, differs from the freshly generated
-file, or is not produced by the generator.
+`./gradlew check` SHALL fail when a generated folder under `docs/images/` (`brushes/`, `menu/`) does not
+contain exactly the generated files: a file is missing, differs from the generated file, or is not produced
+by the generator. Other folders under `docs/images/`, such as `screenshots/`, are not checked for staleness.
 
 #### Scenario: Hand-edited illustration
 - **WHEN** a committed `docs/images/brushes/sphere-brush.svg` is edited by hand
 - **THEN** `./gradlew build` fails in `checkDocsImages` and names the file
 
-#### Scenario: Extra file in the images folder
-- **WHEN** a screenshot is added to `docs/images/` without being generated
+#### Scenario: Extra file in a generated folder
+- **WHEN** `docs/images/brushes/extra.svg` is added without being generated
 - **THEN** `./gradlew check` fails in `checkDocsImages` and names the extra file
+
+#### Scenario: Hand-added screenshot
+- **WHEN** a captured `docs/images/screenshots/tour.gif` is added and a page links to it
+- **THEN** `checkDocsImages` passes, and `checkDocsLinks` passes when the link resolves
 ### Requirement: Documentation links resolve
 `./gradlew check` SHALL fail when a relative link or image target in `docs/` does not resolve to a file.
 
