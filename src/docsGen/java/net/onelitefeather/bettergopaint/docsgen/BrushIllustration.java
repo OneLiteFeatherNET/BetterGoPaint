@@ -33,12 +33,15 @@ import java.util.Set;
 
 /**
  * Draws one brush scene as an SVG: a top view, a cross-section through the clicked block, and a legend. Changed blocks
- * take their palette colour. Blocks the stroke did not change are grey, and the card behind them is light in both
- * GitBook themes, so the painted part stands out. Every position is a whole number of cells.
+ * take their palette colour. Blocks the stroke did not change are grey and air is white, so the painted part stands out
+ * on the light card that is the same in both GitBook themes. Every position is a whole number of cells, and air is drawn
+ * too, so both panels show the same grid.
  */
 final class BrushIllustration {
 
     static final String CARD = "#f8fafc";
+    private static final String AIR = "#ffffff";
+    private static final String GRID = "#e5e7eb";
     private static final String INK = "#111827";
     private static final String UNCHANGED = "#9ca3af";
     private static final String MARKER = "#111827";
@@ -103,19 +106,20 @@ final class BrushIllustration {
         for (int z = box.minZ(); z <= box.maxZ(); z++) {
             for (int x = box.minX(); x <= box.maxX(); x++) {
                 String fill = topFill(scene, palette, highest.get(new Column(x, z)), x, z);
-                if (fill != null) {
-                    cell(document, PADDING, x - box.minX(), z - box.minZ(), fill);
-                }
+                cell(document, PADDING, x - box.minX(), z - box.minZ(), fill);
             }
         }
         BlockVector3 target = scene.target();
         marker(document, PADDING, target.x() - box.minX(), target.z() - box.minZ());
     }
 
+    /**
+     * @return the fill of one column of the top view; air is drawn as an empty cell, so the grid keeps its scale
+     */
     private static String topFill(BrushScene scene, BlockPalette palette, BrushScene.Change changed, int x, int z) {
         if (changed != null) {
             BlockVector3 position = BlockVector3.at(x, changed.position().y(), z);
-            return palette.entry(changed.after(), position).colour();
+            return colourOrAir(palette.entry(changed.after(), position));
         }
         MemoryExtent after = scene.after();
         for (int y = after.getMaximumPoint().y(); y >= after.getMinimumPoint().y(); y--) {
@@ -124,7 +128,11 @@ final class BrushIllustration {
                 return UNCHANGED;
             }
         }
-        return null;
+        return AIR;
+    }
+
+    private static String colourOrAir(BlockPalette.Entry entry) {
+        return entry.colour() == null ? AIR : entry.colour();
     }
 
     /**
@@ -137,10 +145,12 @@ final class BrushIllustration {
             for (int x = box.minX(); x <= box.maxX(); x++) {
                 BlockVector3 position = BlockVector3.at(x, y, planeZ);
                 BlockPalette.Entry entry = palette.entry(scene.after().typeAt(position), position);
+                String fill;
                 if (entry.colour() == null) {
-                    continue;
+                    fill = AIR;
+                } else {
+                    fill = changed.contains(position) ? entry.colour() : UNCHANGED;
                 }
-                String fill = changed.contains(position) ? entry.colour() : UNCHANGED;
                 cell(document, originX, x - box.minX(), box.maxY() - y, fill);
             }
         }
@@ -172,6 +182,7 @@ final class BrushIllustration {
 
         List<Legend> items = new ArrayList<>();
         items.add(new Legend("unchanged block", UNCHANGED, false));
+        items.add(new Legend("air", AIR, false));
         for (BlockPalette.Entry entry : palette.entries()) {
             if (entry.colour() != null && used.contains(entry.type())) {
                 items.add(new Legend(entry.label() + " block", entry.colour(), false));
@@ -182,7 +193,7 @@ final class BrushIllustration {
     }
 
     private static void cell(SvgDocument document, int originX, int column, int row, String fill) {
-        document.rect(originX + column * CELL, PANEL_TOP + row * CELL, CELL, CELL, fill, CARD, 1);
+        document.rect(originX + column * CELL, PANEL_TOP + row * CELL, CELL, CELL, fill, GRID, 1);
     }
 
     private static void marker(SvgDocument document, int originX, int column, int row) {
