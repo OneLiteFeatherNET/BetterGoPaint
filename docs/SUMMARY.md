@@ -1,6 +1,7 @@
 # Table of contents
 
 * [Overview](index.md)
+* [Store page](store-page.md)
 
 ## Getting started
 
