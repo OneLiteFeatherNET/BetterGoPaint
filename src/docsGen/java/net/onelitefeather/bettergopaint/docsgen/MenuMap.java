@@ -23,30 +23,41 @@ import net.onelitefeather.bettergopaint.menu.MenuItem;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 /**
- * Draws the brush menu as a grid of six rows of nine cells. Every cell shows its slot number, the material of the
- * item and the English text of the item name. The slots come from {@code GUI.layout()}, so the picture cannot drift
- * from the menu the plugin builds.
+ * The picture of a brush menu: the slots of {@code GUI.layout()} drawn as the Minecraft 6x9 chest container, at twice the
+ * scale of the inventory. Block items are block tiles, stained glass panes are tinted translucent tiles and the other
+ * items are pixel icons. Each functional slot has a numbered badge, and a legend beside the container maps the numbers
+ * to the English text of the slot. A filler pane has no badge, so the picture shows what a builder can use.
  */
 final class MenuMap {
 
     private static final int COLUMNS = 9;
-    private static final int CELL_WIDTH = 128;
-    private static final int CELL_HEIGHT = 104;
+    private static final int ROWS = 6;
+    private static final int SLOT = 36;
+    private static final int BEVEL = 2;
+    private static final int ITEM = SLOT - 2 * BEVEL;
+    private static final int ITEM_PIXEL = ITEM / BlockLooks.SIZE;
+    private static final int FRAME = 14;
+    private static final int PANEL_WIDTH = COLUMNS * SLOT + 2 * FRAME;
+    private static final int PANEL_HEIGHT = ROWS * SLOT + 2 * FRAME;
     private static final int PADDING = 16;
     private static final int TITLE_BASELINE = 36;
-    private static final int GRID_TOP = 56;
-    private static final int LINE_HEIGHT = 14;
-    private static final int TEXT_CHARACTERS = 18;
-    private static final int MATERIAL_LINES = 2;
-    private static final int PURPOSE_LINES = 3;
+    private static final int PANEL_TOP = 56;
+    private static final int LEGEND_GAP = 28;
+    private static final int LEGEND_WIDTH = 380;
+    private static final int LEGEND_LINE = 24;
+    private static final int BADGE_RADIUS = 9;
+    private static final int BADGE_OFFSET = 10;
+    private static final int GLASS_OPACITY = 80;
     private static final String CARD = "#f8fafc";
-    private static final String CELL = "#ffffff";
-    private static final String BORDER = "#d1d5db";
+    private static final String CONTAINER = "#c6c6c6";
+    private static final String CONTAINER_DARK = "#555555";
+    private static final String SLOT_DARK = "#373737";
+    private static final String SLOT_LIGHT = "#ffffff";
+    private static final String SLOT_FILL = "#8b8b8b";
     private static final String INK = "#111827";
-    private static final String MUTED = "#4b5563";
+    private static final String WHITE = "#ffffff";
 
     private MenuMap() {
     }
@@ -59,6 +70,16 @@ final class MenuMap {
      * @param purpose  the English text of the item name, empty for a filler pane
      */
     record MenuCell(int slot, String material, String purpose) {
+    }
+
+    /**
+     * The numbered badge of a functional slot.
+     *
+     * @param number the number of the badge, from 1 in slot order
+     * @param slot   the slot the badge marks
+     * @param label  the English text of the slot
+     */
+    record Callout(int number, int slot, String label) {
     }
 
     /**
@@ -81,69 +102,94 @@ final class MenuMap {
     }
 
     /**
-     * @param title the title shown above the grid
+     * @param cells the cells of the menu, in slot order
+     * @return one callout per functional slot, numbered from 1 in slot order; filler panes get none
+     */
+    static List<Callout> callouts(List<MenuCell> cells) {
+        List<Callout> callouts = new ArrayList<>();
+        for (MenuCell cell : cells) {
+            if (!cell.purpose().isEmpty()) {
+                callouts.add(new Callout(callouts.size() + 1, cell.slot(), cell.purpose()));
+            }
+        }
+        return callouts;
+    }
+
+    /**
+     * @param title the title shown above the container
      * @param cells the cells of the menu, in slot order
      * @return the picture of the menu
+     * @throws IllegalStateException if an item is neither a block with a look, a glass pane nor an item with an icon
      */
     static SvgDocument render(String title, List<MenuCell> cells) {
-        int width = 2 * PADDING + COLUMNS * CELL_WIDTH;
-        int height = GRID_TOP + (cells.size() / COLUMNS) * CELL_HEIGHT + PADDING;
+        List<Callout> callouts = callouts(cells);
+        int legendHeight = callouts.size() * LEGEND_LINE;
+        int width = PADDING + PANEL_WIDTH + LEGEND_GAP + LEGEND_WIDTH + PADDING;
+        int height = PANEL_TOP + Math.max(PANEL_HEIGHT, legendHeight) + PADDING;
         SvgDocument document = new SvgDocument(width, height)
                 .rect(0, 0, width, height, CARD, "none", 0)
                 .text(PADDING, TITLE_BASELINE, title, 18, INK, true);
+        drawContainer(document, PADDING, PANEL_TOP);
+        Sprites sprites = new Sprites();
         for (MenuCell cell : cells) {
-            int x = PADDING + (cell.slot() % COLUMNS) * CELL_WIDTH + 2;
-            int y = GRID_TOP + (cell.slot() / COLUMNS) * CELL_HEIGHT + 2;
-            document.rect(x, y, CELL_WIDTH - 4, CELL_HEIGHT - 4, CELL, BORDER, 1);
-            drawCell(document, cell, x + 8, y + 18);
+            int x = slotX(cell.slot());
+            int y = slotY(cell.slot());
+            drawSlot(document, sprites, cell, x, y);
         }
+        for (Callout callout : callouts) {
+            badge(document, slotX(callout.slot()) + BADGE_OFFSET, slotY(callout.slot()) + BADGE_OFFSET, callout.number());
+        }
+        int legendX = PADDING + PANEL_WIDTH + LEGEND_GAP;
+        for (Callout callout : callouts) {
+            int baseline = PANEL_TOP + LEGEND_LINE / 2 + (callout.number() - 1) * LEGEND_LINE + 4;
+            badge(document, legendX + BADGE_RADIUS, baseline - 4, callout.number());
+            document.text(legendX + 2 * BADGE_RADIUS + 8, baseline, "Slot " + callout.slot() + ": " + callout.label(),
+                    13, INK, false);
+        }
+        sprites.writeTo(document);
         return document;
     }
 
-    private static void drawCell(SvgDocument document, MenuCell cell, int x, int slotBaseline) {
-        document.text(x, slotBaseline, "Slot " + cell.slot(), 11, MUTED, true);
-        int line = slotBaseline;
-        for (String part : wrap(cell.material().toLowerCase(Locale.ROOT).replace('_', ' '), MATERIAL_LINES)) {
-            line += LINE_HEIGHT;
-            document.text(x, line, part, 11, MUTED, false);
-        }
-        String purpose = cell.purpose().isEmpty() ? "filler" : cell.purpose();
-        for (String part : wrap(purpose, PURPOSE_LINES)) {
-            line += LINE_HEIGHT;
-            document.text(x, line, part, 11, INK, !cell.purpose().isEmpty());
+    private static int slotX(int slot) {
+        return PADDING + FRAME + (slot % COLUMNS) * SLOT;
+    }
+
+    private static int slotY(int slot) {
+        return PANEL_TOP + FRAME + (slot / COLUMNS) * SLOT;
+    }
+
+    /**
+     * The grey container with its light top and left edge and its dark bottom and right edge.
+     */
+    private static void drawContainer(SvgDocument document, int x, int y) {
+        document.rect(x, y, PANEL_WIDTH, PANEL_HEIGHT, CONTAINER_DARK, "none", 0);
+        document.rect(x, y, PANEL_WIDTH - BEVEL, PANEL_HEIGHT - BEVEL, SLOT_LIGHT, "none", 0);
+        document.rect(x + BEVEL, y + BEVEL, PANEL_WIDTH - 2 * BEVEL, PANEL_HEIGHT - 2 * BEVEL, CONTAINER, "none", 0);
+    }
+
+    /**
+     * An inventory slot: a dark inset with a light bottom and right edge, and the item in its middle.
+     */
+    private static void drawSlot(SvgDocument document, Sprites sprites, MenuCell cell, int x, int y) {
+        document.rect(x, y, SLOT, SLOT, SLOT_LIGHT, "none", 0);
+        document.rect(x, y, SLOT - BEVEL, SLOT - BEVEL, SLOT_DARK, "none", 0);
+        document.rect(x + BEVEL, y + BEVEL, ITEM, ITEM, SLOT_FILL, "none", 0);
+        int itemX = x + BEVEL;
+        int itemY = y + BEVEL;
+        if (BlockLooks.has(cell.material())) {
+            document.use(sprites.block(cell.material(), BlockLooks.Face.TOP, ITEM_PIXEL), itemX, itemY, 100);
+        } else if (ItemIcons.isGlassPane(cell.material())) {
+            document.rect(itemX, itemY, ITEM, ITEM, ItemIcons.glassTint(cell.material()), "none", 0, GLASS_OPACITY);
+        } else {
+            document.use(sprites.icon(cell.material(), ITEM_PIXEL), itemX, itemY, 100);
         }
     }
 
     /**
-     * Breaks the text at spaces into at most {@code maxLines} lines of {@link #TEXT_CHARACTERS} characters. Text that
-     * does not fit ends with {@code ...}.
+     * A numbered badge: a dark disc with a white number.
      */
-    static List<String> wrap(String text, int maxLines) {
-        List<String> lines = new ArrayList<>();
-        StringBuilder line = new StringBuilder();
-        for (String word : text.split(" ")) {
-            if (word.isEmpty()) {
-                continue;
-            }
-            if (line.isEmpty()) {
-                line.append(word);
-            } else if (line.length() + 1 + word.length() <= TEXT_CHARACTERS) {
-                line.append(' ').append(word);
-            } else {
-                lines.add(line.toString());
-                line.setLength(0);
-                line.append(word);
-            }
-        }
-        if (!line.isEmpty()) {
-            lines.add(line.toString());
-        }
-        if (lines.size() > maxLines) {
-            List<String> kept = new ArrayList<>(lines.subList(0, maxLines));
-            String last = kept.get(maxLines - 1);
-            kept.set(maxLines - 1, last.substring(0, Math.min(last.length(), TEXT_CHARACTERS - 3)) + "...");
-            return kept;
-        }
-        return lines;
+    private static void badge(SvgDocument document, int centreX, int centreY, int number) {
+        document.circle(centreX, centreY, BADGE_RADIUS, INK, WHITE, 1);
+        document.centredText(centreX, centreY + 4, String.valueOf(number), 11, WHITE, true);
     }
 }

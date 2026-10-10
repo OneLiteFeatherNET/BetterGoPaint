@@ -69,4 +69,70 @@ class MenuMapTest {
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("bettergopaint.menu.brush.name");
     }
+
+    @Test
+    @DisplayName("the callouts are numbered in slot order and cover exactly the functional slots")
+    void calloutsCoverTheFunctionalSlots() {
+        List<MenuMap.MenuCell> cells = MenuMap.cells(MenuStates.sphereDefault(), EnglishText.fromClasspath());
+        List<Integer> functional = cells.stream()
+                .filter(cell -> !cell.purpose().isEmpty())
+                .map(MenuMap.MenuCell::slot)
+                .toList();
+
+        List<MenuMap.Callout> callouts = MenuMap.callouts(cells);
+
+        assertThat(callouts).as("the slots of the callouts").extracting(MenuMap.Callout::slot)
+                .containsExactlyElementsOf(functional);
+        assertThat(callouts).as("the numbers of the callouts")
+                .extracting(MenuMap.Callout::number)
+                .containsExactlyElementsOf(IntStream.rangeClosed(1, functional.size()).boxed().toList());
+    }
+
+    @Test
+    @DisplayName("a filler pane gets no callout")
+    void fillerPaneHasNoCallout() {
+        List<MenuMap.Callout> callouts = MenuMap.callouts(MenuMap.cells(MenuStates.sphereDefault(), EnglishText.fromClasspath()));
+
+        assertThat(callouts).as("the slots of the callouts").extracting(MenuMap.Callout::slot).doesNotContain(0, 1, 3);
+    }
+
+    @Test
+    @DisplayName("a block item is drawn with its block tile")
+    void blockItemIsDrawnWithItsTile() {
+        SvgDocument menu = MenuMap.render("title", MenuMap.cells(MenuStates.sphereDefault(), EnglishText.fromClasspath()));
+
+        assertThat(menu.elements()).as("the tiles of the sphere menu")
+                .anyMatch(element -> element instanceof SvgDocument.Use use && use.target().startsWith("block-stone-"));
+    }
+
+    @Test
+    @DisplayName("a non-block item is drawn with its pixel icon")
+    void nonBlockItemIsDrawnWithItsIcon() {
+        SvgDocument menu = MenuMap.render("title", MenuMap.cells(MenuStates.sphereDefault(), EnglishText.fromClasspath()));
+
+        assertThat(menu.elements()).as("the tiles of the sphere menu")
+                .anyMatch(element -> element instanceof SvgDocument.Use use && use.target().startsWith("icon-feather"));
+    }
+
+    @Test
+    @DisplayName("a filler glass pane is a tinted translucent tile")
+    void fillerGlassPaneIsTranslucent() {
+        SvgDocument menu = MenuMap.render("title", MenuMap.cells(MenuStates.sphereDefault(), EnglishText.fromClasspath()));
+        String tint = ItemIcons.glassTint("GRAY_STAINED_GLASS_PANE");
+
+        assertThat(menu.elements()).as("the rectangles of the sphere menu")
+                .anyMatch(element -> element instanceof SvgDocument.Rect rect
+                        && rect.fill().equals(tint) && rect.opacity() < 100);
+    }
+
+    @Test
+    @DisplayName("a menu item that is neither a block tile nor an icon fails and names its material")
+    void itemWithoutTileOrIconIsNamed() {
+        List<MenuMap.MenuCell> cells = List.of(new MenuMap.MenuCell(0, "MAGMA_BLOCK", "Magma"));
+
+        assertThatThrownBy(() -> MenuMap.render("title", cells))
+                .as("the rendering of an item the generator cannot draw")
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("MAGMA_BLOCK");
+    }
 }

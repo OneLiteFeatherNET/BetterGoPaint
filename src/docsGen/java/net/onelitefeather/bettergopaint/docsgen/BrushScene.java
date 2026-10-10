@@ -36,8 +36,10 @@ import java.util.Objects;
  * @param after   the terrain after the stroke
  * @param target  the position the stroke is centred on
  * @param palette the blocks the stroke could place, in the order they were configured
+ * @param points  the clicked control points in click order; a single point for every brush but the paint brush
  */
-record BrushScene(Brush brush, MemoryExtent before, MemoryExtent after, BlockVector3 target, List<BlockType> palette) {
+record BrushScene(Brush brush, MemoryExtent before, MemoryExtent after, BlockVector3 target, List<BlockType> palette,
+                  List<BlockVector3> points) {
 
     private static final Comparator<BlockVector3> ORDER = Comparator
             .comparingInt(BlockVector3::x)
