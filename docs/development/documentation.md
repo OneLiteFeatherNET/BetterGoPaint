@@ -26,3 +26,46 @@ Pages are written for two readers. Server admins install, configure and permissi
 builders paint with it. `index.md` sends each to their entry points, and `SUMMARY.md` groups the
 how-to guides by audience. Tutorials: one per audience, each ending with a hand-off to the next
 pages.
+
+## Illustrations
+
+The brush and menu pictures in `docs/images/` are generated from the code, never drawn by hand.
+The generator is the `docsGen` source set (`src/docsGen`); it runs the real brush code on the test
+fixtures and renders the brush menu from `GUI.layout()`. Output is SVG with a fixed seed, LF line
+endings and no timestamp, so two runs produce the same bytes on every operating system.
+
+| Command | What it does |
+|---|---|
+| `./gradlew generateDocsImages` | Writes `docs/images/brushes/*.svg` and `docs/images/menu/*.svg` |
+| `./gradlew checkDocsImages` | Fails when a generated image is missing or differs, or when a generated folder (`brushes/`, `menu/`) holds a file the generator does not produce; the message names the file |
+| `./gradlew checkDocsLinks` | Fails when a relative link or image in `docs/` does not resolve, when a builder page has neither an image nor a link to `development/screenshot-shotlist.md`, or when a planned image named in a hint is not listed in that shotlist; external links are not fetched |
+| `./gradlew docsGenTest` | Unit tests of the generator and the checker |
+
+`checkDocsImages`, `checkDocsLinks` and `docsGenTest` run inside `./gradlew check`, so `./gradlew build`
+fails on stale images and broken links.
+
+Rules for the generated files:
+
+- The generated folders `docs/images/brushes/` and `docs/images/menu/` hold generated files only.
+  `checkDocsImages` fails on any other file in them.
+- Hand-captured images, such as in-game screenshots and GIFs for the builder guides, go in
+  `docs/images/screenshots/`. `checkDocsImages` does not check that folder for staleness, and
+  `checkDocsLinks` still fails when a page links to a missing file there. A planned capture named in a
+  hint block must be listed in `docs/development/screenshot-shotlist.md`.
+- A new brush needs a scene in `BrushScenes`; `docsGenTest` fails and names the brush until it has one.
+  Run `./gradlew generateDocsImages`, commit the new SVG and update `reference/brushes.md` in the same
+  pull request.
+- A change to the menu layout needs no code change here: run `./gradlew generateDocsImages` and commit
+  the menu SVGs.
+- The generator reads no clock and no network. Fixed terrain comes from the test fixtures
+  (`MemoryExtent`, `StrokeBuilder`, `Terrain`); the generator contains no copy of a brush algorithm.
+- Builder pages that still have no illustration are listed in
+  `DocsLinkChecker.BUILDER_PAGES_AWAITING_ILLUSTRATIONS`. Remove the entry when the page embeds an
+  image, and give a new builder page an image in the same pull request.
+
+Pages that embed each generated file:
+
+| Generated file | Embedded by |
+|---|---|
+| `images/brushes/*.svg`, one per brush | No page yet; the change `builder-guides-with-images` embeds them |
+| `images/menu/menu-sphere-default.svg`, `menu-spray-disabled.svg`, `menu-angle.svg` | No page yet; the change `builder-guides-with-images` embeds them |

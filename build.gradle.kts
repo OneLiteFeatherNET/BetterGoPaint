@@ -256,6 +256,16 @@ val baseChannel = with(baseVersion) {
 }
 val changelogContent = "See [GitHub](https://github.com/OneLiteFeatherNET/BetterGoPaint/releases/tag/v$baseVersion) for release notes."
 
+// docs/store-page.md is the single source for both store pages (Hangar resource page and Modrinth body).
+// It is read when a sync task runs, never at configuration time, so ./gradlew build works without it.
+val storePage = providers.provider {
+    val storePageFile = file("docs/store-page.md")
+    if (!storePageFile.isFile) {
+        throw GradleException("docs/store-page.md is missing. Both store pages are synced from it.")
+    }
+    storePageFile.readText()
+}
+
 hangarPublish {
     publications.register("BetterGoPaint") {
         version.set(baseVersion)
@@ -268,6 +278,9 @@ hangarPublish {
                 jar.set(tasks.shadowJar.flatMap { it.archiveFile })
                 platformVersions.set(supportedMinecraftVersions)
             }
+        }
+        pages {
+            resourcePage(storePage)
         }
     }
 }
@@ -282,4 +295,67 @@ modrinth {
     uploadFile.set(tasks.shadowJar.flatMap { it.archiveFile })
     gameVersions.addAll(supportedMinecraftVersions)
     loaders.add("paper")
+    syncBodyFrom.set(storePage)
+}
+
+// Documentation tooling: the illustration generator, the stale-image check and the link checker. They live in
+// their own source sets, so shadowJar, which packages only main, keeps them out of the plugin jar.
+// See docs/development/documentation.md.
+val docsGen by sourceSets.creating {
+    compileClasspath += sourceSets.main.get().output + sourceSets.test.get().output
+    runtimeClasspath += output + compileClasspath
+}
+
+val docsGenTest by sourceSets.creating {
+    compileClasspath += docsGen.output + sourceSets.main.get().output + sourceSets.test.get().output
+    runtimeClasspath += output + compileClasspath
+}
+
+listOf(docsGen, docsGenTest).forEach { sourceSet ->
+    configurations.named(sourceSet.implementationConfigurationName) { extendsFrom(configurations["testImplementation"]) }
+    configurations.named(sourceSet.runtimeOnlyConfigurationName) { extendsFrom(configurations["testRuntimeOnly"]) }
+}
+
+val docsDirectory = layout.projectDirectory.dir("docs")
+val docsGeneratorMain = "net.onelitefeather.bettergopaint.docsgen.DocsGenerator"
+
+tasks.register<Test>("docsGenTest") {
+    group = "documentation"
+    description = "Runs the unit tests of the illustration generator and the link checker."
+    testClassesDirs = docsGenTest.output.classesDirs
+    classpath = docsGenTest.runtimeClasspath
+    useJUnitPlatform()
+    testLogging {
+        events("passed", "skipped", "failed")
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
+}
+
+tasks.register<JavaExec>("generateDocsImages") {
+    group = "documentation"
+    description = "Regenerates the SVG illustrations in docs/images from the brush and menu code."
+    classpath = docsGen.runtimeClasspath
+    mainClass.set(docsGeneratorMain)
+    args("generate", docsDirectory.asFile.absolutePath)
+    outputs.dir(docsDirectory.dir("images"))
+}
+
+tasks.register<JavaExec>("checkDocsImages") {
+    group = "documentation"
+    description = "Fails when a file in docs/images is missing, differs from the generated output or is not generated."
+    classpath = docsGen.runtimeClasspath
+    mainClass.set(docsGeneratorMain)
+    args("check", docsDirectory.asFile.absolutePath)
+}
+
+tasks.register<JavaExec>("checkDocsLinks") {
+    group = "documentation"
+    description = "Fails when a relative link or image in docs/ does not resolve, or a builder page has no illustration."
+    classpath = docsGen.runtimeClasspath
+    mainClass.set(docsGeneratorMain)
+    args("links", docsDirectory.asFile.absolutePath)
+}
+
+tasks.named("check") {
+    dependsOn("docsGenTest", "checkDocsImages", "checkDocsLinks")
 }
