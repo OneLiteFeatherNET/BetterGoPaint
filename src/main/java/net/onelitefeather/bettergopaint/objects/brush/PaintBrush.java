@@ -169,15 +169,22 @@ public class PaintBrush extends Brush {
     /**
      * Samples the curve through the points once per stroke. The curve is the same for every candidate block,
      * only translated by the block position, so the samples are kept as offsets from the first point.
+     * The relative curve has one control point per clicked point: the first point is the origin, the others are
+     * their offsets from it. A curve with n control points has n - 1 segments, so sampling the parameter over
+     * 0 to n - 1 reaches the last clicked point.
      *
      * @param points the points of the stroke in click order
      * @param first  the first point, the origin of the relative curve
      * @return the sample offsets from the first point, in curve order
      */
     private List<Vector3> sampleOffsets(@NotNull List<BlockVector3> points, @NotNull BlockVector3 first) {
+        if (points.size() == 1) {
+            // A single point has no segment to sample. The stroke is the point itself.
+            return List.of(Vector3.ZERO);
+        }
         LinkedList<Vector3> relativeCurve = new LinkedList<>();
         relativeCurve.add(Vector3.ZERO);
-        for (BlockVector3 point : points) {
+        for (BlockVector3 point : points.subList(1, points.size())) {
             relativeCurve.add(point.subtract(first).toVector3());
         }
         BezierSpline spline = splines.apply(relativeCurve);

@@ -68,4 +68,28 @@ class PaintBrushCurveTest {
         assertThat(extent.written()).isNotEmpty()
                 .allSatisfy(position -> assertThat(extent.writeCount(position)).as("writes of %s", position).isEqualTo(1));
     }
+
+    @Test
+    @DisplayName("a paint stroke reaches the last clicked point")
+    void strokeReachesLastPoint() {
+        MemoryExtent extent = terrain.flat();
+        BlockVector3 last = BlockVector3.at(6, Terrain.SURFACE, 6);
+
+        brush.apply(extent, stroke().blocks(terrain.gold).size(8).points(target, second, last).build());
+
+        assertThat(extent.typeAt(last)).as("block at the last clicked point").isSameAs(terrain.gold);
+    }
+
+    @Test
+    @DisplayName("a stroke of one point paints around that point")
+    void singlePointStrokePaintsAroundIt() {
+        MemoryExtent extent = terrain.flat();
+
+        brush.apply(extent, stroke().blocks(terrain.gold).size(8).points(target).build());
+
+        assertThat(extent.typeAt(target)).as("block at the single point").isSameAs(terrain.gold);
+        assertThat(extent.written()).as("positions written around the point")
+                .isNotEmpty()
+                .allSatisfy(position -> assertThat(position.distance(target)).as("distance of %s", position).isLessThanOrEqualTo(8.0));
+    }
 }
