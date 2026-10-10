@@ -23,8 +23,8 @@
 
 ## 4. C4 Allocation-free sphere
 
-- [ ] 4.1 Write equivalence tests for sizes 1..21 and the boundary voxel against the reference helper (they must pass before and after the rewrite)
-- [ ] 4.2 Rewrite `Sphere.getBlocksInRadius` with int loops, squared distance, allocation only for hits and the air read in the same pass; verify `SphereTest` and the equivalence tests pass
+- [x] 4.1 Write equivalence tests for sizes 1..21 and the boundary voxel against the reference helper (they must pass before and after the rewrite)
+- [x] 4.2 Rewrite `Sphere.getBlocksInRadius` with int loops, squared distance, allocation only for hits and the air read in the same pass; verify `SphereTest` and the equivalence tests pass
 
 ## 5. C5 One read per position
 
