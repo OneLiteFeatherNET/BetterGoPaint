@@ -25,8 +25,8 @@
 
 ## 6. Link and asset checker (build(docs))
 
-- [ ] 6.1 Red: tests in `@TempDir` for a broken relative link, a broken image, an anchor (ignored), an `https` link (not fetched), a "For builders" page without image or shotlist reference, and a hint file missing from the shotlist
-- [ ] 6.2 Green: implement `DocsLinkChecker` and wire `checkDocsLinks`; run it on `main`'s docs; if it reports existing violations, fix only the link targets in this change or stop for a decision and record the list in the pull request
+- [x] 6.1 Red: tests in `@TempDir` for a broken relative link, a broken image, an anchor (ignored), an `https` link (not fetched), a "For builders" page without image or shotlist reference, and a hint file missing from the shotlist
+- [x] 6.2 Green: implement `DocsLinkChecker` and wire `checkDocsLinks`; run it on `main`'s docs; if it reports existing violations, fix only the link targets in this change or stop for a decision and record the list in the pull request
 
 ## 7. Determinism and offline run (build(docs))
 
