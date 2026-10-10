@@ -28,8 +28,8 @@
 
 ## 5. C5 One read per position
 
-- [ ] 5.1 Write failing tests: no position read more than once for Spray (mask + DIRECT surface), Overlay/Underlay (thickness 3) and Bucket
-- [ ] 5.2 Add the per-stroke read cache, hoist the solid check out of the thickness loop, rewrite `ConnectedBlocks` with a grid and `ArrayDeque`; verify `ConnectedBlocksTest` and `SurfaceTest` pass
+- [x] 5.1 Write failing tests: no position read more than once for Spray (mask + DIRECT surface), Overlay/Underlay (thickness 3) and Bucket
+- [x] 5.2 Add the per-stroke read cache, hoist the solid check out of the thickness loop, rewrite `ConnectedBlocks` with a grid and `ArrayDeque`; verify `ConnectedBlocksTest` and `SurfaceTest` pass
 
 ## 6. C6 Invariants and cheap RNG
 
