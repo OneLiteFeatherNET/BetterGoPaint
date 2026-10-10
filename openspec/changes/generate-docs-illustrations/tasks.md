@@ -30,13 +30,13 @@
 
 ## 7. Determinism and offline run (build(docs))
 
-- [ ] 7.1 Run `./gradlew generateDocsImages` twice, then `git status --porcelain docs/images` must be empty and `cmp` must report no difference
-- [ ] 7.2 Run `./gradlew generateDocsImages --offline` with the network disabled (for example `unshare -rn`) and confirm the output is unchanged
-- [ ] 7.3 Search `src/docsGen` for `Instant.now`, `System.currentTimeMillis`, `System.nanoTime` and `LocalDate.now`; none may be found
+- [x] 7.1 Run `./gradlew generateDocsImages` twice, then `git status --porcelain docs/images` must be empty and `cmp` must report no difference
+- [x] 7.2 Run `./gradlew generateDocsImages --offline` with the network disabled (for example `unshare -rn`) and confirm the output is unchanged
+- [x] 7.3 Search `src/docsGen` for `Instant.now`, `System.currentTimeMillis`, `System.nanoTime` and `LocalDate.now`; none may be found
 
 ## 8. Documentation of the tooling (build(docs))
 
-- [ ] 8.1 Update `docs/development/documentation.md` with the regeneration and check commands and the list of pages that embed each generated file (no user page is written in this change)
+- [x] 8.1 Update `docs/development/documentation.md` with the regeneration and check commands and the list of pages that embed each generated file (no user page is written in this change)
 
 ## 9. Delivery
 
