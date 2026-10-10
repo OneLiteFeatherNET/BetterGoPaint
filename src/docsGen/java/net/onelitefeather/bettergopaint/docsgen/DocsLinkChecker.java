@@ -26,7 +26,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -43,13 +42,6 @@ import java.util.stream.Stream;
  */
 final class DocsLinkChecker {
 
-    /**
-     * Builder pages that have no illustration yet, relative to {@code docs}. The change {@code builder-guides-with-images}
-     * (PR #47) embeds an image or a shotlist link in each of them and removes its entry here. A new builder page gets an
-     * illustration in the change that adds it, so this list never grows.
-     */
-    static final Set<String> BUILDER_PAGES_AWAITING_ILLUSTRATIONS = Set.of("how-to/share-a-brush-as-an-item.md");
-
     private static final String SUMMARY = "SUMMARY.md";
     private static final String SHOTLIST = "development/screenshot-shotlist.md";
     private static final Pattern LINK = Pattern.compile("\\[[^\\]]*\\]\\(([^)\\s]+)(?:\\s+\"[^\"]*\")?\\)");
@@ -61,16 +53,12 @@ final class DocsLinkChecker {
     private static final Pattern HINT_FILE = Pattern.compile("images/[A-Za-z0-9_./-]+");
 
     private final Path docs;
-    private final Set<String> builderPagesWithoutIllustration;
 
     /**
-     * @param docs                                the {@code docs} folder of the repository
-     * @param builderPagesWithoutIllustration     builder pages, relative to {@code docs}, that may have neither an image
-     *                                            nor a shotlist link
+     * @param docs the {@code docs} folder of the repository
      */
-    DocsLinkChecker(Path docs, Set<String> builderPagesWithoutIllustration) {
+    DocsLinkChecker(Path docs) {
         this.docs = docs;
-        this.builderPagesWithoutIllustration = Set.copyOf(builderPagesWithoutIllustration);
     }
 
     /**
@@ -102,9 +90,6 @@ final class DocsLinkChecker {
     private List<String> builderPageProblems() {
         List<String> problems = new ArrayList<>();
         for (String page : builderPages()) {
-            if (builderPagesWithoutIllustration.contains(page)) {
-                continue;
-            }
             Path file = docs.resolve(page);
             if (!Files.isRegularFile(file)) {
                 continue;

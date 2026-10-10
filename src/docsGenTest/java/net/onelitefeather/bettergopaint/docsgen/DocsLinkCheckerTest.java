@@ -27,7 +27,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -45,7 +44,7 @@ class DocsLinkCheckerTest {
     }
 
     private List<String> problems() {
-        return new DocsLinkChecker(folder.resolve("docs"), Set.of()).problems();
+        return new DocsLinkChecker(folder.resolve("docs")).problems();
     }
 
     @Test
@@ -92,16 +91,6 @@ class DocsLinkCheckerTest {
 
         assertThat(problems()).as("the problems of a builder page without illustration")
                 .singleElement().asString().contains("how-to/share.md");
-    }
-
-    @Test
-    @DisplayName("a builder page on the allow-list passes without an illustration")
-    void builderPageOnAllowListPasses() throws IOException {
-        page("SUMMARY.md", "### For builders\n\n* [Share a brush](how-to/share.md)\n");
-        page("how-to/share.md", "Text without a picture.");
-
-        assertThat(new DocsLinkChecker(folder.resolve("docs"), Set.of("how-to/share.md")).problems())
-                .as("the problems of a builder page on the allow-list").isEmpty();
     }
 
     @Test

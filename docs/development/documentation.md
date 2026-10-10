@@ -59,9 +59,8 @@ Rules for the generated files:
   the menu SVGs.
 - The generator reads no clock and no network. Fixed terrain comes from the test fixtures
   (`MemoryExtent`, `StrokeBuilder`, `Terrain`); the generator contains no copy of a brush algorithm.
-- Builder pages that still have no illustration are listed in
-  `DocsLinkChecker.BUILDER_PAGES_AWAITING_ILLUSTRATIONS`. Remove the entry when the page embeds an
-  image, and give a new builder page an image in the same pull request.
+- Every builder page needs an image or a link to the screenshot shotlist; `DocsLinkChecker` fails the
+  build for a builder page that has neither, so give a new builder page an image in the same pull request.
 
 Pages that embed each generated file:
 
