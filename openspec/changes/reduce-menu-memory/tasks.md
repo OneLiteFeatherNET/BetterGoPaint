@@ -25,7 +25,7 @@
 
 ## 6. Quit releases state
 
-- [ ] 6.1 Add tests in `PlayerBrushManagerTest` and `ConnectListenerTest` that quitting removes the `PlayerBrush` and the stroke
+- [x] 6.1 Add tests in `PlayerBrushManagerTest` and `ConnectListenerTest` that quitting removes the `PlayerBrush` and the stroke
 
 ## 7. Delivery
 
