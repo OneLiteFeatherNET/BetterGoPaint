@@ -74,6 +74,17 @@ not used.
 - Quit: `PlayerBrushManagerTest` asserts `removeBrush` removes the `PlayerBrush` and the stroke;
   `ConnectListenerTest` asserts `onQuit` calls `removeBrush`.
 
+## Decisions made during implementation
+
+- `MenuBackend` seam: creating an `ItemStack` in a unit test fails without a server registry
+  (`No RegistryAccess implementation found`). `BrushMenu` therefore turns `MenuItem` records into
+  Bukkit items through `MenuBackend`; production uses `BukkitMenuBackend`, tests use a recording
+  backend. Menu layout logic in `GUI` stays server-free.
+- Drag guard: because renders write only changed slots, an item dragged into the brush menu or the
+  picker would otherwise stay there. `InventoryListener` cancels drags into both inventories.
+- Translation reload: translations are registered only at enable today, so the generation counter
+  changes once; the reload invalidation is exercised by tests only.
+
 ## Risks / Trade-offs
 
 - [Stale cache after translation reload] -> the reload clears the cache; covered by a test.
