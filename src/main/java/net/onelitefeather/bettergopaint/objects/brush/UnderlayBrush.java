@@ -21,6 +21,7 @@ package net.onelitefeather.bettergopaint.objects.brush;
 import com.sk89q.worldedit.extent.Extent;
 import com.sk89q.worldedit.math.BlockVector3;
 import net.onelitefeather.bettergopaint.brush.StrokeContext;
+import net.onelitefeather.bettergopaint.utils.BlockReadCache;
 import net.onelitefeather.bettergopaint.utils.Blocks;
 import net.onelitefeather.bettergopaint.utils.Sphere;
 import org.jetbrains.annotations.NotNull;
@@ -37,15 +38,19 @@ public class UnderlayBrush extends Brush {
 
     @Override
     public void apply(@NotNull Extent extent, @NotNull StrokeContext context) {
-        placeAll(extent, context, Sphere.getBlocksInRadius(extent, context.target(), context.size(), null, false)
-                .filter(position -> context.passesMask(extent, position))
-                .filter(position -> isUnderlay(extent, position, context.thickness()))
+        Extent reads = new BlockReadCache(extent);
+        placeAll(extent, context, Sphere.getBlocksInRadius(reads, context.target(), context.size(), null, false)
+                .filter(position -> context.passesMask(reads, position))
+                .filter(position -> isUnderlay(reads, position, context.thickness()))
                 .toList());
     }
 
     private boolean isUnderlay(Extent extent, BlockVector3 position, int thickness) {
+        if (thickness > 0 && !Blocks.isSolid(extent, position)) {
+            return false;
+        }
         for (int i = 1; i <= thickness; i++) {
-            if (!Blocks.isSolid(extent, position) || !Blocks.isSolid(extent, position.add(0, i, 0))) {
+            if (!Blocks.isSolid(extent, position.x(), position.y() + i, position.z())) {
                 return false;
             }
         }

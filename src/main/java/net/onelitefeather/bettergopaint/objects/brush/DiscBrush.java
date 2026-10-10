@@ -21,6 +21,7 @@ package net.onelitefeather.bettergopaint.objects.brush;
 import com.sk89q.worldedit.extent.Extent;
 import com.sk89q.worldedit.math.BlockVector3;
 import net.onelitefeather.bettergopaint.brush.StrokeContext;
+import net.onelitefeather.bettergopaint.utils.BlockReadCache;
 import net.onelitefeather.bettergopaint.utils.Sphere;
 import org.jetbrains.annotations.NotNull;
 
@@ -36,8 +37,9 @@ public class DiscBrush extends Brush {
 
     @Override
     public void apply(@NotNull Extent extent, @NotNull StrokeContext context) {
-        placeAll(extent, context, Sphere.getBlocksInRadius(extent, context.target(), context.size(), context.axis(), false)
-                .filter(position -> passesDefaultChecks(extent, context, position))
+        Extent reads = new BlockReadCache(extent);
+        placeAll(extent, context, Sphere.getBlocksInRadius(reads, context.target(), context.size(), context.axis(), false)
+                .filter(position -> passesDefaultChecks(reads, context, position))
                 .toList());
     }
 }

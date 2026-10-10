@@ -26,6 +26,7 @@ import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.onelitefeather.bettergopaint.brush.StrokeContext;
 import net.onelitefeather.bettergopaint.settings.SettingsHolder;
+import net.onelitefeather.bettergopaint.utils.BlockReadCache;
 import net.onelitefeather.bettergopaint.utils.Blocks;
 import net.onelitefeather.bettergopaint.utils.HeightCache;
 import net.onelitefeather.bettergopaint.utils.Messages;
@@ -110,10 +111,11 @@ public class PaintBrush extends Brush {
         List<BlockVector3> points = context.points();
         BlockVector3 first = points.getFirst();
         List<Vector3> offsets = sampleOffsets(points, first);
-        HeightCache heights = new HeightCache(extent);
+        Extent reads = new BlockReadCache(extent);
+        HeightCache heights = new HeightCache(reads);
         List<BlockVector3> positions = new ArrayList<>();
 
-        Sphere.getBlocksInRadius(extent, first, context.size(), null, false).forEach(block -> {
+        Sphere.getBlocksInRadius(reads, first, context.size(), null, false).forEach(block -> {
             if (heights.averageHeightDiffAngle(block, 1) >= 0.1
                     && heights.averageHeightDiffAngle(block, context.angleDistance())
                     >= Math.tan(Math.toRadians(context.angleHeightDifference()))) {
@@ -139,7 +141,7 @@ public class PaintBrush extends Brush {
                         blockZ + offset.z()
                 );
 
-                if (Blocks.isAir(extent, point) || !passesDefaultChecks(extent, context, point)) {
+                if (Blocks.isAir(reads, point) || !passesDefaultChecks(reads, context, point)) {
                     continue;
                 }
 

@@ -21,6 +21,7 @@ package net.onelitefeather.bettergopaint.objects.brush;
 import com.sk89q.worldedit.extent.Extent;
 import com.sk89q.worldedit.math.BlockVector3;
 import net.onelitefeather.bettergopaint.brush.StrokeContext;
+import net.onelitefeather.bettergopaint.utils.BlockReadCache;
 import net.onelitefeather.bettergopaint.utils.HeightCache;
 import net.onelitefeather.bettergopaint.utils.Sphere;
 import org.jetbrains.annotations.NotNull;
@@ -37,9 +38,10 @@ public class FractureBrush extends Brush {
 
     @Override
     public void apply(@NotNull Extent extent, @NotNull StrokeContext context) {
-        HeightCache heights = new HeightCache(extent);
-        placeAll(extent, context, Sphere.getBlocksInRadius(extent, context.target(), context.size(), null, false)
-                .filter(position -> context.passesMask(extent, position))
+        Extent reads = new BlockReadCache(extent);
+        HeightCache heights = new HeightCache(reads);
+        placeAll(extent, context, Sphere.getBlocksInRadius(reads, context.target(), context.size(), null, false)
+                .filter(position -> context.passesMask(reads, position))
                 .filter(position -> {
                     int self = heights.nearestNonEmptyBlock(position);
                     return heights.averageHeightDiffFracture(position, self, 1) >= 0.1

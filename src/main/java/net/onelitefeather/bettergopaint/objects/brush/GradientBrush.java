@@ -22,6 +22,7 @@ import com.sk89q.worldedit.extent.Extent;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.world.block.BlockType;
 import net.onelitefeather.bettergopaint.brush.StrokeContext;
+import net.onelitefeather.bettergopaint.utils.BlockReadCache;
 import net.onelitefeather.bettergopaint.utils.Sphere;
 import org.jetbrains.annotations.NotNull;
 
@@ -42,7 +43,8 @@ public class GradientBrush extends Brush {
     public void apply(@NotNull Extent extent, @NotNull StrokeContext context) {
         double y = context.target().y() - (context.size() / 2d);
         List<BlockType> blocks = context.blocks();
-        List<BlockVector3> positions = Sphere.getBlocksInRadius(extent, context.target(), context.size(), null, false)
+        Extent reads = new BlockReadCache(extent);
+        List<BlockVector3> positions = Sphere.getBlocksInRadius(reads, context.target(), context.size(), null, false)
                 .filter(position -> {
                     double rate = (position.distance(context.target()) - (context.size() / 2d)
                             * ((100d - context.falloffStrength()) / 100d))
@@ -51,7 +53,7 @@ public class GradientBrush extends Brush {
 
                     return context.random().nextDouble() > rate;
                 })
-                .filter(position -> passesDefaultChecks(extent, context, position))
+                .filter(position -> passesDefaultChecks(reads, context, position))
                 .toList();
         List<BlockType> types = new ArrayList<>(positions.size());
         for (BlockVector3 position : positions) {

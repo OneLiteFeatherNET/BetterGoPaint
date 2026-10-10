@@ -21,6 +21,7 @@ package net.onelitefeather.bettergopaint.objects.brush;
 import com.sk89q.worldedit.extent.Extent;
 import com.sk89q.worldedit.math.BlockVector3;
 import net.onelitefeather.bettergopaint.brush.StrokeContext;
+import net.onelitefeather.bettergopaint.utils.BlockReadCache;
 import net.onelitefeather.bettergopaint.utils.ConnectedBlocks;
 import net.onelitefeather.bettergopaint.utils.Sphere;
 import org.jetbrains.annotations.NotNull;
@@ -39,10 +40,11 @@ public class BucketBrush extends Brush {
 
     @Override
     public void apply(@NotNull Extent extent, @NotNull StrokeContext context) {
-        List<BlockVector3> blocks = Sphere.getBlocksInRadius(extent, context.target(), context.size(), null, false)
+        Extent reads = new BlockReadCache(extent);
+        List<BlockVector3> blocks = Sphere.getBlocksInRadius(reads, context.target(), context.size(), null, false)
                 .toList();
-        placeAll(extent, context, ConnectedBlocks.getConnectedBlocks(extent, context.target(), blocks)
-                .filter(position -> passesDefaultChecks(extent, context, position))
+        placeAll(extent, context, ConnectedBlocks.getConnectedBlocks(reads, context.target(), blocks)
+                .filter(position -> passesDefaultChecks(reads, context, position))
                 .toList());
     }
 }
