@@ -19,33 +19,34 @@
 package net.onelitefeather.bettergopaint.docsgen;
 
 import com.sk89q.worldedit.math.BlockVector3;
-import com.sk89q.worldedit.world.block.BlockType;
 import net.onelitefeather.bettergopaint.support.MemoryExtent;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /**
- * Draws one brush scene as an SVG: a top view, a cross-section through the clicked block, and a legend. Changed blocks
- * take their palette colour. Blocks the stroke did not change are grey and air is white, so the painted part stands out
- * on the light card that is the same in both GitBook themes. Every position is a whole number of cells, and air is drawn
- * too, so both panels show the same grid.
+ * Draws one brush scene as an SVG: a top view, a cross-section through the clicked block, and a legend. Blocks are
+ * drawn with the tile of their Minecraft material. A block the brush changed is drawn at full opacity with a highlight
+ * border; a block it did not change is faded, so the painted part stands out and the ground stays recognisable. Air
+ * is the sky tint. Every position is a whole number of cells, and air is drawn too, so both panels share one grid.
  */
 final class BrushIllustration {
 
     static final String CARD = "#f8fafc";
-    private static final String AIR = "#ffffff";
-    private static final String GRID = "#e5e7eb";
+    private static final String SKY = "#dbeafe";
+    private static final String GRID = "#0f172a";
+    private static final int GRID_OPACITY = 22;
     private static final String INK = "#111827";
-    private static final String UNCHANGED = "#9ca3af";
-    private static final String MARKER = "#111827";
+    private static final String HIGHLIGHT = "#ffffff";
     private static final int CELL = 24;
+    private static final int PIXEL = CELL / BlockLooks.SIZE;
+    private static final int LEGEND_PIXEL = 2;
+    private static final int SWATCH = 16;
+    private static final int FADED = 55;
     private static final int MARGIN = 2;
     private static final int PADDING = 16;
     private static final int PANEL_GAP = 40;
@@ -54,26 +55,30 @@ final class BrushIllustration {
     private static final int PANEL_TOP = 72;
     private static final int LEGEND_GAP = 32;
     private static final int LEGEND_COLUMNS = 4;
-    private static final int LEGEND_COLUMN_WIDTH = 150;
-    private static final int LEGEND_ROW_HEIGHT = 22;
+    private static final int LEGEND_COLUMN_WIDTH = 180;
+    private static final int LEGEND_ROW_HEIGHT = 26;
+    private static final int POINT_RADIUS = 8;
 
     private BrushIllustration() {
     }
 
     /**
      * @param scene   the scene to draw, with the stroke applied
-     * @param palette the colours of the blocks of the scene
+     * @param palette the materials of the blocks of the scene
      * @return the picture, without any timestamp or generator version
-     * @throws IllegalStateException if a block of the scene is not in the palette
+     * @throws IllegalStateException if a block of the scene is not in the palette or has no look
      */
     static SvgDocument render(BrushScene scene, BlockPalette palette) {
         List<BrushScene.Change> changes = scene.changes();
-        Box box = Box.around(changes, scene.target(), MARGIN);
+        Box box = Box.around(changes, scene.points(), scene.target(), MARGIN);
         Set<BlockVector3> changed = new HashSet<>();
         changes.forEach(change -> changed.add(change.position()));
-        List<Legend> legend = legend(palette, changes);
+        List<Cell> top = topCells(scene, palette, box);
+        List<Cell> side = sideCells(scene, palette, box, changed);
+        List<Legend> legend = legend(palette, top, side, scene.points().size() > 1);
 
-        int panelWidth = (box.maxX() - box.minX() + 1) * CELL;
+        int columns = box.maxX() - box.minX() + 1;
+        int panelWidth = columns * CELL;
         int panelHeight = Math.max(box.maxZ() - box.minZ() + 1, box.maxY() - box.minY() + 1) * CELL;
         int sideOrigin = PADDING + panelWidth + PANEL_GAP;
         int legendRows = (legend.size() + LEGEND_COLUMNS - 1) / LEGEND_COLUMNS;
@@ -87,117 +92,208 @@ final class BrushIllustration {
                 .text(PADDING, TITLE_BASELINE, scene.brush().getName(), 18, INK, true)
                 .text(PADDING, LABEL_BASELINE, "Top view", 13, INK, false)
                 .text(sideOrigin, LABEL_BASELINE, "Side cross-section", 13, INK, false);
-        drawTopView(document, scene, palette, box);
-        drawSideView(document, scene, palette, box, changed, sideOrigin);
-        drawLegend(document, legend, legendTop);
+        Sprites sprites = new Sprites();
+        drawPanel(document, sprites, top, columns, PADDING, BlockLooks.Face.TOP);
+        drawPanel(document, sprites, side, columns, sideOrigin, BlockLooks.Face.SIDE);
+        BlockVector3 target = scene.target();
+        marker(document, PADDING, target.x() - box.minX(), target.z() - box.minZ());
+        marker(document, sideOrigin, target.x() - box.minX(), box.maxY() - target.y());
+        if (scene.points().size() > 1) {
+            drawPoints(document, scene, box);
+        }
+        drawLegend(document, sprites, legend, legendTop);
+        sprites.writeTo(document);
         return document;
     }
 
     /**
-     * One cell per column of x and z. A column shows its highest changed block; a column the stroke did not change
-     * shows its top block in grey.
+     * One cell per column of x and z, row by row from the lowest z. A column the brush changed shows its highest
+     * changed block at full opacity; any other column shows its top block, faded, or the sky when it has none.
      */
-    private static void drawTopView(SvgDocument document, BrushScene scene, BlockPalette palette, Box box) {
+    private static List<Cell> topCells(BrushScene scene, BlockPalette palette, Box box) {
         Map<Column, BrushScene.Change> highest = new HashMap<>();
         for (BrushScene.Change change : scene.changes()) {
             highest.merge(new Column(change.position().x(), change.position().z()), change,
                     (first, second) -> first.position().y() >= second.position().y() ? first : second);
         }
+        List<Cell> cells = new ArrayList<>();
         for (int z = box.minZ(); z <= box.maxZ(); z++) {
             for (int x = box.minX(); x <= box.maxX(); x++) {
-                String fill = topFill(scene, palette, highest.get(new Column(x, z)), x, z);
-                cell(document, PADDING, x - box.minX(), z - box.minZ(), fill);
+                BrushScene.Change change = highest.get(new Column(x, z));
+                if (change != null) {
+                    cells.add(cellOf(palette.entry(change.after(), change.position()), true));
+                } else {
+                    cells.add(topmost(scene.after(), palette, x, z));
+                }
             }
         }
-        BlockVector3 target = scene.target();
-        marker(document, PADDING, target.x() - box.minX(), target.z() - box.minZ());
+        return cells;
     }
 
-    /**
-     * @return the fill of one column of the top view; air is drawn as an empty cell, so the grid keeps its scale
-     */
-    private static String topFill(BrushScene scene, BlockPalette palette, BrushScene.Change changed, int x, int z) {
-        if (changed != null) {
-            BlockVector3 position = BlockVector3.at(x, changed.position().y(), z);
-            return colourOrAir(palette.entry(changed.after(), position));
-        }
-        MemoryExtent after = scene.after();
+    private static Cell topmost(MemoryExtent after, BlockPalette palette, int x, int z) {
         for (int y = after.getMaximumPoint().y(); y >= after.getMinimumPoint().y(); y--) {
             BlockVector3 position = BlockVector3.at(x, y, z);
-            if (palette.entry(after.typeAt(position), position).colour() != null) {
-                return UNCHANGED;
+            BlockPalette.Entry entry = palette.entry(after.typeAt(position), position);
+            if (!entry.air()) {
+                return cellOf(entry, false);
             }
         }
-        return AIR;
-    }
-
-    private static String colourOrAir(BlockPalette.Entry entry) {
-        return entry.colour() == null ? AIR : entry.colour();
+        return Cell.AIR;
     }
 
     /**
-     * One cell per column of x and y, in the plane of the clicked block. The highest y is drawn first.
+     * One cell per x and y in the plane of the clicked block, the highest y first.
      */
-    private static void drawSideView(SvgDocument document, BrushScene scene, BlockPalette palette, Box box,
-                                     Set<BlockVector3> changed, int originX) {
+    private static List<Cell> sideCells(BrushScene scene, BlockPalette palette, Box box, Set<BlockVector3> changed) {
         int planeZ = scene.target().z();
+        List<Cell> cells = new ArrayList<>();
         for (int y = box.maxY(); y >= box.minY(); y--) {
             for (int x = box.minX(); x <= box.maxX(); x++) {
                 BlockVector3 position = BlockVector3.at(x, y, planeZ);
                 BlockPalette.Entry entry = palette.entry(scene.after().typeAt(position), position);
-                String fill;
-                if (entry.colour() == null) {
-                    fill = AIR;
-                } else {
-                    fill = changed.contains(position) ? entry.colour() : UNCHANGED;
-                }
-                cell(document, originX, x - box.minX(), box.maxY() - y, fill);
+                cells.add(cellOf(entry, changed.contains(position)));
             }
         }
-        BlockVector3 target = scene.target();
-        marker(document, originX, target.x() - box.minX(), box.maxY() - target.y());
+        return cells;
     }
 
-    private static void drawLegend(SvgDocument document, List<Legend> legend, int top) {
-        for (int index = 0; index < legend.size(); index++) {
-            Legend item = legend.get(index);
-            int x = PADDING + (index % LEGEND_COLUMNS) * LEGEND_COLUMN_WIDTH;
-            int baseline = top + (index / LEGEND_COLUMNS) * LEGEND_ROW_HEIGHT;
-            if (item.marker()) {
-                document.rect(x, baseline - 11, 14, 14, item.fill(), MARKER, 2);
-            } else {
-                document.rect(x, baseline - 11, 14, 14, item.fill(), "none", 0);
+    private static Cell cellOf(BlockPalette.Entry entry, boolean changed) {
+        return entry.air() ? Cell.AIR : new Cell(entry.material(), changed);
+    }
+
+    private static void drawPanel(SvgDocument document, Sprites sprites, List<Cell> cells, int columns, int originX,
+                                  BlockLooks.Face face) {
+        for (int index = 0; index < cells.size(); index++) {
+            drawCell(document, sprites, originX + (index % columns) * CELL, PANEL_TOP + (index / columns) * CELL,
+                    cells.get(index), face);
+        }
+    }
+
+    private static void drawCell(SvgDocument document, Sprites sprites, int x, int y, Cell cell, BlockLooks.Face face) {
+        if (cell.air()) {
+            document.rect(x, y, CELL, CELL, SKY, "none", 0);
+        } else {
+            document.use(sprites.block(cell.material(), face, PIXEL), x, y, cell.changed() ? 100 : FADED);
+            if (cell.changed()) {
+                highlight(document, x, y, CELL, 70);
             }
-            document.text(x + 22, baseline, item.label(), 13, INK, false);
+        }
+        document.rect(x, y, CELL, CELL, "none", GRID, 1, GRID_OPACITY);
+    }
+
+    /**
+     * The thin highlight border of a changed block: a white line one pixel inside the edge of the cell.
+     */
+    private static void highlight(SvgDocument document, int x, int y, int size, int opacity) {
+        document.rect(x + 1, y + 1, size - 2, size - 2, "none", HIGHLIGHT, 1, opacity);
+    }
+
+    /**
+     * The outline of the clicked block.
+     */
+    private static void marker(SvgDocument document, int originX, int column, int row) {
+        document.rect(originX + column * CELL, PANEL_TOP + row * CELL, CELL, CELL, "none", INK, 2);
+    }
+
+    /**
+     * The stroke as a path through its clicked points, with each point numbered in click order.
+     */
+    private static void drawPoints(SvgDocument document, BrushScene scene, Box box) {
+        List<SvgDocument.Point> centres = new ArrayList<>();
+        for (BlockVector3 point : scene.points()) {
+            centres.add(new SvgDocument.Point(PADDING + (point.x() - box.minX()) * CELL + CELL / 2,
+                    PANEL_TOP + (point.z() - box.minZ()) * CELL + CELL / 2));
+        }
+        document.polyline(centres, INK, 2);
+        for (int index = 0; index < centres.size(); index++) {
+            SvgDocument.Point centre = centres.get(index);
+            document.circle(centre.x(), centre.y(), POINT_RADIUS, HIGHLIGHT, INK, 2);
+            document.centredText(centre.x(), centre.y() + 4, String.valueOf(index + 1), 11, INK, true);
         }
     }
 
     /**
-     * The legend: the unchanged grey, each palette block that the picture shows, and the marker of the clicked block.
-     * Palette blocks follow the palette order, so the legend does not depend on the order of the changes.
+     * The legend: each material of the picture by its Minecraft name, in palette order, then the markers.
      */
-    private static List<Legend> legend(BlockPalette palette, List<BrushScene.Change> changes) {
-        Set<BlockType> used = Collections.newSetFromMap(new IdentityHashMap<>());
-        changes.forEach(change -> used.add(change.after()));
-
-        List<Legend> items = new ArrayList<>();
-        items.add(new Legend("unchanged block", UNCHANGED, false));
-        items.add(new Legend("air", AIR, false));
-        for (BlockPalette.Entry entry : palette.entries()) {
-            if (entry.colour() != null && used.contains(entry.type())) {
-                items.add(new Legend(entry.label() + " block", entry.colour(), false));
+    private static List<Legend> legend(BlockPalette palette, List<Cell> top, List<Cell> side, boolean numbered) {
+        Set<String> materials = new HashSet<>();
+        boolean air = false;
+        Cell changedSample = null;
+        Cell fadedSample = null;
+        List<Cell> all = new ArrayList<>(top);
+        all.addAll(side);
+        for (Cell cell : all) {
+            if (cell.air()) {
+                air = true;
+            } else {
+                materials.add(cell.material());
+                if (cell.changed() && changedSample == null) {
+                    changedSample = cell;
+                }
+                if (!cell.changed() && fadedSample == null) {
+                    fadedSample = cell;
+                }
             }
         }
-        items.add(new Legend("clicked block", CARD, true));
+        List<Legend> items = new ArrayList<>();
+        for (BlockPalette.Entry entry : palette.entries()) {
+            if (!entry.air() && materials.contains(entry.material())) {
+                items.add(new Legend(BlockLooks.look(entry.material()).label(), Marker.MATERIAL, entry.material()));
+            }
+        }
+        if (air) {
+            items.add(new Legend("air", Marker.AIR, null));
+        }
+        if (changedSample != null) {
+            items.add(new Legend("changed by the brush", Marker.CHANGED, changedSample.material()));
+        }
+        if (fadedSample != null) {
+            items.add(new Legend("unchanged (faded)", Marker.FADED, fadedSample.material()));
+        }
+        items.add(new Legend("clicked block", Marker.CLICKED, null));
+        if (numbered) {
+            items.add(new Legend("numbered: click order", Marker.POINT, null));
+        }
         return items;
     }
 
-    private static void cell(SvgDocument document, int originX, int column, int row, String fill) {
-        document.rect(originX + column * CELL, PANEL_TOP + row * CELL, CELL, CELL, fill, GRID, 1);
+    private static void drawLegend(SvgDocument document, Sprites sprites, List<Legend> legend, int top) {
+        for (int index = 0; index < legend.size(); index++) {
+            Legend item = legend.get(index);
+            int x = PADDING + (index % LEGEND_COLUMNS) * LEGEND_COLUMN_WIDTH;
+            int y = top + (index / LEGEND_COLUMNS) * LEGEND_ROW_HEIGHT;
+            drawSwatch(document, sprites, item, x, y);
+            document.text(x + SWATCH + 6, y + 12, item.label(), 13, INK, false);
+        }
     }
 
-    private static void marker(SvgDocument document, int originX, int column, int row) {
-        document.rect(originX + column * CELL, PANEL_TOP + row * CELL, CELL, CELL, "none", MARKER, 2);
+    private static void drawSwatch(SvgDocument document, Sprites sprites, Legend item, int x, int y) {
+        switch (item.marker()) {
+            case MATERIAL -> document.use(sprites.block(item.material(), BlockLooks.Face.TOP, LEGEND_PIXEL), x, y, 100);
+            case AIR -> document.rect(x, y, SWATCH, SWATCH, SKY, GRID, 1);
+            case CHANGED -> {
+                document.use(sprites.block(item.material(), BlockLooks.Face.TOP, LEGEND_PIXEL), x, y, 100);
+                highlight(document, x, y, SWATCH, 70);
+            }
+            case FADED -> document.use(sprites.block(item.material(), BlockLooks.Face.TOP, LEGEND_PIXEL), x, y, FADED);
+            case CLICKED -> document.rect(x, y, SWATCH, SWATCH, "none", INK, 2);
+            case POINT -> document.circle(x + SWATCH / 2, y + SWATCH / 2, 6, HIGHLIGHT, INK, 2);
+        }
+    }
+
+    /**
+     * One cell of a panel.
+     *
+     * @param material the Minecraft name of the block, or {@code null} for air
+     * @param changed  whether the brush changed the block
+     */
+    private record Cell(String material, boolean changed) {
+
+        static final Cell AIR = new Cell(null, false);
+
+        boolean air() {
+            return material == null;
+        }
     }
 
     /**
@@ -209,27 +305,37 @@ final class BrushIllustration {
     /**
      * One legend line.
      *
-     * @param label  the text of the line
-     * @param fill   the fill of the swatch
-     * @param marker whether the swatch is the outline of the clicked block
+     * @param label    the text of the line
+     * @param marker   what the swatch shows
+     * @param material the material of the swatch, or {@code null} when the marker needs none
      */
-    private record Legend(String label, String fill, boolean marker) {
+    private record Legend(String label, Marker marker, String material) {
     }
 
     /**
-     * The smallest box of whole blocks that holds every change and the clicked block, grown by a margin.
+     * What a legend swatch shows.
+     */
+    private enum Marker {
+        MATERIAL, AIR, CHANGED, FADED, CLICKED, POINT
+    }
+
+    /**
+     * The smallest box of whole blocks that holds every change, the clicked block and every control point, grown by a
+     * margin.
      */
     private record Box(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
 
-        static Box around(List<BrushScene.Change> changes, BlockVector3 target, int margin) {
-            int minX = target.x();
-            int minY = target.y();
-            int minZ = target.z();
-            int maxX = target.x();
-            int maxY = target.y();
-            int maxZ = target.z();
-            for (BrushScene.Change change : changes) {
-                BlockVector3 position = change.position();
+        static Box around(List<BrushScene.Change> changes, List<BlockVector3> points, BlockVector3 target, int margin) {
+            List<BlockVector3> positions = new ArrayList<>(points);
+            positions.add(target);
+            changes.forEach(change -> positions.add(change.position()));
+            int minX = Integer.MAX_VALUE;
+            int minY = Integer.MAX_VALUE;
+            int minZ = Integer.MAX_VALUE;
+            int maxX = Integer.MIN_VALUE;
+            int maxY = Integer.MIN_VALUE;
+            int maxZ = Integer.MIN_VALUE;
+            for (BlockVector3 position : positions) {
                 minX = Math.min(minX, position.x());
                 minY = Math.min(minY, position.y());
                 minZ = Math.min(minZ, position.z());

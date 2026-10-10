@@ -43,9 +43,15 @@ import static net.onelitefeather.bettergopaint.support.StrokeBuilder.stroke;
 
 /**
  * The fixed scene of every brush: the terrain it paints on and the settings of its stroke. The brush itself runs its
- * own {@link Brush#apply}; a scene only describes the input.
+ * own {@link Brush#apply}; a scene only describes the input. Every scene stands on grass over dirt over stone, so the
+ * pictures show the blocks a builder paints on.
  */
 final class BrushScenes {
+
+    /**
+     * How far the terrain reaches from the origin in x and z.
+     */
+    private static final int RADIUS = 12;
 
     private BrushScenes() {
     }
@@ -74,7 +80,7 @@ final class BrushScenes {
 
         brush.apply(after, context);
 
-        BrushScene scene = new BrushScene(brush, before, after, context.target(), context.blocks());
+        BrushScene scene = new BrushScene(brush, before, after, context.target(), context.blocks(), context.points());
         if (scene.changes().isEmpty()) {
             throw new IllegalStateException("the illustration scene of " + brush.getName() + " changes no block");
         }
@@ -83,56 +89,84 @@ final class BrushScenes {
 
     private static Recipe recipeOf(Brush brush) {
         return switch (brush) {
-            case SphereBrush _ -> new Recipe(BrushScenes::dirtGround,
-                    terrain -> stroke().blocks(terrain.stone, terrain.andesite, terrain.gold).size(5).build());
-            case SprayBrush _ -> new Recipe(Terrain::flat,
+            case SphereBrush _ -> new Recipe(BrushScenes::grassGround,
+                    terrain -> stroke().blocks(terrain.stone, terrain.andesite, terrain.cobblestone).size(5).build());
+            case SprayBrush _ -> new Recipe(BrushScenes::grassGround,
                     terrain -> stroke().blocks(terrain.gold).size(5).chance(50).build());
-            case SplatterBrush _ -> new Recipe(Terrain::flat,
+            case SplatterBrush _ -> new Recipe(BrushScenes::grassGround,
                     terrain -> stroke().blocks(terrain.gold).size(5).falloff(2).build());
-            case DiscBrush _ -> new Recipe(Terrain::flat,
+            case DiscBrush _ -> new Recipe(BrushScenes::grassGround,
                     terrain -> stroke().blocks(terrain.gold).size(5).axis(Axis.X).build());
-            case BucketBrush _ -> new Recipe(terrain -> terrain.flatWithTop(terrain.grass),
+            case BucketBrush _ -> new Recipe(BrushScenes::grassGround,
                     terrain -> stroke().blocks(terrain.gold).size(5).build());
-            case AngleBrush _ -> new Recipe(Terrain::step,
+            case AngleBrush _ -> new Recipe(BrushScenes::step,
                     terrain -> stroke().blocks(terrain.gold).size(6).angle(2, 40).build());
-            case OverlayBrush _ -> new Recipe(terrain -> terrain.flatWithTop(terrain.grass),
+            case OverlayBrush _ -> new Recipe(BrushScenes::grassGround,
                     terrain -> stroke().blocks(terrain.gold).size(5).thickness(2).build());
-            case UnderlayBrush _ -> new Recipe(terrain -> terrain.flatWithTop(terrain.grass),
+            case UnderlayBrush _ -> new Recipe(BrushScenes::grassGround,
                     terrain -> stroke().blocks(terrain.gold).size(5).thickness(2).build());
-            case FractureBrush _ -> new Recipe(Terrain::trench,
+            case FractureBrush _ -> new Recipe(BrushScenes::trench,
                     terrain -> stroke().target(BlockVector3.at(0, Terrain.SURFACE - 3, 0)).blocks(terrain.gold).size(5)
                             .fractureDistance(2).build());
-            case GradientBrush _ -> new Recipe(BrushScenes::dirtGround,
-                    terrain -> stroke().blocks(terrain.stone, terrain.andesite).size(5).mixing(2).falloff(2).build());
-            case PaintBrush _ -> new Recipe(Terrain::flat, BrushScenes::paintStroke);
+            // The bands run from the bottom up. Stone comes last: the ground is stone below the dirt, and placing stone on
+            // stone changes no block, so a stone band at the bottom would not show.
+            case GradientBrush _ -> new Recipe(BrushScenes::grassGround,
+                    terrain -> stroke().target(BlockVector3.at(0, Terrain.SURFACE - 3, 0))
+                            .blocks(terrain.cobblestone, terrain.andesite, terrain.stone).size(6).mixing(2).falloff(2)
+                            .build());
+            case PaintBrush _ -> new Recipe(BrushScenes::grassGround, BrushScenes::paintStroke);
             default -> throw new IllegalStateException("no illustration scene for the brush " + brush.getName());
         };
     }
 
     /**
-     * Dirt instead of stone, as deep as the flat terrain. The brushes that place stone or andesite need a block they
-     * can replace: stone placed on stone changes nothing. Unchanged blocks are drawn grey whatever their type, so
-     * the picture only shows the difference this makes to the stone palette.
+     * Grass on three dirt blocks on stone, as flat as the top layer of {@link Terrain#SURFACE}.
      */
-    private static MemoryExtent dirtGround(Terrain terrain) {
-        return terrain.empty().fill(BlockVector3.at(-12, Terrain.MIN_Y, -12), BlockVector3.at(12, Terrain.SURFACE, 12),
-                terrain.dirt);
+    private static MemoryExtent grassGround(Terrain terrain) {
+        return layers(terrain.empty(), terrain, -RADIUS, RADIUS, Terrain.SURFACE);
     }
 
     /**
-     * A paint stroke of six clicks along a fixed curve on the top layer of the flat terrain. The last point is the
-     * target.
+     * The ground of the angle scene: flat grass for x up to zero and the same ground four blocks higher beyond it.
+     */
+    private static MemoryExtent step(Terrain terrain) {
+        MemoryExtent world = terrain.empty();
+        layers(world, terrain, -RADIUS, 0, Terrain.SURFACE);
+        return layers(world, terrain, 1, RADIUS, Terrain.SURFACE + 4);
+    }
+
+    /**
+     * The grass ground with a one block wide trench along z at x = 0, three blocks deep.
+     */
+    private static MemoryExtent trench(Terrain terrain) {
+        return grassGround(terrain).fill(BlockVector3.at(0, Terrain.SURFACE - 2, -RADIUS),
+                BlockVector3.at(0, Terrain.SURFACE, RADIUS), terrain.air);
+    }
+
+    /**
+     * Stone up to four blocks under {@code grassY}, three dirt blocks, then the grass block at {@code grassY}, for
+     * every x from {@code fromX} to {@code toX}.
+     */
+    private static MemoryExtent layers(MemoryExtent world, Terrain terrain, int fromX, int toX, int grassY) {
+        world.fill(BlockVector3.at(fromX, Terrain.MIN_Y, -RADIUS), BlockVector3.at(toX, grassY - 4, RADIUS), terrain.stone);
+        world.fill(BlockVector3.at(fromX, grassY - 3, -RADIUS), BlockVector3.at(toX, grassY - 1, RADIUS), terrain.dirt);
+        return world.fill(BlockVector3.at(fromX, grassY, -RADIUS), BlockVector3.at(toX, grassY, RADIUS), terrain.grass);
+    }
+
+    /**
+     * A paint stroke of six clicks along a wave on the top layer of the grass ground. The last point is the target.
+     * The brush size is one block, so the stroke is a thin path through the points and not a solid area.
      */
     private static StrokeContext paintStroke(Terrain terrain) {
         List<BlockVector3> points = List.of(
-                BlockVector3.at(-6, Terrain.SURFACE, -4),
-                BlockVector3.at(-3, Terrain.SURFACE, -1),
-                BlockVector3.at(-1, Terrain.SURFACE, 3),
-                BlockVector3.at(2, Terrain.SURFACE, 2),
-                BlockVector3.at(4, Terrain.SURFACE, -2),
-                BlockVector3.at(6, Terrain.SURFACE, 0));
+                BlockVector3.at(-5, Terrain.SURFACE, -4),
+                BlockVector3.at(-3, Terrain.SURFACE, 1),
+                BlockVector3.at(-1, Terrain.SURFACE, -3),
+                BlockVector3.at(1, Terrain.SURFACE, 3),
+                BlockVector3.at(3, Terrain.SURFACE, -2),
+                BlockVector3.at(5, Terrain.SURFACE, 1));
         return stroke().points(points.toArray(BlockVector3[]::new)).target(points.getLast())
-                .blocks(terrain.gold).size(5).falloff(2).build();
+                .blocks(terrain.gold).size(1).falloff(2).build();
     }
 
     /**

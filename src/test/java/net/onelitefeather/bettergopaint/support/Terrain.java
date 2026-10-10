@@ -39,6 +39,7 @@ public final class Terrain {
     public final BlockType grass = TestBlocks.solid("grass");
     public final BlockType dirt = TestBlocks.solid("dirt");
     public final BlockType andesite = TestBlocks.solid("andesite");
+    public final BlockType cobblestone = TestBlocks.solid("cobblestone");
     public final BlockType gold = TestBlocks.solid("gold");
 
     public MemoryExtent empty() {

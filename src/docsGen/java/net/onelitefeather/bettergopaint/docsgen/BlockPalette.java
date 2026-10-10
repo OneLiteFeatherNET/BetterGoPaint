@@ -25,11 +25,16 @@ import net.onelitefeather.bettergopaint.support.Terrain;
 import java.util.List;
 
 /**
- * The colour and the name of every block the scenes contain. Blocks are matched by identity, because the test
- * fixtures are mocks that share no state. A block that is not listed fails the generator with its position; the
- * generator never guesses a colour.
+ * The Minecraft material of every block the scenes contain. Blocks are matched by identity, because the test
+ * fixtures are mocks that share no state, and each fixture is named after the real material it stands for. A block
+ * that is not listed fails the generator with its position; the generator never guesses a material.
  */
 final class BlockPalette {
+
+    /**
+     * The material name of air, which is never drawn as a block.
+     */
+    static final String AIR = "AIR";
 
     private final List<Entry> entries;
 
@@ -43,12 +48,13 @@ final class BlockPalette {
      */
     static BlockPalette of(Terrain terrain) {
         return new BlockPalette(List.of(
-                new Entry(terrain.air, "air", null),
-                new Entry(terrain.stone, "stone", "#374151"),
-                new Entry(terrain.andesite, "andesite", "#0d9488"),
-                new Entry(terrain.gold, "gold", "#ca8a04"),
-                new Entry(terrain.grass, "grass", "#16a34a"),
-                new Entry(terrain.dirt, "dirt", "#92400e")));
+                new Entry(terrain.air, AIR),
+                new Entry(terrain.grass, "GRASS_BLOCK"),
+                new Entry(terrain.dirt, "DIRT"),
+                new Entry(terrain.stone, "STONE"),
+                new Entry(terrain.andesite, "ANDESITE"),
+                new Entry(terrain.cobblestone, "COBBLESTONE"),
+                new Entry(terrain.gold, "GOLD_BLOCK")));
     }
 
     /**
@@ -63,7 +69,7 @@ final class BlockPalette {
                 return entry;
             }
         }
-        throw new IllegalStateException("no colour for the block " + type + " at " + position
+        throw new IllegalStateException("no material for the block " + type + " at " + position
                 + "; add it to BlockPalette");
     }
 
@@ -77,10 +83,16 @@ final class BlockPalette {
     /**
      * One block of the palette.
      *
-     * @param type   the block type, matched by identity
-     * @param label  the name shown in the legend
-     * @param colour the fill colour, or {@code null} for air, which is not drawn
+     * @param type     the block type, matched by identity
+     * @param material the Minecraft name of the material, for example {@code GRASS_BLOCK}, or {@link #AIR}
      */
-    record Entry(BlockType type, String label, String colour) {
+    record Entry(BlockType type, String material) {
+
+        /**
+         * @return whether the block is air
+         */
+        boolean air() {
+            return material.equals(AIR);
+        }
     }
 }

@@ -19,9 +19,12 @@
 package net.onelitefeather.bettergopaint.docsgen;
 
 import com.sk89q.worldedit.extent.Extent;
+import com.sk89q.worldedit.math.BlockVector3;
 import net.onelitefeather.bettergopaint.brush.PlayerBrushManager;
 import net.onelitefeather.bettergopaint.brush.StrokeContext;
 import net.onelitefeather.bettergopaint.objects.brush.Brush;
+import net.onelitefeather.bettergopaint.objects.brush.GradientBrush;
+import net.onelitefeather.bettergopaint.objects.brush.PaintBrush;
 import net.onelitefeather.bettergopaint.objects.brush.SphereBrush;
 import net.onelitefeather.bettergopaint.settings.SettingsHolder;
 import net.onelitefeather.bettergopaint.support.Terrain;
@@ -29,6 +32,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -90,5 +95,51 @@ class BrushScenesTest {
                 BrushScenes.sceneOf(brush(SphereBrush.class), second), BlockPalette.of(second)));
 
         assertThat(secondSvg).as("the svg of the sphere scene rendered twice").isEqualTo(firstSvg);
+    }
+
+    @Test
+    @DisplayName("the sphere scene places stone, andesite and cobblestone")
+    void sphereSceneMixesThreeStoneFamilyBlocks() {
+        BrushScene scene = BrushScenes.sceneOf(brush(SphereBrush.class), terrain);
+
+        assertThat(scene.changes()).as("the changes of the sphere scene")
+                .extracting(BrushScene.Change::after)
+                .contains(terrain.stone, terrain.andesite, terrain.cobblestone);
+    }
+
+    @Test
+    @DisplayName("the gradient scene places stone, andesite and cobblestone")
+    void gradientSceneMixesThreeStoneFamilyBlocks() {
+        BrushScene scene = BrushScenes.sceneOf(brush(GradientBrush.class), terrain);
+
+        assertThat(scene.changes()).as("the changes of the gradient scene")
+                .extracting(BrushScene.Change::after)
+                .contains(terrain.stone, terrain.andesite, terrain.cobblestone);
+    }
+
+    @Test
+    @DisplayName("the paint scene has six control points and its last point is the clicked block")
+    void paintSceneHasSixControlPoints() {
+        BrushScene scene = BrushScenes.sceneOf(brush(PaintBrush.class), terrain);
+
+        assertThat(scene.points()).as("the control points of the paint scene").hasSize(6);
+        assertThat(scene.points().getLast()).as("the last control point").isEqualTo(scene.target());
+    }
+
+    @Test
+    @DisplayName("the paint stroke fills less than half of its bounding box in the top view")
+    void paintStrokeIsAPathNotABlob() {
+        BrushScene scene = BrushScenes.sceneOf(brush(PaintBrush.class), terrain);
+        Set<BlockVector3> columns = scene.changes().stream()
+                .map(change -> BlockVector3.at(change.position().x(), 0, change.position().z()))
+                .collect(Collectors.toSet());
+        int minX = columns.stream().mapToInt(BlockVector3::x).min().orElseThrow();
+        int maxX = columns.stream().mapToInt(BlockVector3::x).max().orElseThrow();
+        int minZ = columns.stream().mapToInt(BlockVector3::z).min().orElseThrow();
+        int maxZ = columns.stream().mapToInt(BlockVector3::z).max().orElseThrow();
+        double area = (maxX - minX + 1.0) * (maxZ - minZ + 1.0);
+
+        assertThat(columns.size() / area).as("the share of the bounding box the paint stroke fills")
+                .isLessThan(0.5);
     }
 }
