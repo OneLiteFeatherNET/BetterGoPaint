@@ -16,8 +16,10 @@ The feather is the brush. Holding anything else does nothing.
 
 ## 2. Open the brush menu
 
-Left-click with the feather in your hand. The **goPaint Menu** opens. The top row shows the
-current brush, its size and its settings. The two rows at the bottom are your block palette.
+Left-click with the feather in your hand. The **goPaint Menu** opens. The second row shows the current brush,
+its settings, its size and the mask. The bottom row is your block palette, in palette slots 1 to 5.
+
+![Brush menu after the first left-click: the brush and its settings are in the second row, and the palette is in the bottom row](../images/menu/menu-sphere-default.svg)
 
 ## 3. Fill the palette
 
@@ -26,8 +28,11 @@ palette slots. Right-clicking a palette slot removes the block again.
 
 ## 4. Pick the brush
 
-Left-click the brush icon until it shows **Spray Brush**. Right-click goes backwards; shift-click
-shows every brush at once.
+Left-click the **Selected Brush type** item until the **Spray Brush** entry in its lore is highlighted.
+Right-click goes backwards; shift-click shows every brush at once.
+
+The mask is on by default and only changes sponge blocks, so turn it off: click the **Mask** item once.
+It turns into a carved pumpkin and its lore says **Disabled**.
 
 ## 5. Paint
 
