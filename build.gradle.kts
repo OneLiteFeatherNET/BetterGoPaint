@@ -19,7 +19,7 @@ plugins {
 }
 
 group = "net.onelitefeather.bettergopaint"
-version = "2.0.0" // x-release-please-version
+version = "2.0.1" // x-release-please-version
 
 if (!File("$rootDir/.git").exists()) {
     logger.lifecycle(

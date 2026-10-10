@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.1](https://github.com/OneLiteFeatherNET/BetterGoPaint/compare/v2.0.0...v2.0.1) (2026-10-10)
+
+
+### Bug Fixes
+
+* **brush:** paint strokes reach the last clicked point ([#57](https://github.com/OneLiteFeatherNET/BetterGoPaint/issues/57)) ([2937bdc](https://github.com/OneLiteFeatherNET/BetterGoPaint/commit/2937bdc9f4653a100179b7b1fa217ef9db978a3e))
+* **i18n:** tell players how to re-enable a disabled brush ([#51](https://github.com/OneLiteFeatherNET/BetterGoPaint/issues/51)) ([389925c](https://github.com/OneLiteFeatherNET/BetterGoPaint/commit/389925ceeb5945f5dfcc47d6378a804874265fee))
+
 ## [2.0.0](https://github.com/OneLiteFeatherNET/BetterGoPaint/compare/1.1.0...v2.0.0) (2026-10-10)
 
 
