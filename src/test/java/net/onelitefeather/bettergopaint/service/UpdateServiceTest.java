@@ -27,7 +27,9 @@ import org.bukkit.plugin.Plugin;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -87,5 +89,25 @@ class UpdateServiceTest {
         service.check();
 
         assertThat(service.remoteVersion()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("with update checks disabled the service never asks Hangar")
+    @SuppressWarnings("unchecked")
+    void disabledCheckNeverAsksHangar() {
+        Settings defaults = Settings.defaults();
+        Settings.Generic generic = defaults.generic();
+        Settings disabled = new Settings(
+                new Settings.Generic(generic.languages(), generic.defaultBrush(), generic.maxSize(), generic.defaultSize(),
+                        generic.defaultChance(), generic.defaultAxis(), generic.defaultFalloffStrength(),
+                        generic.defaultMixingStrength(), generic.prefix(), false, List.copyOf(generic.disabledWorlds()),
+                        generic.enabledByDefault(), generic.maskEnabled(), generic.defaultMask(), generic.surfaceMode()),
+                defaults.thickness(), defaults.angle(), defaults.fracture());
+        Supplier<Optional<String>> source = mock(Supplier.class);
+        UpdateService service = new UpdateService(plugin, console, SettingsHolder.of(disabled), Version.parse("2.0.0"), source);
+
+        service.start();
+
+        verify(source, never()).get();
     }
 }

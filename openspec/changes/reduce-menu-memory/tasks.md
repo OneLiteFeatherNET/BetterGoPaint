@@ -20,8 +20,8 @@
 
 ## 5. Lazy HTTP client (M5)
 
-- [ ] 5.1 Red: test that with checks disabled the client supplier is never called
-- [ ] 5.2 Green: create the client on first `get()` in `HangarReleaseSource`, close only if created; commit as `perf(update)`
+- [x] 5.1 Red: test that with checks disabled the client supplier is never called
+- [x] 5.2 Green: create the client on first `get()` in `HangarReleaseSource`, close only if created; commit as `perf(update)`
 
 ## 6. Quit releases state
 
