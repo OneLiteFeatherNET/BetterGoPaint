@@ -20,8 +20,8 @@
 
 ## 5. Stale check (build(docs))
 
-- [ ] 5.1 Red: tests in `@TempDir` that a missing, a differing and an extra file each make `check` mode return a failure that names the file, and that a matching folder passes
-- [ ] 5.2 Green: implement check mode in the generator entry point and make `checkDocsImages` run it; confirm `./gradlew checkDocsImages` passes on the committed files and fails after a one-byte edit (then revert the edit)
+- [x] 5.1 Red: tests in `@TempDir` that a missing, a differing and an extra file each make `check` mode return a failure that names the file, and that a matching folder passes
+- [x] 5.2 Green: implement check mode in the generator entry point and make `checkDocsImages` run it; confirm `./gradlew checkDocsImages` passes on the committed files and fails after a one-byte edit (then revert the edit)
 
 ## 6. Link and asset checker (build(docs))
 
