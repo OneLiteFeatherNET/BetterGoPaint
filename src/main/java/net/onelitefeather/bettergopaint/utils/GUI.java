@@ -95,27 +95,51 @@ public final class GUI {
      * @return one item per slot of the brush menu
      */
     public @NotNull MenuItem[] layout(@NotNull PlayerBrush playerBrush) {
-        Brush brush = playerBrush.brush();
         Locale locale = playerBrush.locale();
         MenuItem[] items = filled(BrushMenuHolder.SIZE);
 
-        // brush item: export and toggle
+        brushToggleSection(items, playerBrush, locale);
+        typeSection(items, playerBrush, locale);
+        List<Component> increaseDecrease = lore(locale, "bettergopaint.menu.click.increase", "bettergopaint.menu.click.decrease");
+        brushSettingSection(items, playerBrush, locale, increaseDecrease);
+        angleSection(items, playerBrush, locale, increaseDecrease);
+        mixingSection(items, playerBrush, locale, increaseDecrease);
+        falloffSection(items, playerBrush, locale, increaseDecrease);
+        sizeSection(items, playerBrush, locale);
+        maskToggleSection(items, playerBrush, locale);
+        surfaceSection(items, playerBrush, locale);
+        paletteSection(items, playerBrush, locale);
+        maskBlockSection(items, playerBrush, locale);
+        return items;
+    }
+
+    /**
+     * Slot 1: the brush item, showing whether the brush is enabled and how to export or toggle it.
+     */
+    private void brushToggleSection(MenuItem[] items, PlayerBrush playerBrush, Locale locale) {
         List<Component> brushLore = new ArrayList<>();
         brushLore.add(text(locale, playerBrush.enabled() ? "bettergopaint.menu.brush.enabled" : "bettergopaint.menu.brush.disabled"));
         brushLore.addAll(lore(locale, "bettergopaint.menu.brush.export", "bettergopaint.menu.brush.toggle"));
         column(items, 1, playerBrush.enabled() ? Material.LIME_STAINED_GLASS_PANE : Material.RED_STAINED_GLASS_PANE,
                 item(playerBrush.settings().generic().defaultBrush(), 1, text(locale, "bettergopaint.menu.brush.name"), brushLore));
+    }
 
-        // brush type
+    /**
+     * Slot 2: the head of the current brush type, with every brush listed in its lore.
+     */
+    private void typeSection(MenuItem[] items, PlayerBrush playerBrush, Locale locale) {
         List<Component> typeLore = lore(locale, "bettergopaint.menu.type.select", "bettergopaint.menu.type.cycle");
         typeLore.add(Component.empty());
-        typeLore.addAll(brushList(playerBrush.brushes(), brush, locale));
+        typeLore.addAll(brushList(playerBrush.brushes(), playerBrush.brush(), locale));
         column(items, 2, Material.ORANGE_STAINED_GLASS_PANE,
-                head(brush.getHead(), text(locale, "bettergopaint.menu.type.name"), typeLore));
+                head(playerBrush.brush().getHead(), text(locale, "bettergopaint.menu.type.name"), typeLore));
+    }
 
-        List<Component> increaseDecrease = lore(locale, "bettergopaint.menu.click.increase", "bettergopaint.menu.click.decrease");
-
-        // first brush specific setting
+    /**
+     * Slot 3 for the brushes with one setting: the chance, the axis, the thickness or the fracture distance.
+     */
+    private void brushSettingSection(MenuItem[] items, PlayerBrush playerBrush, Locale locale, List<Component> increaseDecrease) {
+        Brush brush = playerBrush.brush();
         if (brush instanceof SprayBrush) {
             column(items, 3, Material.WHITE_STAINED_GLASS_PANE, item(Material.GOLD_NUGGET, 1,
                     text(locale, "bettergopaint.menu.chance", Component.text(playerBrush.chance())), increaseDecrease));
@@ -129,7 +153,18 @@ public final class GUI {
             column(items, 3, Material.WHITE_STAINED_GLASS_PANE, item(Material.BOOK, 1,
                     text(locale, "bettergopaint.menu.thickness", Component.text(playerBrush.thickness())), increaseDecrease));
         }
-        if (brush instanceof AngleBrush) {
+        if (brush instanceof FractureBrush) {
+            column(items, 3, Material.WHITE_STAINED_GLASS_PANE, item(Material.DAYLIGHT_DETECTOR, 1,
+                    text(locale, "bettergopaint.menu.fracture_distance", Component.text(playerBrush.fractureDistance())),
+                    increaseDecrease));
+        }
+    }
+
+    /**
+     * Slots 3 and 4 for the angle brush: the check distance and the height difference.
+     */
+    private void angleSection(MenuItem[] items, PlayerBrush playerBrush, Locale locale, List<Component> increaseDecrease) {
+        if (playerBrush.brush() instanceof AngleBrush) {
             column(items, 3, Material.WHITE_STAINED_GLASS_PANE, item(Material.DAYLIGHT_DETECTOR, 1,
                     text(locale, "bettergopaint.menu.angle_distance", Component.text(playerBrush.angleDistance())),
                     increaseDecrease));
@@ -138,35 +173,55 @@ public final class GUI {
                     lore(locale, "bettergopaint.menu.click.increase", "bettergopaint.menu.click.decrease",
                             "bettergopaint.menu.click.shift_15")));
         }
-        if (brush instanceof FractureBrush) {
-            column(items, 3, Material.WHITE_STAINED_GLASS_PANE, item(Material.DAYLIGHT_DETECTOR, 1,
-                    text(locale, "bettergopaint.menu.fracture_distance", Component.text(playerBrush.fractureDistance())),
-                    increaseDecrease));
-        }
-        if (brush instanceof GradientBrush) {
+    }
+
+    /**
+     * Slot 4 for the gradient brush: the mixing strength.
+     */
+    private void mixingSection(MenuItem[] items, PlayerBrush playerBrush, Locale locale, List<Component> increaseDecrease) {
+        if (playerBrush.brush() instanceof GradientBrush) {
             column(items, 4, Material.WHITE_STAINED_GLASS_PANE, item(Material.MAGMA_CREAM, 1,
                     text(locale, "bettergopaint.menu.mixing", Component.text(playerBrush.mixingStrength())), increaseDecrease));
         }
+    }
+
+    /**
+     * Slot 3 for the brushes with a falloff: the splatter, the paint and the gradient brush.
+     */
+    private void falloffSection(MenuItem[] items, PlayerBrush playerBrush, Locale locale, List<Component> increaseDecrease) {
+        Brush brush = playerBrush.brush();
         if (brush instanceof SplatterBrush || brush instanceof PaintBrush || brush instanceof GradientBrush) {
             column(items, 3, Material.WHITE_STAINED_GLASS_PANE, item(Material.BLAZE_POWDER, 1,
                     text(locale, "bettergopaint.menu.falloff", Component.text(playerBrush.falloffStrength())), increaseDecrease));
         }
+    }
 
-        // size
+    /**
+     * Slot 5: the brush size.
+     */
+    private void sizeSection(MenuItem[] items, PlayerBrush playerBrush, Locale locale) {
         column(items, 5, Material.WHITE_STAINED_GLASS_PANE, item(Material.BROWN_MUSHROOM, 1,
                 text(locale, "bettergopaint.menu.size", Component.text(playerBrush.size())),
                 lore(locale, "bettergopaint.menu.click.increase", "bettergopaint.menu.click.decrease",
                         "bettergopaint.menu.click.shift_10")));
+    }
 
-        // mask toggle
+    /**
+     * Slot 6: the mask toggle, a jack o'lantern while the mask is enabled.
+     */
+    private void maskToggleSection(MenuItem[] items, PlayerBrush playerBrush, Locale locale) {
         List<Component> maskLore = new ArrayList<>();
         maskLore.add(text(locale, playerBrush.maskEnabled() ? "bettergopaint.menu.brush.enabled" : "bettergopaint.menu.brush.disabled"));
         maskLore.addAll(lore(locale, "bettergopaint.menu.click.toggle"));
         column(items, 6, playerBrush.maskEnabled() ? Material.LIME_STAINED_GLASS_PANE : Material.RED_STAINED_GLASS_PANE,
                 item(playerBrush.maskEnabled() ? Material.JACK_O_LANTERN : Material.CARVED_PUMPKIN, 1,
                         text(locale, "bettergopaint.menu.mask"), maskLore));
+    }
 
-        // surface mode
+    /**
+     * Slot 7: the surface mode, colored by the mode and described in the lore.
+     */
+    private void surfaceSection(MenuItem[] items, PlayerBrush playerBrush, Locale locale) {
         Material surfacePane = switch (playerBrush.surfaceMode()) {
             case DIRECT -> Material.LIME_STAINED_GLASS_PANE;
             case DISABLED -> Material.RED_STAINED_GLASS_PANE;
@@ -182,8 +237,12 @@ public final class GUI {
         surfaceLore.addAll(lore(locale, "bettergopaint.menu.click.toggle"));
         column(items, 7, surfacePane, item(Material.LIGHT_WEIGHTED_PRESSURE_PLATE, 1,
                 text(locale, "bettergopaint.menu.surface"), surfaceLore));
+    }
 
-        // palette
+    /**
+     * Slots 37 to 41 and 46 to 50: the yellow frame above the palette, then the blocks of the brush or barriers for the empty ones.
+     */
+    private void paletteSection(MenuItem[] items, PlayerBrush playerBrush, Locale locale) {
         for (int slot = 37; slot <= 41; slot++) {
             items[slot] = pane(Material.YELLOW_STAINED_GLASS_PANE);
         }
@@ -200,12 +259,15 @@ public final class GUI {
                     lore(locale, "bettergopaint.menu.slot.change", "bettergopaint.menu.slot.clear"));
             slot++;
         }
+    }
 
-        // mask block
+    /**
+     * Slots 43 and 52: the frame next to the palette and the mask block.
+     */
+    private void maskBlockSection(MenuItem[] items, PlayerBrush playerBrush, Locale locale) {
         items[43] = pane(Material.YELLOW_STAINED_GLASS_PANE);
         items[52] = item(playerBrush.mask(), 1, text(locale, "bettergopaint.menu.mask.current"),
                 lore(locale, "bettergopaint.menu.mask.change"));
-        return items;
     }
 
     private List<Component> brushList(List<Brush> brushes, Brush selected, Locale locale) {
