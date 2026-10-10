@@ -15,8 +15,8 @@
 
 ## 4. Picker and heads (M4)
 
-- [ ] 4.1 Red: tests that the picker is built once per locale with a separate inventory per viewer and that equal textures give equal heads
-- [ ] 4.2 Green: cache the picker per locale and derive the profile UUID with `UUID.nameUUIDFromBytes`
+- [x] 4.1 Red: tests that the picker is built once per locale with a separate inventory per viewer and that equal textures give equal heads
+- [x] 4.2 Green: cache the picker per locale and derive the profile UUID with `UUID.nameUUIDFromBytes`
 
 ## 5. Lazy HTTP client (M5)
 
