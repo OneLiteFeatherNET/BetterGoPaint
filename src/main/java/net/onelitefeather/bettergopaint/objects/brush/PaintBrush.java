@@ -18,22 +18,27 @@
  */
 package net.onelitefeather.bettergopaint.objects.brush;
 
-import net.onelitefeather.bettergopaint.brush.BrushSettings;
-import net.onelitefeather.bettergopaint.objects.other.Settings;
+import com.sk89q.worldedit.extent.Extent;
+import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.math.Vector3;
+import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.text.Component;
+import net.onelitefeather.bettergopaint.brush.StrokeContext;
+import net.onelitefeather.bettergopaint.settings.SettingsHolder;
+import net.onelitefeather.bettergopaint.utils.Blocks;
 import net.onelitefeather.bettergopaint.utils.Height;
+import net.onelitefeather.bettergopaint.utils.Messages;
 import net.onelitefeather.bettergopaint.utils.Sphere;
 import net.onelitefeather.bettergopaint.utils.curve.BezierSpline;
-import org.bukkit.Location;
-import org.bukkit.block.Block;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Stream;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class PaintBrush extends Brush {
 
@@ -41,70 +46,92 @@ public class PaintBrush extends Brush {
     private static final String DESCRIPTION = "Paints strokes\n§8hold shift to end";
     private static final String HEAD = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODBiM2E5ZGZhYmVmYmRkOTQ5YjIxN2JiZDRmYTlhNDg2YmQwYzNmMGNhYjBkMGI5ZGZhMjRjMzMyZGQzZTM0MiJ9fX0=";
 
-    public PaintBrush() {
+    /**
+     * Points of the stroke each player is currently drawing. Owned by this brush instance, so it is dropped with
+     * the player's brush state through {@link #forget(UUID)}.
+     */
+    private final Map<UUID, List<BlockVector3>> selectedPoints = new ConcurrentHashMap<>();
+
+    private final SettingsHolder settings;
+
+    public PaintBrush(@NotNull SettingsHolder settings) {
         super(NAME, DESCRIPTION, HEAD);
+        this.settings = settings;
     }
 
-    private static final HashMap<UUID, List<Location>> selectedPoints = new HashMap<>();
+    /**
+     * Drops the unfinished stroke of a player, for example when the player quits.
+     *
+     * @param playerId the player whose stroke points should be discarded
+     */
+    public void forget(@NotNull UUID playerId) {
+        selectedPoints.remove(playerId);
+    }
 
     @Override
-    public void paint(
-            @NotNull Location target,
-            @NotNull Player player,
-            @NotNull BrushSettings brushSettings
+    public @Nullable StrokeContext prepare(
+            @NotNull UUID playerId,
+            boolean sneaking,
+            @NotNull Audience feedback,
+            @NotNull StrokeContext context
     ) {
-        String prefix = Settings.settings().generic.PREFIX;
+        List<BlockVector3> points = selectedPoints.computeIfAbsent(playerId, ignored -> new ArrayList<>());
+        points.add(context.target());
 
-        List<Location> locations = selectedPoints.computeIfAbsent(player.getUniqueId(), ignored -> new ArrayList<>());
-        locations.add(target);
-
-        if (!player.isSneaking()) {
-            player.sendRichMessage(prefix + " Paint brush point #" + locations.size() + " set.");
-            return;
+        if (!sneaking) {
+            feedback.sendMessage(Component.translatable(
+                    "bettergopaint.brush.paint.point",
+                    Messages.prefix(settings.get()),
+                    Component.text(points.size())
+            ));
+            return null;
         }
 
-        selectedPoints.remove(player.getUniqueId());
+        selectedPoints.remove(playerId);
+        return context.withPoints(points);
+    }
 
-        performEdit(player, session -> {
-            Location first = locations.getFirst();
-            Stream<Block> blocks = Sphere.getBlocksInRadius(first, brushSettings.size(), null, false);
-            blocks.forEach(block -> {
-                if (Height.getAverageHeightDiffAngle(block.getLocation(), 1) >= 0.1
-                        && Height.getAverageHeightDiffAngle(block.getLocation(), brushSettings.angleDistance())
-                        >= Math.tan(Math.toRadians(brushSettings.angleHeightDifference()))) {
-                    return;
+    @Override
+    public void apply(@NotNull Extent extent, @NotNull StrokeContext context) {
+        List<BlockVector3> points = context.points();
+        BlockVector3 first = points.getFirst();
+        List<BlockVector3> positions = new ArrayList<>();
+
+        Sphere.getBlocksInRadius(extent, first, context.size(), null, false).forEach(block -> {
+            if (Height.getAverageHeightDiffAngle(extent, block, 1) >= 0.1
+                    && Height.getAverageHeightDiffAngle(extent, block, context.angleDistance())
+                    >= Math.tan(Math.toRadians(context.angleHeightDifference()))) {
+                return;
+            }
+
+            double rate = (block.distance(first) - (context.size() / 2.0)
+                    * ((100.0 - context.falloffStrength()) / 100.0)) / ((context.size() / 2.0)
+                    - (context.size() / 2.0) * ((100.0 - context.falloffStrength()) / 100.0));
+
+            if (context.random().nextDouble() <= rate) {
+                return;
+            }
+
+            LinkedList<Vector3> newCurve = new LinkedList<>();
+            newCurve.add(block.toVector3());
+            for (BlockVector3 point : points) {
+                newCurve.add(block.add(point.subtract(first)).toVector3());
+            }
+            BezierSpline spline = new BezierSpline(newCurve);
+            double maxCount = (spline.getCurveLength() * 2.5) + 1;
+            for (int y = 0; y <= maxCount; y++) {
+                Vector3 curvePoint = spline.getPoint((y / maxCount) * (points.size() - 1));
+                BlockVector3 point = BlockVector3.at(curvePoint.x(), curvePoint.y(), curvePoint.z());
+
+                if (Blocks.isAir(extent, point) || !passesDefaultChecks(extent, context, point)) {
+                    continue;
                 }
 
-                double rate = (block.getLocation().distance(first) - (brushSettings.size() / 2.0)
-                        * ((100.0 - brushSettings.falloffStrength()) / 100.0)) / ((brushSettings.size() / 2.0)
-                        - (brushSettings.size() / 2.0) * ((100.0 - brushSettings.falloffStrength()) / 100.0));
-
-                if (brushSettings.random().nextDouble() <= rate) {
-                    return;
-                }
-
-                LinkedList<Location> newCurve = new LinkedList<>();
-                newCurve.add(block.getLocation());
-                for (Location location : locations) {
-                    newCurve.add(block.getLocation().clone().add(
-                            location.getX() - first.getX(),
-                            location.getY() - first.getY(),
-                            location.getZ() - first.getZ()
-                    ));
-                }
-                BezierSpline spline = new BezierSpline(newCurve);
-                double maxCount = (spline.getCurveLength() * 2.5) + 1;
-                for (int y = 0; y <= maxCount; y++) {
-                    Block point = spline.getPoint((y / maxCount) * (locations.size() - 1)).getBlock();
-
-                    if (point.isEmpty() || !passesDefaultChecks(brushSettings, player, point)) {
-                        continue;
-                    }
-
-                    setBlock(session, point, brushSettings.randomBlock());
-                }
-            });
+                positions.add(point);
+            }
         });
+
+        placeAll(extent, context, positions);
     }
 
 }

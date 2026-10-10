@@ -18,6 +18,9 @@
  */
 package net.onelitefeather.bettergopaint.brush;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import net.onelitefeather.bettergopaint.settings.SettingsHolder;
 import net.onelitefeather.bettergopaint.objects.brush.AngleBrush;
 import net.onelitefeather.bettergopaint.objects.brush.Brush;
 import net.onelitefeather.bettergopaint.objects.brush.BucketBrush;
@@ -34,22 +37,44 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
 
 /**
  * The PlayerBrushManager class manages the brush selection for each player.
  */
+@Singleton
 public class PlayerBrushManager {
 
-    private final HashMap<UUID, PlayerBrush> playerBrushes;
+    /**
+     * Written from the region thread of each player and read from commands and the FAWE worker, so it must be
+     * safe for concurrent use.
+     */
+    private final Map<UUID, PlayerBrush> playerBrushes;
+    private final BiFunction<PlayerBrushManager, Locale, PlayerBrush> brushFactory;
     private final List<Brush> brushes;
+    private final PaintBrush paintBrush;
 
-    public PlayerBrushManager() {
-        this.playerBrushes = new HashMap<>();
+    private final SettingsHolder settings;
+
+    @Inject
+    public PlayerBrushManager(@NotNull SettingsHolder settings) {
+        this(settings, (manager, locale) -> new PlayerBrush(manager, settings, locale));
+    }
+
+    PlayerBrushManager(
+            @NotNull SettingsHolder settings,
+            @NotNull BiFunction<PlayerBrushManager, Locale, PlayerBrush> brushFactory
+    ) {
+        this.settings = settings;
+        this.brushFactory = brushFactory;
+        this.playerBrushes = new ConcurrentHashMap<>();
+        this.paintBrush = new PaintBrush(settings);
         this.brushes = List.of(
                 new SphereBrush(),
                 new SprayBrush(),
@@ -61,7 +86,7 @@ public class PlayerBrushManager {
                 new UnderlayBrush(),
                 new FractureBrush(),
                 new GradientBrush(),
-                new PaintBrush()
+                paintBrush
         );
     }
 
@@ -72,24 +97,7 @@ public class PlayerBrushManager {
      * @return The brush for the specified player.
      */
     public @NotNull PlayerBrush getBrush(@NotNull Player player) {
-        return playerBrushes.computeIfAbsent(player.getUniqueId(), ignored -> new PlayerBrush(this));
-    }
-
-    /**
-     * Retrieves the lore for a specific brush. Each brush name is preceded by a color code
-     * indicating whether it is the currently selected brush or not.
-     *
-     * @param brush The brush for which to retrieve the lore.
-     * @return The lore for the specified brush.
-     */
-    public @NotNull String getBrushLore(@NotNull Brush brush) {
-        return brushes.stream().map(current -> {
-            if (current.equals(brush)) {
-                return "§e" + current.getName() + "\n";
-            } else {
-                return "§8" + current.getName() + "\n";
-            }
-        }).collect(Collectors.joining());
+        return playerBrushes.computeIfAbsent(player.getUniqueId(), ignored -> brushFactory.apply(this, player.locale()));
     }
 
     /**
@@ -105,6 +113,18 @@ public class PlayerBrushManager {
     }
 
     /**
+     * Retrieves the brush with exactly the given name.
+     *
+     * @param name The name of the brush.
+     * @return An optional containing the brush, or empty if no brush has that name.
+     */
+    public @NotNull Optional<Brush> getBrushByName(@NotNull String name) {
+        return brushes.stream()
+                .filter(brush -> brush.getName().equals(name))
+                .findFirst();
+    }
+
+    /**
      * Retrieves the list of available brushes.
      *
      * @return The list of available brushes.
@@ -114,12 +134,13 @@ public class PlayerBrushManager {
     }
 
     /**
-     * Removes the player from the {@link #playerBrushes} map.
+     * Removes the player's brush settings and any unfinished Paint Brush stroke.
      *
      * @param player The player who should be removed.
      */
     public void removeBrush(@NotNull Player player) {
         playerBrushes.remove(player.getUniqueId());
+        paintBrush.forget(player.getUniqueId());
     }
 
     /**

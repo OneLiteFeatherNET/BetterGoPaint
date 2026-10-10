@@ -18,14 +18,11 @@
  */
 package net.onelitefeather.bettergopaint.objects.brush;
 
-import net.onelitefeather.bettergopaint.brush.BrushSettings;
+import com.sk89q.worldedit.extent.Extent;
+import com.sk89q.worldedit.math.BlockVector3;
+import net.onelitefeather.bettergopaint.brush.StrokeContext;
 import net.onelitefeather.bettergopaint.utils.Sphere;
-import org.bukkit.Location;
-import org.bukkit.block.Block;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.stream.Stream;
 
 public class SprayBrush extends Brush {
 
@@ -38,17 +35,10 @@ public class SprayBrush extends Brush {
     }
 
     @Override
-    public void paint(
-            @NotNull Location location,
-            @NotNull Player player,
-            @NotNull BrushSettings brushSettings
-    ) {
-        performEdit(player, session -> {
-            Stream<Block> blocks = Sphere.getBlocksInRadius(location, brushSettings.size(), null, false);
-            blocks.filter(block -> passesDefaultChecks(brushSettings, player, block))
-                    .filter(block -> brushSettings.random().nextInt(100) < brushSettings.chance())
-                    .forEach(block -> setBlock(session, block, brushSettings.randomBlock()));
-        });
+    public void apply(@NotNull Extent extent, @NotNull StrokeContext context) {
+        placeAll(extent, context, Sphere.getBlocksInRadius(extent, context.target(), context.size(), null, false)
+                .filter(position -> passesDefaultChecks(extent, context, position))
+                .filter(position -> context.random().nextInt(100) < context.chance())
+                .toList());
     }
-
 }

@@ -1,0 +1,50 @@
+schema: spec-driven
+
+context: |
+  BetterGoPaint is a Paper plugin (paper-plugin.yml, not plugin.yml). FastAsyncWorldEdit is a hard
+  runtime dependency; every block change goes through a FAWE edit session.
+  Quality bar and conventions follow OneLiteFeatherNET/AntiRedstoneClock-Remastered: Conventional
+  Commits (enforced by commitlint and pr-lint), Release Please for versioning, Diátaxis docs in docs/
+  published by GitBook, JUnit 6 + AssertJ + Mockito tests that run without a server.
+  The supported Minecraft versions are defined once in build.gradle.kts (supportedMinecraftVersions)
+  and mirrored in docs/reference/supported-versions.md.
+  Player-facing text must be translatable through the bettergopaint*.properties bundles (MiniMessage).
+  Write all OpenSpec artifacts in English.
+
+rules:
+  proposal:
+    - State what is out of scope.
+    - Mark changes that need a server owner to act (new Java, new Minecraft, config changes) as BREAKING.
+  tasks:
+    - Every group that changes a command, permission, config key or supported version updates the matching page under docs/reference/.
+
+# Project context (optional)
+# Add only constraints that should guide OpenSpec artifacts and workflows.
+# Include constraints an agent cannot infer by reading the code.
+# Keep general project documentation and discoverable codebase facts out.
+# Example:
+#   context: |
+#     Designs and tasks must cover Windows, macOS, and Linux
+#     Write all artifacts in Spanish
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always state what is out of scope
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing

@@ -18,10 +18,10 @@
  */
 package net.onelitefeather.bettergopaint.utils;
 
+import com.sk89q.worldedit.extent.Extent;
+import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.math.Vector3;
 import net.onelitefeather.bettergopaint.objects.other.SurfaceMode;
-import org.bukkit.Location;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.jetbrains.annotations.NotNull;
 
 public final class Surface {
@@ -33,50 +33,56 @@ public final class Surface {
     /**
      * Checks if the given block is on the surface.
      *
-     * @param block the block to check
+     * @param extent   the extent to read from
+     * @param position the position of the block to check
      * @return true if the block is on the surface, false otherwise
      */
-    public static boolean isDirectlyOnSurface(@NotNull Block block) {
-        return block.isSolid() && !block.getRelative(BlockFace.UP).isSolid();
+    public static boolean isDirectlyOnSurface(@NotNull Extent extent, @NotNull BlockVector3 position) {
+        return Blocks.isSolid(extent, position) && !Blocks.isSolid(extent, position.add(0, 1, 0));
     }
 
     /**
-     * Checks if a block is on the surface, taking into account the player's location.
+     * Checks if a block is on the surface, taking into account the player's position.
      *
-     * @param block     the block to check if the player is near
-     * @param playerLoc the player's location
-     * @return true if the block is on the surface from the player's location, false otherwise
+     * @param extent   the extent to read from
+     * @param position the position of the block to check
+     * @param eye      the position of the player's eyes
+     * @return true if the block is on the surface from the player's position, false otherwise
      */
-    public static boolean isRelativelyOnSurface(@NotNull Block block, @NotNull Location playerLoc) {
-        Location location = block.getLocation();
+    public static boolean isRelativelyOnSurface(@NotNull Extent extent, @NotNull BlockVector3 position,
+                                                @NotNull Vector3 eye) {
+        double distanceX = eye.x() - position.x();
+        double distanceY = eye.y() - position.y();
+        double distanceZ = eye.z() - position.z();
 
-        playerLoc.add(0, 1.5, 0);
-        double distanceX = playerLoc.getX() - block.getX();
-        double distanceY = playerLoc.getY() - block.getY();
-        double distanceZ = playerLoc.getZ() - block.getZ();
+        double x = position.x();
+        double y = position.y();
+        double z = position.z();
         if (distanceX > 1) {
-            location.add(1, 0, 0);
+            x += 1;
         } else if (distanceX > 0) {
-            location.add(0.5, 0, 0);
+            x += 0.5;
         }
         if (distanceY > 1) {
-            location.add(0, 1, 0);
+            y += 1;
         } else if (distanceY > 0) {
-            location.add(0, 0.5, 0);
+            y += 0.5;
         }
         if (distanceZ > 1) {
-            location.add(0, 0, 1);
+            z += 1;
         } else if (distanceZ > 0) {
-            location.add(0, 0, 0.5);
+            z += 0.5;
         }
 
-        double distance = location.distance(playerLoc);
-        for (int x = 1; x < distance; x++) {
-            double moveX = distanceX * (x / distance);
-            double moveY = distanceY * (x / distance);
-            double moveZ = distanceZ * (x / distance);
-            Location checkLoc = location.add(moveX, moveY, moveZ);
-            if (!checkLoc.getBlock().isEmpty()) {
+        double dx = x - eye.x();
+        double dy = y - eye.y();
+        double dz = z - eye.z();
+        double distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        for (int step = 1; step < distance; step++) {
+            x += distanceX * (step / distance);
+            y += distanceY * (step / distance);
+            z += distanceZ * (step / distance);
+            if (!Blocks.isAir(extent, (int) Math.floor(x), (int) Math.floor(y), (int) Math.floor(z))) {
                 return false;
             }
         }
@@ -84,17 +90,19 @@ public final class Surface {
     }
 
     /**
-     * Checks if a given block is on the surface based on the specified surface mode and location.
+     * Checks if a given block is on the surface based on the specified surface mode and eye position.
      *
-     * @param block       the block to check
+     * @param extent      the extent to read from
+     * @param position    the position of the block to check
      * @param surfaceMode the surface mode to use for the check
-     * @param location    the location to use for the check
-     * @return true if the block is on the surface based on the surface mode and location, false otherwise
+     * @param eye         the position of the player's eyes
+     * @return true if the block is on the surface based on the surface mode and position, false otherwise
      */
-    public static boolean isOnSurface(@NotNull Block block, @NotNull SurfaceMode surfaceMode, @NotNull Location location) {
+    public static boolean isOnSurface(@NotNull Extent extent, @NotNull BlockVector3 position,
+                                      @NotNull SurfaceMode surfaceMode, @NotNull Vector3 eye) {
         return switch (surfaceMode) {
-            case RELATIVE -> isRelativelyOnSurface(block, location);
-            case DIRECT -> isDirectlyOnSurface(block);
+            case RELATIVE -> isRelativelyOnSurface(extent, position, eye);
+            case DIRECT -> isDirectlyOnSurface(extent, position);
             case DISABLED -> true;
         };
     }

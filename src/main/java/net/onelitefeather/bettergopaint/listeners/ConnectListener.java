@@ -18,12 +18,14 @@
  */
 package net.onelitefeather.bettergopaint.listeners;
 
+import jakarta.inject.Inject;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.onelitefeather.bettergopaint.BetterGoPaint;
 import net.onelitefeather.bettergopaint.brush.PlayerBrushManager;
-import net.onelitefeather.bettergopaint.objects.other.Settings;
+import net.onelitefeather.bettergopaint.service.UpdateService;
+import net.onelitefeather.bettergopaint.settings.SettingsHolder;
 import net.onelitefeather.bettergopaint.utils.Constants;
+import net.onelitefeather.bettergopaint.utils.Messages;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -31,14 +33,21 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.jetbrains.annotations.NotNull;
 
-public class ConnectListener implements Listener {
+public final class ConnectListener implements Listener {
 
     private final PlayerBrushManager brushManager;
-    private final BetterGoPaint betterGoPaint;
+    private final UpdateService updateService;
+    private final SettingsHolder settings;
 
-    public ConnectListener(@NotNull PlayerBrushManager brushManager, final BetterGoPaint paint) {
+    @Inject
+    public ConnectListener(
+            @NotNull PlayerBrushManager brushManager,
+            @NotNull UpdateService updateService,
+            @NotNull SettingsHolder settings
+    ) {
         this.brushManager = brushManager;
-        this.betterGoPaint = paint;
+        this.updateService = updateService;
+        this.settings = settings;
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -48,13 +57,13 @@ public class ConnectListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onJoin(@NotNull PlayerJoinEvent event) {
-        var player = event.getPlayer();
-        if (player.isOp() || (player.hasPermission(Constants.ADMIN_PERMISSION) && !player.hasPermission(Constants.DISABLE_DONATION_NOTIFY))) {
-            player.sendMessage(Component.translatable("bettergopaint.notify.donation.player").arguments(MiniMessage.miniMessage()
-                    .deserialize(Settings.settings().generic.PREFIX)));
+        Player player = event.getPlayer();
+        if (player.isOp() || (player.hasPermission(Constants.ADMIN_PERMISSION)
+                && !player.hasPermission(Constants.DISABLE_DONATION_NOTIFY))) {
+            player.sendMessage(Component.translatable("bettergopaint.notify.donation.player", Messages.prefix(settings.get())));
         }
         if (player.isOp() || player.hasPermission(Constants.PERMISSION_NOTIFY_UPDATE)) {
-            this.betterGoPaint.getUpdateService().notifyPlayer(player);
+            updateService.notifyPlayer(player);
         }
     }
 }

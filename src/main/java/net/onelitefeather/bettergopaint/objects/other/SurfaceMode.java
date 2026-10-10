@@ -19,8 +19,9 @@
 package net.onelitefeather.bettergopaint.objects.other;
 
 import net.onelitefeather.bettergopaint.utils.Surface;
-import org.bukkit.Location;
-import org.bukkit.block.Block;
+import com.sk89q.worldedit.extent.Extent;
+import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.math.Vector3;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
@@ -29,19 +30,19 @@ public enum SurfaceMode {
     /**
      * This enumeration represents a more intuitive check.
      *
-     * @see Surface#isDirectlyOnSurface(Block)
+     * @see Surface#isDirectlyOnSurface(Extent, BlockVector3)
      */
     DIRECT("Direct"),
     /**
      * This enumeration represents that surface mode is disabled.
      *
-     * @see Surface#isOnSurface(Block, SurfaceMode, Location)
+     * @see Surface#isOnSurface(Extent, BlockVector3, SurfaceMode, Vector3)
      */
     DISABLED("Disabled"),
     /**
      * This enumeration represents the original surface mode check.
      *
-     * @see Surface#isRelativelyOnSurface(Block, Location)
+     * @see Surface#isRelativelyOnSurface(Extent, BlockVector3, Vector3)
      */
     RELATIVE("Relative");
 

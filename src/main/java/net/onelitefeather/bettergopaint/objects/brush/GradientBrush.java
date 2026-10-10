@@ -18,14 +18,15 @@
  */
 package net.onelitefeather.bettergopaint.objects.brush;
 
-import net.onelitefeather.bettergopaint.brush.BrushSettings;
+import com.sk89q.worldedit.extent.Extent;
+import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.world.block.BlockType;
+import net.onelitefeather.bettergopaint.brush.StrokeContext;
 import net.onelitefeather.bettergopaint.utils.Sphere;
-import org.bukkit.Location;
-import org.bukkit.block.Block;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.stream.Stream;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GradientBrush extends Brush {
 
@@ -38,31 +39,30 @@ public class GradientBrush extends Brush {
     }
 
     @Override
-    public void paint(
-            @NotNull Location location,
-            @NotNull Player player,
-            @NotNull BrushSettings brushSettings
-    ) {
-        performEdit(player, session -> {
-            double y = location.getBlockY() - (brushSettings.size() / 2d);
-            Stream<Block> blocks = Sphere.getBlocksInRadius(location, brushSettings.size(), null, false);
-            blocks.filter(block -> passesDefaultChecks(brushSettings, player, block)).filter(block -> {
-                double rate = (block.getLocation().distance(location) - (brushSettings.size() / 2d)
-                        * ((100d - brushSettings.falloffStrength()) / 100d))
-                        / ((brushSettings.size() / 2d) - (brushSettings.size() / 2d)
-                        * ((100d - brushSettings.falloffStrength()) / 100d));
+    public void apply(@NotNull Extent extent, @NotNull StrokeContext context) {
+        double y = context.target().y() - (context.size() / 2d);
+        List<BlockType> blocks = context.blocks();
+        List<BlockVector3> positions = Sphere.getBlocksInRadius(extent, context.target(), context.size(), null, false)
+                .filter(position -> passesDefaultChecks(extent, context, position))
+                .filter(position -> {
+                    double rate = (position.distance(context.target()) - (context.size() / 2d)
+                            * ((100d - context.falloffStrength()) / 100d))
+                            / ((context.size() / 2d) - (context.size() / 2d)
+                            * ((100d - context.falloffStrength()) / 100d));
 
-                return brushSettings.random().nextDouble() > rate;
-            }).forEach(block -> {
-                int random = (int) (((block.getLocation().getBlockY() - y) / brushSettings.size()
-                        * brushSettings.blocks().size()) + (brushSettings.random().nextDouble() * 2 - 1)
-                        * (brushSettings.mixingStrength() / 100d));
+                    return context.random().nextDouble() > rate;
+                })
+                .toList();
+        List<BlockType> types = new ArrayList<>(positions.size());
+        for (BlockVector3 position : positions) {
+            int random = (int) (((position.y() - y) / context.size()
+                    * blocks.size()) + (context.random().nextDouble() * 2 - 1)
+                    * (context.mixingStrength() / 100d));
 
-                int index = Math.clamp(random, 0, brushSettings.blocks().size() - 1);
-
-                setBlock(session, block, brushSettings.blocks().get(index));
-            });
-        });
+            types.add(blocks.get(Math.clamp(random, 0, blocks.size() - 1)));
+        }
+        for (int i = 0; i < positions.size(); i++) {
+            place(extent, types.get(i), positions.get(i));
+        }
     }
-
 }

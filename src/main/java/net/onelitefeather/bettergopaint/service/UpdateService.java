@@ -19,94 +19,138 @@
 package net.onelitefeather.bettergopaint.service;
 
 import com.github.zafarkhaja.semver.Version;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.onelitefeather.bettergopaint.BetterGoPaint;
-import net.onelitefeather.bettergopaint.objects.other.Settings;
-import net.onelitefeather.bettergopaint.utils.Constants;
+import net.onelitefeather.bettergopaint.settings.SettingsHolder;
+import net.onelitefeather.bettergopaint.utils.Messages;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.plugin.Plugin;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.net.http.HttpClient;
-import java.net.http.HttpResponse;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
-public final class UpdateService implements Runnable {
-    private final HttpClient hangarClient = HttpClient.newBuilder().build();
+/**
+ * Checks Hangar for a newer release off the main thread and tells the console and joining admins about it.
+ */
+@Singleton
+public final class UpdateService {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(UpdateService.class);
+    private static final long CHECK_INTERVAL_HOURS = 3L;
+    private static final String DOWNLOAD_URL = "https://hangar.papermc.io/OneLiteFeather/BetterGoPaint/versions/%s";
+
+    private final Plugin plugin;
+    private final SettingsHolder settings;
+    private final ComponentLogger console;
     private final Version localVersion;
-    private Version remoteVersion;
-    private final BukkitTask scheduler;
-    private final String DOWNLOAD_URL = "https://hangar.papermc.io/OneLiteFeather/BetterGoPaint/versions/%s";
+    private final Supplier<Optional<String>> latestReleaseSource;
 
-    public UpdateService(BetterGoPaint betterGoPaint) {
-        this.localVersion = Version.parse(betterGoPaint.getPluginMeta().getVersion());
-        this.scheduler = Bukkit.getScheduler().runTaskTimerAsynchronously(betterGoPaint, this, 0, 20 * 60 * 60 * 3);
+    private volatile @Nullable Version remoteVersion;
+    private @Nullable ScheduledTask task;
+
+    @Inject
+    public UpdateService(@NotNull Plugin plugin, @NotNull ComponentLogger console, @NotNull SettingsHolder settings) {
+        this(plugin, console, settings, Version.parse(plugin.getPluginMeta().getVersion()), new HangarReleaseSource());
     }
 
+    UpdateService(
+            @NotNull Plugin plugin,
+            @NotNull ComponentLogger console,
+            @NotNull SettingsHolder settings,
+            @NotNull Version localVersion,
+            @NotNull Supplier<Optional<String>> latestReleaseSource
+    ) {
+        this.plugin = plugin;
+        this.console = console;
+        this.settings = settings;
+        this.localVersion = localVersion;
+        this.latestReleaseSource = latestReleaseSource;
+    }
 
-    @Override
-    public void run() {
-        var remoteVersion = getNewerVersion();
-        if (remoteVersion != null) {
-            this.remoteVersion = remoteVersion;
-            for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-                if (onlinePlayer.isOp() || onlinePlayer.hasPermission(Constants.PERMISSION_NOTIFY_UPDATE)) {
-                    notifyPlayer(localVersion, remoteVersion, onlinePlayer);
-                }
-            }
+    /**
+     * Schedules the periodic check on Paper's async scheduler, starting immediately. The check runs off the
+     * server thread, which also keeps it valid on Folia. Does nothing when {@code generic.check-for-updates}
+     * is disabled.
+     */
+    public void start() {
+        if (!settings.get().generic().checkForUpdates()) {
+            return;
         }
+        this.task = Bukkit.getAsyncScheduler().runAtFixedRate(
+                plugin,
+                scheduled -> check(),
+                0,
+                CHECK_INTERVAL_HOURS,
+                TimeUnit.HOURS
+        );
     }
 
-    public void notifyConsole(ComponentLogger logger) {
-        if (this.remoteVersion != null && this.remoteVersion.isHigherThan(this.localVersion)) {
-            logger.warn(Component.translatable("bettergopaint.notify.update.console")
-                    .arguments(Component.text(localVersion.toString()),
-                            Component.text(remoteVersion.toString()),
-                            Component.text(DOWNLOAD_URL.formatted(remoteVersion.toString()))
-                    ));
+    /**
+     * Runs one check. The console is told once per newly discovered version.
+     */
+    void check() {
+        Optional<Version> newer = latestReleaseSource.get().flatMap(this::parseNewer);
+        if (newer.isEmpty() || newer.get().equals(remoteVersion)) {
+            return;
         }
+        Version version = newer.get();
+        this.remoteVersion = version;
+        console.warn(Component.translatable("bettergopaint.notify.update.console").arguments(
+                Component.text(localVersion.toString()),
+                Component.text(version.toString()),
+                Component.text(DOWNLOAD_URL.formatted(version))
+        ));
     }
 
-
-    public void notifyPlayer(Player player) {
-        if (this.remoteVersion != null && this.remoteVersion.isHigherThan(this.localVersion)) {
-            notifyPlayer(this.localVersion, this.remoteVersion, player);
-        }
-    }
-
-
-    private void notifyPlayer(Version localVersion, Version remoteVersion, Player player) {
-        player.sendMessage(Component.translatable("bettergopaint.notify.update.player")
-                .arguments(
-                        MiniMessage.miniMessage().deserialize(Settings.settings().generic.PREFIX),
-                        Component.text(localVersion.toString()),
-                        Component.text(remoteVersion.toString())
-                ));
-    }
-
-
-    @Nullable
-    private Version getNewerVersion() {
+    private Optional<Version> parseNewer(String body) {
         try {
-            HttpResponse<String> httpResponse = hangarClient.send(Constants.LATEST_RELEASE_VERSION_REQUEST, HttpResponse.BodyHandlers.ofString());
-            Version remoteVersion = Version.parse(httpResponse.body());
-            if (remoteVersion.isHigherThan(this.localVersion)) {
-                return remoteVersion;
-            }
-        } catch (IOException | InterruptedException e) {
-            LOGGER.error("Something went wrong to check updates", e);
+            Version version = Version.parse(body.trim());
+            return version.isHigherThan(localVersion) ? Optional.of(version) : Optional.empty();
+        } catch (RuntimeException e) {
+            LOGGER.debug("Update check: Hangar answered with something that is not a version: {}", body);
+            return Optional.empty();
         }
-        return null;
+    }
+
+    /**
+     * @return the newest release known to be higher than the installed version
+     */
+    public Optional<Version> remoteVersion() {
+        return Optional.ofNullable(remoteVersion);
+    }
+
+    public void notifyPlayer(@NotNull Player player) {
+        Version version = this.remoteVersion;
+        if (version == null) {
+            return;
+        }
+        player.sendMessage(Component.translatable("bettergopaint.notify.update.player").arguments(
+                Messages.prefix(settings.get()),
+                Component.text(localVersion.toString()),
+                Component.text(version.toString())
+        ));
     }
 
     public void shutdown() {
-        this.hangarClient.shutdownNow();
-        this.scheduler.cancel();
+        if (task != null) {
+            task.cancel();
+            task = null;
+        }
+        if (latestReleaseSource instanceof AutoCloseable closeable) {
+            try {
+                closeable.close();
+            } catch (Exception e) {
+                LOGGER.debug("Update check: closing the HTTP client failed", e);
+            }
+        }
     }
 }

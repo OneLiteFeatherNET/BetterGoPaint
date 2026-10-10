@@ -19,9 +19,8 @@
 package net.onelitefeather.bettergopaint.brush;
 
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.translation.GlobalTranslator;
 import net.onelitefeather.bettergopaint.objects.brush.AngleBrush;
 import net.onelitefeather.bettergopaint.objects.brush.Brush;
 import net.onelitefeather.bettergopaint.objects.brush.DiscBrush;
@@ -31,7 +30,8 @@ import net.onelitefeather.bettergopaint.objects.brush.OverlayBrush;
 import net.onelitefeather.bettergopaint.objects.brush.SplatterBrush;
 import net.onelitefeather.bettergopaint.objects.brush.SprayBrush;
 import net.onelitefeather.bettergopaint.objects.brush.UnderlayBrush;
-import net.onelitefeather.bettergopaint.objects.other.Settings;
+import net.onelitefeather.bettergopaint.settings.Settings;
+import net.onelitefeather.bettergopaint.settings.SettingsHolder;
 import net.onelitefeather.bettergopaint.objects.other.SurfaceMode;
 import net.onelitefeather.bettergopaint.utils.GUI;
 import org.bukkit.Axis;
@@ -46,6 +46,7 @@ import org.jetbrains.annotations.NotNull;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -55,6 +56,7 @@ import java.util.stream.Collectors;
 public final class PlayerBrush implements BrushSettings {
 
     private final PlayerBrushManager brushManager;
+    private final SettingsHolder settings;
     private final Random random = new SecureRandom();
 
     private boolean maskEnabled;
@@ -74,24 +76,27 @@ public final class PlayerBrush implements BrushSettings {
     private Material mask;
     private final List<Material> blocks = new ArrayList<>();
 
+    private final Locale locale;
     private final Inventory gui;
 
-    public PlayerBrush(@NotNull PlayerBrushManager brushManager) {
+    public PlayerBrush(@NotNull PlayerBrushManager brushManager, @NotNull SettingsHolder settings, @NotNull Locale locale) {
         this.brushManager = brushManager;
+        this.settings = settings;
+        this.locale = locale;
 
-        surfaceMode = Settings.settings().generic.SURFACE_MODE;
-        maskEnabled = Settings.settings().generic.MASK_ENABLED;
-        enabled = Settings.settings().generic.ENABLED_BY_DEFAULT;
-        chance = Settings.settings().generic.DEFAULT_CHANCE;
-        thickness = Settings.settings().thickness.DEFAULT_THICKNESS;
-        fractureDistance = Settings.settings().fracture.DEFAULT_FRACTURE_DISTANCE;
-        angleDistance = Settings.settings().angle.DEFAULT_ANGLE_DISTANCE;
-        angleHeightDifference = Settings.settings().angle.DEFAULT_ANGLE_HEIGHT_DIFFERENCE;
-        falloffStrength = Settings.settings().generic.DEFAULT_FALLOFF_STRENGTH;
-        mixingStrength = Settings.settings().generic.DEFAULT_MIXING_STRENGTH;
-        axis = Settings.settings().generic.DEFAULT_AXIS;
-        size = Settings.settings().generic.DEFAULT_SIZE;
-        mask = Settings.settings().generic.DEFAULT_MASK;
+        surfaceMode = settings.get().generic().surfaceMode();
+        maskEnabled = settings.get().generic().maskEnabled();
+        enabled = settings.get().generic().enabledByDefault();
+        chance = settings.get().generic().defaultChance();
+        thickness = settings.get().thickness().defaultThickness();
+        fractureDistance = settings.get().fracture().defaultFractureDistance();
+        angleDistance = settings.get().angle().defaultAngleDistance();
+        angleHeightDifference = settings.get().angle().defaultAngleHeightDifference();
+        falloffStrength = settings.get().generic().defaultFalloffStrength();
+        mixingStrength = settings.get().generic().defaultMixingStrength();
+        axis = settings.get().generic().defaultAxis();
+        size = settings.get().generic().defaultSize();
+        mask = settings.get().generic().defaultMask();
         brush = brushManager.cycleForward(null);
         blocks.add(Material.STONE);
         gui = GUI.create(this);
@@ -184,6 +189,27 @@ public final class PlayerBrush implements BrushSettings {
         return axis;
     }
 
+    /**
+     * @return the locale the menu of this brush is rendered in
+     */
+    public @NotNull Locale locale() {
+        return locale;
+    }
+
+    /**
+     * @return the current settings snapshot
+     */
+    public @NotNull Settings settings() {
+        return settings.get();
+    }
+
+    /**
+     * @return every brush the player can cycle through
+     */
+    public @NotNull List<Brush> brushes() {
+        return brushManager.getBrushes();
+    }
+
     public void updateInventory() {
         GUI.update(gui, this);
     }
@@ -248,10 +274,10 @@ public final class PlayerBrush implements BrushSettings {
     }
 
     public void setSize(int size) {
-        if (size <= Settings.settings().generic.MAX_SIZE && size > 0) {
+        if (size <= settings.get().generic().maxSize() && size > 0) {
             this.size = size;
-        } else if (size > Settings.settings().generic.MAX_SIZE) {
-            this.size = Settings.settings().generic.MAX_SIZE;
+        } else if (size > settings.get().generic().maxSize()) {
+            this.size = settings.get().generic().maxSize();
         } else {
             this.size = 1;
         }
@@ -264,13 +290,13 @@ public final class PlayerBrush implements BrushSettings {
 
     public void increaseBrushSize(boolean x10) {
         if (x10) {
-            if (size + 10 <= Settings.settings().generic.MAX_SIZE) {
+            if (size + 10 <= settings.get().generic().maxSize()) {
                 size += 10;
             } else {
-                size = Settings.settings().generic.MAX_SIZE;
+                size = settings.get().generic().maxSize();
             }
         } else {
-            if (size < Settings.settings().generic.MAX_SIZE) {
+            if (size < settings.get().generic().maxSize()) {
                 size += 1;
             }
         }
@@ -312,7 +338,7 @@ public final class PlayerBrush implements BrushSettings {
     }
 
     public void increaseThickness() {
-        if (thickness < Settings.settings().thickness.MAX_THICKNESS) {
+        if (thickness < settings.get().thickness().maxThickness()) {
             thickness += 1;
         }
         updateInventory();
@@ -326,7 +352,7 @@ public final class PlayerBrush implements BrushSettings {
     }
 
     public void increaseAngleDistance() {
-        if (angleDistance < Settings.settings().angle.MAX_ANGLE_DISTANCE) {
+        if (angleDistance < settings.get().angle().maxAngleDistance()) {
             angleDistance += 1;
         }
         updateInventory();
@@ -340,7 +366,7 @@ public final class PlayerBrush implements BrushSettings {
     }
 
     public void increaseFractureDistance() {
-        if (this.fractureDistance < Settings.settings().fracture.MAX_FRACTURE_DISTANCE) {
+        if (this.fractureDistance < settings.get().fracture().maxFractureDistance()) {
             this.fractureDistance += 1;
         }
         updateInventory();
@@ -359,8 +385,8 @@ public final class PlayerBrush implements BrushSettings {
         } else {
             angleHeightDifference += 5.0;
         }
-        if (angleHeightDifference > Settings.settings().angle.MAX_ANGLE_HEIGHT_DIFFERENCE) {
-            angleHeightDifference = Settings.settings().angle.MAX_ANGLE_HEIGHT_DIFFERENCE;
+        if (angleHeightDifference > settings.get().angle().maxAngleHeightDifference()) {
+            angleHeightDifference = settings.get().angle().maxAngleHeightDifference();
         }
         updateInventory();
     }
@@ -371,8 +397,8 @@ public final class PlayerBrush implements BrushSettings {
         } else {
             angleHeightDifference -= 5.0;
         }
-        if (angleHeightDifference < Settings.settings().angle.MIN_ANGLE_HEIGHT_DIFFERENCE) {
-            angleHeightDifference = Settings.settings().angle.MIN_ANGLE_HEIGHT_DIFFERENCE;
+        if (angleHeightDifference < settings.get().angle().minAngleHeightDifference()) {
+            angleHeightDifference = settings.get().angle().minAngleHeightDifference();
         }
         updateInventory();
     }
@@ -400,48 +426,56 @@ public final class PlayerBrush implements BrushSettings {
         updateInventory();
     }
 
-    public void export(ItemStack itemStack) {
-        List<String> lore = new ArrayList<>();
-        lore.add("");
-        lore.add("Size: " + size);
+    /**
+     * Stores this brush on the given item. The settings go into the item's persistent data, the
+     * lore only shows them.
+     */
+    public void export(@NotNull ItemStack itemStack) {
+        List<Component> lore = new ArrayList<>();
+        lore.add(Component.empty());
+        lore.add(line("bettergopaint.export.size", size));
         if (brush() instanceof SprayBrush) {
-            lore.add("Chance: " + chance() + "%");
+            lore.add(line("bettergopaint.export.chance", chance()));
         } else if (brush() instanceof OverlayBrush || brush() instanceof UnderlayBrush) {
-            lore.add("Thickness: " + thickness());
+            lore.add(line("bettergopaint.export.thickness", thickness()));
         } else if (brush() instanceof DiscBrush) {
-            lore.add("Axis: " + axis().name());
+            lore.add(line("bettergopaint.export.axis", axis().name()));
         } else if (brush() instanceof AngleBrush) {
-            lore.add("AngleDistance: " + angleDistance());
-            lore.add("AngleHeightDifference: " + angleHeightDifference());
+            lore.add(line("bettergopaint.export.angle_distance", angleDistance()));
+            lore.add(line("bettergopaint.export.angle_height", angleHeightDifference()));
         } else if (brush() instanceof SplatterBrush) {
-            lore.add("Falloff: " + falloffStrength());
+            lore.add(line("bettergopaint.export.falloff", falloffStrength()));
         } else if (brush() instanceof GradientBrush) {
-            lore.add("Mixing: " + mixingStrength());
-            lore.add("Falloff: " + falloffStrength());
+            lore.add(line("bettergopaint.export.mixing", mixingStrength()));
+            lore.add(line("bettergopaint.export.falloff", falloffStrength()));
         } else if (brush() instanceof FractureBrush) {
-            lore.add("FractureDistance: " + fractureDistance());
+            lore.add(line("bettergopaint.export.fracture_distance", fractureDistance()));
         }
-        lore.add("Blocks: " + (blocks().isEmpty() ? "none" : blocks().stream()
+        lore.add(line("bettergopaint.export.blocks", blocks().isEmpty() ? "-" : blocks().stream()
                 .map(Material::getKey)
                 .map(NamespacedKey::asMinimalString)
                 .collect(Collectors.joining(", "))));
-
         if (maskEnabled()) {
-            lore.add("Mask: " + mask().getKey().asMinimalString());
+            lore.add(line("bettergopaint.export.mask", mask().getKey().asMinimalString()));
         }
         if (!surfaceMode().equals(SurfaceMode.DISABLED)) {
-            lore.add("Surface Mode: " + surfaceMode.getName());
+            lore.add(line("bettergopaint.export.surface", surfaceMode.getName()));
         }
 
         itemStack.editMeta(itemMeta -> {
-            itemMeta.displayName(Component.text(" ♦ " + brush().getName() + " ♦ ", NamedTextColor.AQUA)
-                    .style(Style.style(TextDecoration.ITALIC.withState(false))));
-            itemMeta.lore(lore.stream().map(string -> Component.text(string).style(Style
-                    .style(TextDecoration.ITALIC.withState(false))
-                    .color(NamedTextColor.DARK_GRAY))).toList());
+            itemMeta.displayName(GlobalTranslator.render(
+                    Component.translatable("bettergopaint.export.name", Component.text(brush().getName())), locale
+            ).decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE));
+            itemMeta.lore(lore);
             itemMeta.addEnchant(Enchantment.INFINITY, 1, false);
             itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+            ExportedBrushes.write(itemMeta, this);
         });
+    }
+
+    private Component line(String key, Object value) {
+        return GlobalTranslator.render(Component.translatable(key, Component.text(String.valueOf(value))), locale)
+                .decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE);
     }
 
 }

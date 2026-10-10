@@ -18,15 +18,12 @@
  */
 package net.onelitefeather.bettergopaint.objects.brush;
 
-import net.onelitefeather.bettergopaint.brush.BrushSettings;
+import com.sk89q.worldedit.extent.Extent;
+import com.sk89q.worldedit.math.BlockVector3;
+import net.onelitefeather.bettergopaint.brush.StrokeContext;
 import net.onelitefeather.bettergopaint.utils.Height;
 import net.onelitefeather.bettergopaint.utils.Sphere;
-import org.bukkit.Location;
-import org.bukkit.block.Block;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.stream.Stream;
 
 public class AngleBrush extends Brush {
 
@@ -39,19 +36,12 @@ public class AngleBrush extends Brush {
     }
 
     @Override
-    public void paint(
-            @NotNull Location location,
-            @NotNull Player player,
-            @NotNull BrushSettings brushSettings
-    ) {
-        performEdit(player, session -> {
-            Stream<Block> blocks = Sphere.getBlocksInRadius(location, brushSettings.size(), null, false);
-            blocks.filter(block -> passesDefaultChecks(brushSettings, player, block))
-                    .filter(block -> Height.getAverageHeightDiffAngle(block.getLocation(), 1) >= 0.1
-                            && Height.getAverageHeightDiffAngle(block.getLocation(), brushSettings.angleDistance())
-                            >= Math.tan(Math.toRadians(brushSettings.angleHeightDifference())))
-                    .forEach(block -> setBlock(session, block, brushSettings.randomBlock()));
-        });
+    public void apply(@NotNull Extent extent, @NotNull StrokeContext context) {
+        placeAll(extent, context, Sphere.getBlocksInRadius(extent, context.target(), context.size(), null, false)
+                .filter(position -> passesDefaultChecks(extent, context, position))
+                .filter(position -> Height.getAverageHeightDiffAngle(extent, position, 1) >= 0.1
+                        && Height.getAverageHeightDiffAngle(extent, position, context.angleDistance())
+                        >= Math.tan(Math.toRadians(context.angleHeightDifference())))
+                .toList());
     }
-
 }

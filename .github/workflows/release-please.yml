@@ -1,0 +1,216 @@
+name: Release Please
+
+# Two ways in:
+#
+#   push to main       Release Please collects commits into a release PR.
+#                      Merging that PR tags the version and publishes it.
+#
+#   workflow_dispatch  Re-publish a release that was already tagged. Needed
+#                      when publishing failed after the tag was created, which
+#                      otherwise leaves a release stranded with no way back,
+#                      for example when Hangar rejects a platform version.
+
+"on":
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to publish, e.g. v1.2.0"
+        required: true
+        type: string
+      ref:
+        description: "Git ref to build from. Defaults to the tag itself. Point this at main when the tagged commit is what broke publishing."
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  release-please:
+    name: Release Please
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # to create the tag and the GitHub release
+      pull-requests: write # to open and update the release PR
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - name: Release Please
+        id: release
+        uses: googleapis/release-please-action@v5
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  # Builds, publishes nothing. Everything public waits behind security-gate.
+  build:
+    name: Build Release Artifacts
+    needs: release-please
+    # always() because release-please is skipped on workflow_dispatch, and a
+    # skipped dependency would otherwise skip this job too.
+    if: >-
+      always() &&
+      (needs.release-please.outputs.release_created == 'true' ||
+       github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.resolve.outputs.version }}
+      ref: ${{ steps.resolve.outputs.ref }}
+    env:
+      TAG_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || needs.release-please.outputs.tag_name }}
+      BUILD_REF: ${{ github.event_name == 'workflow_dispatch' && (inputs.ref || inputs.tag) || needs.release-please.outputs.tag_name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && (inputs.ref || inputs.tag) || needs.release-please.outputs.tag_name }}
+
+      - name: Resolve version
+        id: resolve
+        run: |
+          version="${TAG_NAME#v}"
+          declared="$(sed -n 's/^version = "\([^"]*\)".*/\1/p' build.gradle.kts)"
+          if [ "$version" != "$declared" ]; then
+            echo "::error::Tag $TAG_NAME expects version $version, but build.gradle.kts declares $declared. Refusing to publish mismatched artifacts."
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "ref=$BUILD_REF" >> "$GITHUB_OUTPUT"
+
+      - name: Validate Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@v6
+
+      - name: Setup Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Build
+        run: ./gradlew check shadowJar cyclonedxBom
+
+      - name: Upload plugin JAR
+        uses: actions/upload-artifact@v7
+        with:
+          name: plugin-jar
+          path: |
+            build/libs/BetterGoPaint-*.jar
+            !build/libs/*-unshaded.jar
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: sbom
+          path: build/reports/cyclonedx/bom.xml
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload build reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: publish-reports
+          path: build/reports/**
+          if-no-files-found: ignore
+          retention-days: 14
+
+  # The point of no return. Everything below this job is public, so a HIGH or
+  # CRITICAL finding in the jar we are about to ship stops the release here.
+  # Scans the built artifact, not the source tree: for a shaded jar that is the
+  # only target that sees what actually ships.
+  security-gate:
+    name: Security Gate
+    needs: build
+    permissions:
+      contents: read
+      security-events: write # SARIF upload to code scanning
+    uses: OneLiteFeatherNET/workflows/.github/workflows/security-scan.yml@v2.9.0
+    with:
+      scan-type: rootfs
+      artifact-name: plugin-jar
+      severity: "CRITICAL,HIGH"
+      fail-on-findings: true
+    secrets: inherit
+
+  publish:
+    name: Publish Release
+    needs: [release-please, build, security-gate]
+    # No always() here - a failed gate must stop the release, and always()
+    # would run this job anyway.
+    if: >-
+      !cancelled() &&
+      needs.security-gate.result == 'success' &&
+      (needs.release-please.outputs.release_created == 'true' ||
+       github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # to upload assets to the GitHub release
+    env:
+      TAG_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || needs.release-please.outputs.tag_name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.build.outputs.ref }}
+
+      - name: Download plugin JAR
+        uses: actions/download-artifact@v8
+        with:
+          name: plugin-jar
+          path: build/libs
+
+      # Deliberately before the platform uploads. Hangar and Modrinth reject
+      # versions for reasons outside this repository's control; when that
+      # happens the artifact should still be attached to the GitHub release
+      # rather than lost with the failed run.
+      - name: Upload JAR to GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "$TAG_NAME" build/libs/BetterGoPaint-*.jar --clobber
+
+      - name: Setup Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Publish to Hangar and Modrinth
+        env:
+          HANGAR_SECRET: ${{ secrets.HANGAR_KEY }}
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_KEY }}
+        run: ./gradlew publishAllPublicationsToHangar modrinth
+
+  # Separate job so Dependency-Track being down, or rejecting the API key,
+  # cannot take the release with it. With the SBOM upload inside the publish
+  # job, one rejected platform version would cost the JAR, both
+  # platform releases and the SBOM at once.
+  sbom:
+    name: Publish SBOM
+    needs: [build, publish]
+    uses: OneLiteFeatherNET/workflows/.github/workflows/sbom-publish.yml@v2.9.0
+    with:
+      project-name: "BetterGoPaint"
+      project-version: ${{ needs.build.outputs.version }}
+      project-tags: "bukkit,paper,plugin"
+      parent-uuid: "682857a9-0cd2-4ffd-a2b3-098eeba5ab74"
+      # The CycloneDX Gradle plugin resolves the dependency graph better than
+      # an external scanner, so hand it the artifact the build produced.
+      artifact-name: "sbom"
+      sbom-path: "bom.xml"
+    secrets: inherit

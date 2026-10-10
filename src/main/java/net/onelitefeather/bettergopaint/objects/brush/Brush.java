@@ -19,22 +19,29 @@
 package net.onelitefeather.bettergopaint.objects.brush;
 
 import com.sk89q.worldedit.EditSession;
-import com.sk89q.worldedit.LocalSession;
 import com.sk89q.worldedit.MaxChangedBlocksException;
-import com.sk89q.worldedit.WorldEdit;
-import com.sk89q.worldedit.bukkit.BukkitAdapter;
-import com.sk89q.worldedit.bukkit.BukkitPlayer;
+import com.sk89q.worldedit.extent.Extent;
+import com.sk89q.worldedit.extent.MaskingExtent;
+import com.sk89q.worldedit.function.mask.Mask;
+import com.sk89q.worldedit.function.pattern.Pattern;
 import com.sk89q.worldedit.math.BlockVector3;
-import net.onelitefeather.bettergopaint.brush.BrushSettings;
+import com.sk89q.worldedit.world.block.BlockType;
+import net.kyori.adventure.audience.Audience;
+import net.onelitefeather.bettergopaint.brush.StrokeContext;
 import net.onelitefeather.bettergopaint.utils.Surface;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.block.Block;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.function.Consumer;
+import java.util.List;
+import java.util.UUID;
 
+/**
+ * A BetterGoPaint brush. A brush instance only describes the brush. The state of one stroke lives in a
+ * {@link StrokeContext}, and the brush reads and writes blocks only through the {@link Extent} it is given.
+ * <p>
+ * {@link #bind(StrokeContext)} turns a brush and a context into WorldEdit's own
+ * {@link com.sk89q.worldedit.command.tool.brush.Brush}.
+ */
 public abstract class Brush {
 
     private final String name;
@@ -75,89 +82,134 @@ public abstract class Brush {
     }
 
     /**
-     * Performs a painting action using the provided location, player, and brush settings.
+     * Called on the player's thread for every click before a stroke is queued. Most brushes paint on
+     * every click and return the context unchanged. A brush that needs several clicks collects them here.
      *
-     * @param location      The location the painting action is performed.
-     * @param player        The player who is performing the paint action.
-     * @param brushSettings The brush settings to be applied while painting.
+     * @param playerId the unique id of the player
+     * @param sneaking whether the player is sneaking
+     * @param feedback where messages for the player go
+     * @param context  the context captured for this click
+     * @return the context of the stroke to queue, or null if no stroke should run yet
      */
-    public abstract void paint(
-            @NotNull Location location,
-            @NotNull Player player,
-            @NotNull BrushSettings brushSettings
-    );
+    public @Nullable StrokeContext prepare(
+            @NotNull UUID playerId,
+            boolean sneaking,
+            @NotNull Audience feedback,
+            @NotNull StrokeContext context
+    ) {
+        return context;
+    }
 
     /**
-     * Sets the material of a block in an EditSession.
+     * Computes the stroke and writes it to the extent. Every read happens before the first block is
+     * written, so the result does not depend on the order of the writes.
      *
-     * @param session  The EditSession to perform the block update in.
-     * @param block    The block to update.
-     * @param material The material to set the block to.
-     * @throws MaxChangedBlocksException If the maximum number of changed blocks is exceeded.
+     * @param extent  the extent to read from and write to
+     * @param context the context of the stroke
      */
-    protected void setBlock(
-            @NotNull EditSession session,
-            @NotNull Block block,
-            @NotNull Material material
-    ) throws MaxChangedBlocksException {
-        BlockVector3 vector = BlockVector3.at(block.getX(), block.getY(), block.getZ());
-        if (session.getMask() == null || session.getMask().test(vector)) {
-            session.setBlock(vector, BukkitAdapter.asBlockType(material));
+    public abstract void apply(@NotNull Extent extent, @NotNull StrokeContext context);
+
+    /**
+     * Binds this brush to the context of one stroke.
+     *
+     * @param context the context of the stroke
+     * @return the stroke as a WorldEdit brush
+     */
+    public final @NotNull com.sk89q.worldedit.command.tool.brush.Brush bind(@NotNull StrokeContext context) {
+        return new Stroke(this, context);
+    }
+
+    /**
+     * Wraps the extent so that no block the mask rejects is written. A stroke runs against the edit session
+     * of the player, which already carries the global mask. This makes the rule hold for any extent.
+     *
+     * @param extent the extent to write to
+     * @param mask   the mask of the player's session, or null
+     * @return the extent the brush should use
+     */
+    static @NotNull Extent masked(@NotNull Extent extent, @Nullable Mask mask) {
+        return mask == null ? extent : new MaskingExtent(extent, mask);
+    }
+
+    /**
+     * Writes a block of the palette to the position.
+     *
+     * @param extent   the extent to write to
+     * @param context  the context of the stroke
+     * @param position the position to change
+     */
+    protected void place(@NotNull Extent extent, @NotNull StrokeContext context, @NotNull BlockVector3 position) {
+        extent.setBlock(position, context.palette().applyBlock(position));
+    }
+
+    /**
+     * Writes a block of the palette to every position.
+     *
+     * @param extent    the extent to write to
+     * @param context   the context of the stroke
+     * @param positions the positions to change
+     */
+    protected void placeAll(@NotNull Extent extent, @NotNull StrokeContext context, @NotNull List<BlockVector3> positions) {
+        for (BlockVector3 position : positions) {
+            place(extent, context, position);
         }
     }
 
     /**
-     * Performs an edit using WorldEdit's EditSession.
-     * This method wraps the edit session in a try-with-resources block to ensure proper cleanup of resources.
+     * Writes the default state of a block type to the position.
      *
-     * @param player The player performing the edit.
-     * @param edit   A Consumer functional interface that defines the actions to be taken within the edit session.
+     * @param extent   the extent to write to
+     * @param type     the block type to place
+     * @param position the position to change
      */
-    protected void performEdit(@NotNull Player player, @NotNull Consumer<EditSession> edit) {
-        BukkitPlayer wrapped = BukkitAdapter.adapt(player);
-        LocalSession localSession = WorldEdit.getInstance().getSessionManager().get(wrapped);
-        try (EditSession editsession = localSession.createEditSession(wrapped)) {
-            try {
-                edit.accept(editsession);
-            } finally {
-                localSession.remember(editsession);
-            }
+    protected void place(@NotNull Extent extent, @NotNull BlockType type, @NotNull BlockVector3 position) {
+        extent.setBlock(position, type.getDefaultState());
+    }
+
+    /**
+     * Checks if a position passes the default checks defined by the stroke context.
+     *
+     * @param extent   the extent to read from
+     * @param context  the context of the stroke
+     * @param position the position being checked
+     * @return true if the position passes all the default checks, false otherwise
+     */
+    protected boolean passesDefaultChecks(@NotNull Extent extent, @NotNull StrokeContext context,
+                                          @NotNull BlockVector3 position) {
+        return context.passesMask(extent, position) && passesSurfaceCheck(extent, context, position);
+    }
+
+    /**
+     * Checks if a position passes the surface check defined by the stroke context.
+     *
+     * @param extent   the extent to read from
+     * @param context  the context of the stroke
+     * @param position the position being checked
+     * @return true if the position passes the surface check, false otherwise
+     */
+    protected boolean passesSurfaceCheck(@NotNull Extent extent, @NotNull StrokeContext context,
+                                         @NotNull BlockVector3 position) {
+        return Surface.isOnSurface(extent, position, context.surfaceMode(), context.eye());
+    }
+
+    /**
+     * The stroke of a brush as WorldEdit sees it.
+     */
+    private static final class Stroke implements com.sk89q.worldedit.command.tool.brush.Brush {
+
+        private final Brush brush;
+        private final StrokeContext context;
+
+        private Stroke(@NotNull Brush brush, @NotNull StrokeContext context) {
+            this.brush = brush;
+            this.context = context;
         }
-    }
 
-    /**
-     * Checks if a given block passes the default checks defined by the brush settings.
-     *
-     * @param brushSettings The brush settings to be checked against.
-     * @param player        The player using the brush.
-     * @param block         The block being checked.
-     * @return true if the block passes all the default checks, false otherwise.
-     */
-    protected boolean passesDefaultChecks(@NotNull BrushSettings brushSettings, @NotNull Player player, @NotNull Block block) {
-        return passesMaskCheck(brushSettings, block) && passesSurfaceCheck(brushSettings, player, block);
-    }
-
-    /**
-     * Checks if a given block passes the surface check defined by the brush settings.
-     *
-     * @param brushSettings The brush settings to be checked against.
-     * @param player        The player using the brush.
-     * @param block         The block being checked.
-     * @return true if the block passes the surface check, false otherwise.
-     */
-    protected boolean passesSurfaceCheck(@NotNull BrushSettings brushSettings, @NotNull Player player, @NotNull Block block) {
-        return Surface.isOnSurface(block, brushSettings.surfaceMode(), player.getLocation());
-    }
-
-    /**
-     * Checks if a given block passes the mask check defined by the brush settings.
-     *
-     * @param brushSettings The brush settings to be checked against.
-     * @param block         The block being checked.
-     * @return true if the block passes the mask check, false otherwise.
-     */
-    protected boolean passesMaskCheck(@NotNull BrushSettings brushSettings, @NotNull Block block) {
-        return !brushSettings.maskEnabled() || block.getType().equals(brushSettings.mask());
+        @Override
+        public void build(EditSession session, BlockVector3 position, Pattern pattern, double size)
+                throws MaxChangedBlocksException {
+            brush.apply(masked(session, session.getMask()), context.with(position, pattern, (int) Math.round(size)));
+        }
     }
 
 }

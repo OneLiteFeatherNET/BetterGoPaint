@@ -18,9 +18,9 @@
  */
 package net.onelitefeather.bettergopaint.utils;
 
+import com.sk89q.worldedit.extent.Extent;
+import com.sk89q.worldedit.math.BlockVector3;
 import org.bukkit.Axis;
-import org.bukkit.Location;
-import org.bukkit.block.Block;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -36,70 +36,72 @@ public final class Sphere {
     }
 
     /**
-     * Returns a stream of blocks within a specified radius from a given middle point.
+     * Returns a stream of positions within a specified radius from a given middle point. Positions
+     * outside the build limits of the extent are never returned.
      *
+     * @param extent      The extent the blocks are read from.
      * @param middlePoint The middle point from which to calculate the radius.
      * @param radius      The radius value.
      * @param axis        The axis along which to calculate the radius (optional).
      * @param air         Whether air blocks should be included.
-     * @return A stream of blocks within the specified radius.
+     * @return A stream of positions within the specified radius.
      */
-    @Contract(value = "_, _, _, _ -> new", pure = true)
-    public static @NotNull Stream<Block> getBlocksInRadius(@NotNull Location middlePoint, int radius, @Nullable Axis axis,
-                                                     boolean air) {
-        List<Block> blocks = new ArrayList<>();
-        Location loc1 = middlePoint.clone().add(-radius / 2d, -radius / 2d, -radius / 2d).getBlock().getLocation();
-        Location loc2 = middlePoint.clone().add(radius / 2d, radius / 2d, radius / 2d).getBlock().getLocation();
+    @Contract(value = "_, _, _, _, _ -> new", pure = true)
+    public static @NotNull Stream<BlockVector3> getBlocksInRadius(@NotNull Extent extent, @NotNull BlockVector3 middlePoint,
+                                                                  int radius, @Nullable Axis axis, boolean air) {
+        List<BlockVector3> blocks = new ArrayList<>();
+        int minX = floor(middlePoint.x() + -radius / 2d);
+        int minY = floor(middlePoint.y() + -radius / 2d);
+        int minZ = floor(middlePoint.z() + -radius / 2d);
+        int maxX = floor(middlePoint.x() + radius / 2d);
+        int maxY = floor(middlePoint.y() + radius / 2d);
+        int maxZ = floor(middlePoint.z() + radius / 2d);
 
         switch (axis) {
             case Y:
-                for (int x = loc1.getBlockX(); x <= loc2.getBlockX(); x++) {
-                    for (int z = loc1.getBlockZ(); z <= loc2.getBlockZ(); z++) {
-                        Location location = new Location(loc1.getWorld(), x, middlePoint.getBlockY(), z);
-                        if (passesDefaultChecks(location, middlePoint, radius)) {
-                            blocks.add(location.getBlock());
-                        }
+                for (int x = minX; x <= maxX; x++) {
+                    for (int z = minZ; z <= maxZ; z++) {
+                        add(blocks, BlockVector3.at(x, middlePoint.y(), z), middlePoint, radius);
                     }
                 }
                 break;
             case X:
-                for (int y = loc1.getBlockY(); y <= loc2.getBlockY(); y++) {
-                    for (int z = loc1.getBlockZ(); z <= loc2.getBlockZ(); z++) {
-                        Location location = new Location(loc1.getWorld(), middlePoint.getBlockX(), y, z);
-                        if (passesDefaultChecks(location, middlePoint, radius)) {
-                            blocks.add(location.getBlock());
-                        }
+                for (int y = minY; y <= maxY; y++) {
+                    for (int z = minZ; z <= maxZ; z++) {
+                        add(blocks, BlockVector3.at(middlePoint.x(), y, z), middlePoint, radius);
                     }
                 }
                 break;
             case Z:
-                for (int x = loc1.getBlockX(); x <= loc2.getBlockX(); x++) {
-                    for (int y = loc1.getBlockY(); y <= loc2.getBlockY(); y++) {
-                        Location location = new Location(loc1.getWorld(), x, y, middlePoint.getBlockZ());
-                        if (passesDefaultChecks(location, middlePoint, radius)) {
-                            blocks.add(location.getBlock());
-                        }
+                for (int x = minX; x <= maxX; x++) {
+                    for (int y = minY; y <= maxY; y++) {
+                        add(blocks, BlockVector3.at(x, y, middlePoint.z()), middlePoint, radius);
                     }
                 }
                 break;
             case null:
-                for (int x = loc1.getBlockX(); x <= loc2.getBlockX(); x++) {
-                    for (int y = loc1.getBlockY(); y <= loc2.getBlockY(); y++) {
-                        for (int z = loc1.getBlockZ(); z <= loc2.getBlockZ(); z++) {
-                            Location location = new Location(loc1.getWorld(), x, y, z);
-                            if (passesDefaultChecks(location, middlePoint, radius)) {
-                                blocks.add(location.getBlock());
-                            }
+                for (int x = minX; x <= maxX; x++) {
+                    for (int y = minY; y <= maxY; y++) {
+                        for (int z = minZ; z <= maxZ; z++) {
+                            add(blocks, BlockVector3.at(x, y, z), middlePoint, radius);
                         }
                     }
                 }
                 break;
         }
-        if (air) return blocks.stream();
-        return blocks.stream().filter(block -> !block.isEmpty());
+        return blocks.stream()
+                .filter(position -> Blocks.isInBounds(extent, position.y()))
+                .filter(position -> air || !Blocks.isAir(extent, position));
     }
 
-    private static boolean passesDefaultChecks(@NotNull Location location, @NotNull Location middlePoint, int radius) {
-        return location.distance(middlePoint) < radius / 2d;
+    private static int floor(double value) {
+        return (int) Math.floor(value);
+    }
+
+    private static void add(@NotNull List<BlockVector3> blocks, @NotNull BlockVector3 position,
+                            @NotNull BlockVector3 middlePoint, int radius) {
+        if (position.distance(middlePoint) < radius / 2d) {
+            blocks.add(position);
+        }
     }
 }

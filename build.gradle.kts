@@ -1,78 +1,89 @@
 import io.papermc.hangarpublishplugin.model.Platforms
-import kotlin.system.exitProcess
 import net.minecrell.pluginyml.bukkit.BukkitPluginDescription
 import net.minecrell.pluginyml.paper.PaperPluginDescription
+import org.gradle.api.GradleException
 import xyz.jpenilla.runpaper.task.RunServer
+import xyz.jpenilla.runtask.pluginsapi.PluginDownloadService
+import xyz.jpenilla.runtask.service.DownloadsAPIService
 
 plugins {
-    id("java")
+    java
+    jacoco
     alias(libs.plugins.shadowJar)
-    alias(libs.plugins.publishdata)
     alias(libs.plugins.paper.run)
     alias(libs.plugins.paper.yml)
     alias(libs.plugins.hangar)
     alias(libs.plugins.modrinth)
+    alias(libs.plugins.cyclonedx)
     alias(libs.plugins.spotless)
-    id("olf.build-logic")
-    `maven-publish`
 }
 
+group = "net.onelitefeather.bettergopaint"
+version = "1.1.0" // x-release-please-version
+
 if (!File("$rootDir/.git").exists()) {
-    logger.lifecycle("""
+    logger.lifecycle(
+        """
     **************************************************************************************
     You need to fork and clone this repository! Don't download a .zip file.
     If you need assistance, consult the GitHub docs: https://docs.github.com/get-started/quickstart/fork-a-repo
     **************************************************************************************
     """.trimIndent()
-    ).also { exitProcess(1) }
+    ).also { System.exit(1) }
 }
 
-allprojects {
-    group = "net.onelitefeather.bettergopaint"
-    version = "1.1.0"
-}
-group = "net.onelitefeather.bettergopaint"
-
+// Every version listed here is offered on Hangar and Modrinth and gets a run-<version> task.
+// Paper 26.x runs on Java 25, which is also the bytecode level this plugin is compiled for,
+// so older Minecraft lines cannot load the jar. Keep docs/reference/supported-versions.md in sync.
 val supportedMinecraftVersions = listOf(
-        "1.21"
+    "26.1.1",
+    "26.1.2",
+    "26.2"
 )
 
-repositories {
-    mavenCentral()
-    maven("https://papermc.io/repo/repository/maven-public/")
-    maven("https://maven.enginehub.org/repo/")
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(25))
+    }
 }
 
 dependencies {
-    // Paper / Spigot
     compileOnly(libs.paper)
-    // Fawe / WorldEdit
-    implementation(platform(libs.fawe.bom))
-    compileOnly(libs.fawe.bukkit)
-    // Utils
-    implementation(libs.serverlib)
-    implementation(libs.paperlib)
-    implementation(libs.semver)
-    // Stats
+    compileOnly(libs.fawe.core)
+    compileOnly(libs.fawe.bukkit) { isTransitive = false }
+
     implementation(libs.bstats)
-    // Commands
+    implementation(libs.semver)
+    // Guava comes with Paper; only Guice itself and its small dependencies are shaded.
+    implementation(libs.guice) {
+        exclude(group = "com.google.guava")
+        exclude(group = "com.google.errorprone")
+    }
+    implementation(libs.jakarta.inject)
     implementation(libs.cloud.command.annotations)
     implementation(libs.cloud.command.extras)
     implementation(libs.cloud.command.paper)
     annotationProcessor(libs.cloud.command.annotations)
-}
 
-publishData {
-    useEldoNexusRepos(false)
-    publishTask("shadowJar")
+    testImplementation(libs.paper)
+    testImplementation(libs.fawe.core)
+    testImplementation(libs.fawe.bukkit) { isTransitive = false }
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.junit.jupiter)
+    testImplementation(libs.assertj.core)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }
-
 
 paper {
     name = "BetterGoPaint"
     main = "net.onelitefeather.bettergopaint.BetterGoPaint"
-    authors = listOf("Arcaniax", "TheMeinerLP")
-    apiVersion = "1.20"
+    authors = listOf("Arcaniax", "TheMeinerLP", "OneLiteFeather")
+    apiVersion = "26.1"
+    website = "https://github.com/OneLiteFeatherNET/BetterGoPaint"
+    provides = listOf("goPaint")
+    // Folia is only declared with -PfoliaSupported=true (local testing). Release builds never set it.
+    foliaSupported = providers.gradleProperty("foliaSupported").map(String::toBoolean).orElse(false).get()
 
     serverDependencies {
         register("FastAsyncWorldEdit") {
@@ -81,63 +92,104 @@ paper {
         }
     }
 
-    website = "https://github.com/OneLiteFeatherNET/BetterGoPaint"
-    provides = listOf("goPaint")
-
     permissions {
-        register("bettergopaint.command.admin.reload") {
-            default = BukkitPluginDescription.Permission.Default.OP
-        }
-        register("bettergopaint.notify.admin.update") {
-            default = BukkitPluginDescription.Permission.Default.OP
-        }
-        register("bettergopaint.notify.disable.donation") {
-            default = BukkitPluginDescription.Permission.Default.FALSE
-        }
         register("bettergopaint.use") {
+            description = "Use the goPaint brush. Every /gopaint subcommand also needs its own node."
+            default = BukkitPluginDescription.Permission.Default.OP
+        }
+        register("bettergopaint.command.help") {
+            description = "List the /gopaint commands with /gopaint help."
+            default = BukkitPluginDescription.Permission.Default.TRUE
+        }
+        register("bettergopaint.command.size") {
+            description = "Set the brush size with /gopaint size <size>."
+            default = BukkitPluginDescription.Permission.Default.TRUE
+        }
+        register("bettergopaint.command.toggle") {
+            description = "Enable or disable the brush with /gopaint toggle."
+            default = BukkitPluginDescription.Permission.Default.TRUE
+        }
+        register("bettergopaint.command.info") {
+            description = "Show the plugin credits with /gopaint info."
+            default = BukkitPluginDescription.Permission.Default.TRUE
+        }
+        register("bettergopaint.command.admin.reload") {
+            description = "Reload config.yml with /gopaint reload."
             default = BukkitPluginDescription.Permission.Default.OP
         }
         register("bettergopaint.admin") {
+            description = "Bundle of the administrative permissions."
+            children = listOf("bettergopaint.command.admin.reload")
             default = BukkitPluginDescription.Permission.Default.FALSE
         }
         register("bettergopaint.world.bypass") {
+            description = "Paint in worlds listed under disabled worlds in config.yml."
+            default = BukkitPluginDescription.Permission.Default.FALSE
+        }
+        register("bettergopaint.notify.admin.update") {
+            description = "Receive a notice on join when a newer plugin version is available on Hangar."
+            default = BukkitPluginDescription.Permission.Default.OP
+        }
+        register("bettergopaint.notify.disable.donation") {
+            description = "Suppress the donation notice that is shown on join."
             default = BukkitPluginDescription.Permission.Default.FALSE
         }
     }
 }
-
 
 spotless {
     java {
         licenseHeaderFile(rootProject.file("HEADER.txt"))
-        target("**/*.java")
+        target("src/**/*.java")
     }
-}
-
-java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
 }
 
 tasks {
+    compileJava {
+        options.encoding = "UTF-8"
+        options.release.set(25)
+    }
+    compileTestJava {
+        options.encoding = "UTF-8"
+        options.release.set(25)
+    }
     jar {
         archiveClassifier.set("unshaded")
     }
-    compileJava {
-        options.release.set(21)
-        options.encoding = "UTF-8"
-    }
     shadowJar {
         archiveClassifier.set("")
-        dependencies {
-            relocate("com.cryptomorin.xseries", "${rootProject.group}.xseries")
-            relocate("org.incendo.serverlib", "${rootProject.group}.serverlib")
-            relocate("org.bstats", "${rootProject.group}.metrics")
-            relocate("io.papermc.lib", "${rootProject.group}.paperlib")
-        }
+        relocate("org.bstats", "${project.group}.metrics")
+        relocate("com.github.zafarkhaja.semver", "${project.group}.semver")
+        relocate("com.google.inject", "${project.group}.libs.guice")
+        relocate("jakarta.inject", "${project.group}.libs.jakarta.inject")
+        relocate("org.aopalliance", "${project.group}.libs.aopalliance")
     }
     build {
+        dependsOn(shadowJar)
+    }
+    test {
+        useJUnitPlatform()
+        testLogging {
+            events("passed", "skipped", "failed")
+            exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        }
+        reports {
+            junitXml.required.set(true)
+            html.required.set(true)
+        }
+        finalizedBy(jacocoTestReport)
+    }
+    jacocoTestReport {
+        dependsOn(test)
+        reports {
+            xml.required.set(true)
+            html.required.set(true)
+        }
+    }
+    named("modrinth") {
+        dependsOn(shadowJar)
+    }
+    named("publishAllPublicationsToHangar") {
         dependsOn(shadowJar)
     }
     supportedMinecraftVersions.forEach { serverVersion ->
@@ -146,73 +198,87 @@ tasks {
             jvmArgs("-DPaper.IgnoreJavaVersion=true", "-Dcom.mojang.eula.agree=true")
             group = "run paper"
             runDirectory.set(file("run-$serverVersion"))
-            pluginJars(rootProject.tasks.shadowJar.map { it.archiveFile }.get())
+            pluginJars(shadowJar.flatMap { it.archiveFile })
+            downloadPlugins {
+                modrinth("fastasyncworldedit", libs.versions.fawe.get())
+            }
         }
     }
-}
+    // Folia test servers for local testing only. Stable FastAsyncWorldEdit does not support Folia yet, so a
+    // Folia-capable FAWE build has to be passed in with -PfoliaFaweUrl=<url>.
+    supportedMinecraftVersions.forEach { serverVersion ->
+        register<RunServer>("run-folia-$serverVersion") {
+            minecraftVersion(serverVersion)
+            jvmArgs("-DPaper.IgnoreJavaVersion=true", "-Dcom.mojang.eula.agree=true")
+            group = "run folia"
+            description = "Starts a local Folia $serverVersion test server. Needs -PfoliaFaweUrl=<url of a Folia-capable FAWE jar>."
+            runDirectory.set(file("run-folia-$serverVersion"))
+            pluginJars(shadowJar.flatMap { it.archiveFile })
+            downloadsApiService.convention(DownloadsAPIService.folia(project))
+            pluginDownloadService.convention(PluginDownloadService.paper(project))
 
-val branch = rootProject.branchName()
-val baseVersion = publishData.getVersion(false)
-val isRelease = !baseVersion.contains('-')
-val isMainBranch = branch == "master"
-if (!isRelease || isMainBranch) { // Only publish releases from the main branch
-    val suffixedVersion = if (isRelease) baseVersion else baseVersion + "+" + System.getenv("GITHUB_RUN_NUMBER")
-    val changelogContent = if (isRelease) {
-        "See [GitHub](https://github.com/OneLiteFeatherNET/BetterGoPaint) for release notes."
-    } else {
-        val commitHash = rootProject.latestCommitHash()
-        "[$commitHash](https://github.com/OneLiteFeatherNET/BetterGoPaint/commit/$commitHash) ${rootProject.latestCommitMessage()}"
-    }
-    hangarPublish {
-        publications.register("BetterGoPaint") {
-            version.set(suffixedVersion)
-            channel.set(if (isRelease) "Release" else "Snapshot")
-            changelog.set(changelogContent)
-            apiKey.set(System.getenv("HANGAR_SECRET"))
-            id.set("BetterGoPaint")
-            platforms {
-                register(Platforms.PAPER) {
-                    jar.set(tasks.shadowJar.flatMap { it.archiveFile })
-                    platformVersions.set(supportedMinecraftVersions)
+            val faweUrl = providers.gradleProperty("foliaFaweUrl").orNull
+            val foliaDeclared = providers.gradleProperty("foliaSupported").map(String::toBoolean).orElse(false).get()
+            if (faweUrl != null) {
+                downloadPlugins {
+                    url(faweUrl)
+                }
+            }
+            doFirst {
+                val example = "./gradlew run-folia-$serverVersion -PfoliaSupported=true -PfoliaFaweUrl=<url>"
+                if (faweUrl == null) {
+                    throw GradleException(
+                        "run-folia-$serverVersion needs a Folia-capable FastAsyncWorldEdit jar. Stable FAWE does not " +
+                            "support Folia yet. Pass -PfoliaFaweUrl=<url of a Folia-capable FAWE jar>, for example $example."
+                    )
+                }
+                if (!foliaDeclared) {
+                    // Without the flag Folia refuses to load the plugin, which looks like a broken test server.
+                    throw GradleException(
+                        "run-folia-$serverVersion needs -PfoliaSupported=true, otherwise Folia skips BetterGoPaint. " +
+                            "Run $example."
+                    )
                 }
             }
         }
     }
+}
 
-    modrinth {
-        token.set(System.getenv("MODRINTH_TOKEN"))
-        projectId.set("qf7sNg9A")
-        versionType.set(if (isRelease) "release" else "beta")
-        versionNumber.set(suffixedVersion)
-        versionName.set(suffixedVersion)
+val baseVersion = version as String
+val baseChannel = with(baseVersion) {
+    when {
+        contains("SNAPSHOT", true) -> "Snapshot"
+        contains("ALPHA", true) -> "Alpha"
+        contains("BETA", true) -> "Beta"
+        else -> "Release"
+    }
+}
+val changelogContent = "See [GitHub](https://github.com/OneLiteFeatherNET/BetterGoPaint/releases/tag/v$baseVersion) for release notes."
+
+hangarPublish {
+    publications.register("BetterGoPaint") {
+        version.set(baseVersion)
+        channel.set(baseChannel)
         changelog.set(changelogContent)
-        uploadFile.set(tasks.shadowJar.flatMap { it.archiveFile })
-        gameVersions.addAll(supportedMinecraftVersions)
-        loaders.add("paper")
-        loaders.add("bukkit")
-        loaders.add("folia")
+        apiKey.set(System.getenv("HANGAR_SECRET"))
+        id.set("BetterGoPaint")
+        platforms {
+            register(Platforms.PAPER) {
+                jar.set(tasks.shadowJar.flatMap { it.archiveFile })
+                platformVersions.set(supportedMinecraftVersions)
+            }
+        }
     }
 }
 
-publishing {
-    publications.create<MavenPublication>("maven") {
-        // Configure our maven publication
-        publishData.configurePublication(this)
-    }
-
-    repositories {
-        // We add EldoNexus as our repository. The used url is defined by the publish data.
-        maven {
-            authentication {
-                credentials(PasswordCredentials::class) {
-                    // Those credentials need to be set under "Settings -> Secrets -> Actions" in your repository
-                    username = System.getenv("ELDO_USERNAME")
-                    password = System.getenv("ELDO_PASSWORD")
-                }
-            }
-
-            name = "EldoNexus"
-            setUrl(publishData.getRepository())
-        }
-    }
+modrinth {
+    token.set(System.getenv("MODRINTH_TOKEN"))
+    projectId.set("qf7sNg9A")
+    versionType.set(baseChannel.lowercase())
+    versionNumber.set(baseVersion)
+    versionName.set(baseVersion)
+    changelog.set(changelogContent)
+    uploadFile.set(tasks.shadowJar.flatMap { it.archiveFile })
+    gameVersions.addAll(supportedMinecraftVersions)
+    loaders.add("paper")
 }

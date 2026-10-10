@@ -18,14 +18,14 @@
  */
 package net.onelitefeather.bettergopaint.utils;
 
-import org.bukkit.Location;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
+import com.sk89q.worldedit.extent.Extent;
+import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.world.block.BlockType;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -34,13 +34,13 @@ import java.util.stream.Stream;
 
 public final class ConnectedBlocks {
 
-    private static final BlockFace[] faces = new BlockFace[]{
-            BlockFace.NORTH,
-            BlockFace.EAST,
-            BlockFace.SOUTH,
-            BlockFace.WEST,
-            BlockFace.UP,
-            BlockFace.DOWN,
+    private static final BlockVector3[] FACES = new BlockVector3[]{
+            BlockVector3.at(0, 0, -1),
+            BlockVector3.at(1, 0, 0),
+            BlockVector3.at(0, 0, 1),
+            BlockVector3.at(-1, 0, 0),
+            BlockVector3.at(0, 1, 0),
+            BlockVector3.at(0, -1, 0),
     };
 
     private ConnectedBlocks() {
@@ -48,34 +48,37 @@ public final class ConnectedBlocks {
     }
 
     /**
-     * Returns a stream of connected blocks starting from a given location, based on a list of blocks.
+     * Returns a stream of connected positions starting from a given position, based on a list of positions.
      * Only blocks of the same type as the start block are considered.
      *
-     * @param loc    the starting location
-     * @param blocks the list of blocks to check for connectivity
-     * @return a stream of connected blocks
+     * @param extent the extent to read from
+     * @param start  the starting position
+     * @param blocks the list of positions to check for connectivity
+     * @return a stream of connected positions
      */
-    @Contract(value = "_, _ -> new", pure = true)
-    public static @NotNull Stream<Block> getConnectedBlocks(@NotNull Location loc, @NotNull List<Block> blocks) {
+    @Contract(value = "_, _, _ -> new", pure = true)
+    public static @NotNull Stream<BlockVector3> getConnectedBlocks(@NotNull Extent extent, @NotNull BlockVector3 start,
+                                                                   @NotNull List<BlockVector3> blocks) {
         if (blocks.isEmpty()) return Stream.empty();
-        Block startBlock = loc.getBlock();
-        Set<Block> connected = new HashSet<>();
-        Queue<Block> toCheck = new LinkedList<>();
+        BlockType startType = extent.getBlock(start).getBlockType();
+        Set<BlockVector3> candidates = new HashSet<>(blocks);
+        Set<BlockVector3> connected = new LinkedHashSet<>();
+        Queue<BlockVector3> toCheck = new LinkedList<>();
 
-        toCheck.add(startBlock);
-        connected.add(startBlock);
+        toCheck.add(start);
+        connected.add(start);
 
         while (!toCheck.isEmpty() && connected.size() < blocks.size()) {
-            Block current = toCheck.poll();
-            List<Block> neighbors = Arrays.stream(faces)
-                    .map(current::getRelative)
-                    .filter(relative -> relative.getType().equals(startBlock.getType())
-                            && !connected.contains(relative)
-                            && blocks.contains(relative))
-                    .toList();
-
-            connected.addAll(neighbors);
-            toCheck.addAll(neighbors);
+            BlockVector3 current = toCheck.poll();
+            for (BlockVector3 face : FACES) {
+                BlockVector3 relative = current.add(face);
+                if (candidates.contains(relative)
+                        && !connected.contains(relative)
+                        && extent.getBlock(relative).getBlockType().equals(startType)) {
+                    connected.add(relative);
+                    toCheck.add(relative);
+                }
+            }
         }
 
         return connected.stream();
