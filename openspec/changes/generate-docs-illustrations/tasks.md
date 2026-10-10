@@ -10,8 +10,8 @@
 
 ## 3. Brush illustrations (build(docs))
 
-- [ ] 3.1 Red: tests that every brush in `PlayerBrushManager`'s registry has a scene (names the missing one), that the sphere scene places at least one stone block and that two renders of the same scene are equal
-- [ ] 3.2 Green: implement `BrushScenes` (terrain, `StrokeBuilder` settings, seed 1 per the design table) and `BrushIllustration` (top view, cross-section, legend); the generate mode writes `docs/images/brushes/*.svg`; run `./gradlew generateDocsImages` and commit the eleven files
+- [x] 3.1 Red: tests that every brush in `PlayerBrushManager`'s registry has a scene (names the missing one), that the sphere scene places at least one stone block and that two renders of the same scene are equal
+- [x] 3.2 Green: implement `BrushScenes` (terrain, `StrokeBuilder` settings, seed 1 per the design table) and `BrushIllustration` (top view, cross-section, legend); the generate mode writes `docs/images/brushes/*.svg`; run `./gradlew generateDocsImages` and commit the eleven files
 
 ## 4. Menu map (build(docs))
 
