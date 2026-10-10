@@ -37,8 +37,8 @@ public class SprayBrush extends Brush {
     @Override
     public void apply(@NotNull Extent extent, @NotNull StrokeContext context) {
         placeAll(extent, context, Sphere.getBlocksInRadius(extent, context.target(), context.size(), null, false)
-                .filter(position -> passesDefaultChecks(extent, context, position))
                 .filter(position -> context.random().nextInt(100) < context.chance())
+                .filter(position -> passesDefaultChecks(extent, context, position))
                 .toList());
     }
 }

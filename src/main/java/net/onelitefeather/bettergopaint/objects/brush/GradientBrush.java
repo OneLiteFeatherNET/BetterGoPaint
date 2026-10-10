@@ -43,7 +43,6 @@ public class GradientBrush extends Brush {
         double y = context.target().y() - (context.size() / 2d);
         List<BlockType> blocks = context.blocks();
         List<BlockVector3> positions = Sphere.getBlocksInRadius(extent, context.target(), context.size(), null, false)
-                .filter(position -> passesDefaultChecks(extent, context, position))
                 .filter(position -> {
                     double rate = (position.distance(context.target()) - (context.size() / 2d)
                             * ((100d - context.falloffStrength()) / 100d))
@@ -52,6 +51,7 @@ public class GradientBrush extends Brush {
 
                     return context.random().nextDouble() > rate;
                 })
+                .filter(position -> passesDefaultChecks(extent, context, position))
                 .toList();
         List<BlockType> types = new ArrayList<>(positions.size());
         for (BlockVector3 position : positions) {

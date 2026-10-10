@@ -37,7 +37,6 @@ public class SplatterBrush extends Brush {
     @Override
     public void apply(@NotNull Extent extent, @NotNull StrokeContext context) {
         placeAll(extent, context, Sphere.getBlocksInRadius(extent, context.target(), context.size(), null, false)
-                .filter(position -> passesDefaultChecks(extent, context, position))
                 .filter(position -> {
                     double rate = (position.distance(context.target()) - ((double) context.size() / 2.0)
                             * ((100.0 - (double) context.falloffStrength()) / 100.0))
@@ -46,6 +45,7 @@ public class SplatterBrush extends Brush {
 
                     return !(context.random().nextDouble() <= rate);
                 })
+                .filter(position -> passesDefaultChecks(extent, context, position))
                 .toList());
     }
 }
