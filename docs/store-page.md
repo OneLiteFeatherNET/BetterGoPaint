@@ -1,6 +1,6 @@
 ![BetterGoPaint banner](https://i.imgur.com/ulEwPm9.jpg)
 
-BetterGoPaint paints terrain for Paper servers. A builder holds a feather, picks a brush and a palette of up to ten blocks, and right-clicks the ground. Every stroke is a [FastAsyncWorldEdit](https://modrinth.com/plugin/fastasyncworldedit) edit and can be undone with `//undo`.
+BetterGoPaint paints terrain for Paper servers. A builder holds a feather, picks a brush and a palette of up to five blocks, and right-clicks the ground. Every stroke is a [FastAsyncWorldEdit](https://modrinth.com/plugin/fastasyncworldedit) edit and can be undone with `//undo`.
 
 BetterGoPaint is a maintained fork of goPaint by Arcaniax.
 
@@ -8,7 +8,7 @@ BetterGoPaint is a maintained fork of goPaint by Arcaniax.
 
 - **Painting with a held item.** The feather is the default brush item. Left-click opens the brush menu, right-click paints.
 - **Eleven brushes** for spheres, discs, cliffs, cracks, curved strokes and more. See the table below.
-- **Block palettes** of up to ten blocks. Each block placed by a stroke is picked from the palette.
+- **Block palettes** of up to five blocks. Each block placed by a stroke is picked from the palette.
 - **Masks.** A stroke can replace only a chosen mask block. The global mask of the builder's WorldEdit session (`//gmask`) is respected.
 - **Surface modes** `DIRECT`, `RELATIVE` and `DISABLED` decide which blocks count as surface when a stroke is applied. `DISABLED` skips the check.
 - **Undo and redo.** Each stroke is one FastAsyncWorldEdit edit, so `//undo` and `//redo` work stroke by stroke.

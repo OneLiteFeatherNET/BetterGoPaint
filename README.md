@@ -14,7 +14,7 @@
 </p>
 
 BetterGoPaint paints terrain for Paper servers. Hold a feather, pick a brush and a palette of up to
-ten blocks, then right-click the ground. Every stroke is a
+five blocks, then right-click the ground. Every stroke is a
 [FastAsyncWorldEdit](https://modrinth.com/plugin/fastasyncworldedit) edit and can be undone with
 `//undo`.
 
