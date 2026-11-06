@@ -41,10 +41,22 @@ jobs:
       tag_name: ${{ steps.release.outputs.tag_name }}
       version: ${{ steps.release.outputs.version }}
     steps:
+      # GITHUB_TOKEN-opened release PRs leave their checks in "action_required"
+      # until GitHub fails them after 30 days; the release bot app avoids that.
+      - name: Create release bot token
+        id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ secrets.RELEASE_PLEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_PLEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
       - name: Release Please
         id: release
         uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         with:
+          token: ${{ steps.app-token.outputs.token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
